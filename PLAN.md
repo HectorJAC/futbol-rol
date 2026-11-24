@@ -117,11 +117,19 @@ Eventos definidos como datos (JSON con condiciones y efectos), o **Ink/inkjs** p
 ### Importante para Steam: licencias
 Sin licencias **no se pueden usar** nombres reales de clubes, jugadores, ligas, escudos ni trofeos (Balón de Oro, Champions…). Usar clubes y competiciones ficticios (p. ej. ciudades reales con nombres inventados) y premios propios ("Balón Dorado", "Bota de Plata"). Las banderas de países sí se pueden usar.
 
+**Decisión del 2026-11-23 (v0.8):** los clubes usan nombres parecidos a los reales con una o dos letras cambiadas ("FC Barkelone", "Real Madrik") y las ligas nombres genéricos ("Primera División de España"). Jugadores, trofeos y escudos siguen siendo propios. Antes de publicar en Steam conviene revisar este criterio con alguien de temas legales.
+
 ### Roadmap tentativo
-- **v0.1** — Menú principal + creación de personaje (este plan).
-- **v0.2** — Orígenes y atributos iniciales, elección del primer club, guardado/carga local (JSON en la carpeta de usuario).
-- **v0.3** — Simulación de una temporada con eventos y decisiones; Sala de trofeos.
-- **v0.4** — Mercado de fichajes y relaciones.
-- **v0.5** — Selección nacional y premios individuales completos.
-- **v0.6** — Ajustes (pantalla completa, volumen, idioma) y Records.
+Estado a 2026-11-24: v0.1–v0.10 hechas (ver el registro de trabajo en README.md).
+
+- ✅ **v0.1** — Menú principal + creación de personaje (este plan).
+- ✅ **v0.2** — Orígenes y atributos iniciales, elección del primer club, guardado/carga local (JSON en la carpeta de usuario).
+- ✅ **v0.3** — Simulación de una temporada con eventos y decisiones; Sala de trofeos.
+- ✅ **v0.4** — Mercado de fichajes, eventos de consecuencia y pantalla de Relaciones.
+- ✅ **v0.5** — Selección nacional, premios individuales completos y Records *(adelantado desde la v0.6)*.
+- ✅ **v0.6** — Ajustes (pantalla completa, tamaño de ventana, animaciones, idioma). *(Volumen pendiente: aún no hay audio.)*
+- ✅ **v0.7** — Peticiones tras la primera prueba: puntero propio, 4 orígenes por país y 10 especiales (menú Extras), modos de juego (Rápida, Normal, Completa, Personalizada) con fin de carrera, asistencias en la Sala de trofeos, 4 atributos nuevos, 10 decisiones y partidos importantes jugada a jugada en el modo Completa, competiciones (calendario, liga, copas, goleadores y asistentes) y contrato con dinero y tienda de mejoras.
+- ✅ **v0.8** — Media con estadísticas y valor de mercado, partidos importantes (grandes, clásico, derbi, segundo de la tabla, desde cuartos de copa), resultado de la eliminación al pasar el cursor, tienda rotativa, sueldo mensual, manita en los botones, historia de pareja, puntos de atributo al acabar cada temporada y clubes con nombres parecidos a los reales en primera y segunda división con ascensos y descensos.
+- ✅ **v0.9** — Resultados entre decisiones, moneda por país, origen de las consecuencias, título del partido importante dentro del recuadro, eventos que reaccionan al último partido (texto con el marcador real), eventos únicos ("La nómina de un grande", "Un país nuevo") y titularidad difícil para un joven en un club de 5 estrellas.
+- ✅ **v0.10** — Balón parado (córners, faltas, penaltis) y lanzadores, escala de atributos por modo (20/30/50), compañeros y excompañeros con relación, capitanía, buscador de equipos, tienda de 15 mejoras centrada en atributos, panel de resultados con tus números, puesto en liga en el marcador, tres copas europeas y Copa Intercontinental, y reparto de puntos cuando quieras.
 - **v1.0** — Steamworks (logros, Cloud), traducción al inglés, empaquetado y página de Steam.

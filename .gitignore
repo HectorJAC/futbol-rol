@@ -1,0 +1,11 @@
+node_modules
+dist
+out
+.DS_Store
+.eslintcache
+*.log*
+
+# Resultados de tests e2e
+e2e/.results
+e2e/screenshots
+*.tsbuildinfo
