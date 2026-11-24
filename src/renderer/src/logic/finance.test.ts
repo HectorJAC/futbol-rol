@@ -196,13 +196,20 @@ describe('partidos importantes', () => {
       knockout: true,
       neutral: true
     }
-    const live = createLiveMatch(c, fixture)
-    expect(live.phases).toHaveLength(4) // final: 4 jugadas
+    // Un titular que juega los 90 minutos de una final vive 4 jugadas.
+    let live = createLiveMatch(c, fixture)
+    for (let i = 0; live.role !== 'titular' || live.exitMinute !== undefined; i++) {
+      c = startSeason(career({ id: `final-${i}`, trust: 95 }))
+      live = createLiveMatch(c, fixture)
+    }
+    expect(live.phases).toHaveLength(4)
     c = { ...c, seasonProgress: { ...c.seasonProgress!, liveMatch: live } }
     while (!isLiveMatchOver(c.seasonProgress!.liveMatch!)) {
       const before = c.seasonProgress!.liveMatch!
-      const moment = getMoment(before.momentIds[before.resolutions.length])
-      expect(moment.phase).toBe(before.phases[before.resolutions.length])
+      const index = before.resolutions.length
+      expect(getMoment(before.momentIds[index])).toBeDefined()
+      // Las jugadas van en orden de minuto.
+      if (index > 0) expect(before.minutes[index]).toBeGreaterThan(before.minutes[index - 1])
       c = resolveMoment(c, 0).career
     }
     const end = c.seasonProgress!.liveMatch!

@@ -148,6 +148,11 @@ export interface GameEvent {
   captain?: boolean
   /** Solo cuando el vestuario te propone ser capitán (ver `canBeCaptain`). */
   captaincyOffer?: boolean
+  /**
+   * Las opciones se generan según lo que tu equipo necesita que mejores
+   * (ver `eventOptions`); `options` queda como respaldo.
+   */
+  trainingOptions?: boolean
 }
 
 /** Eventos de la v0.3–v0.6. */
@@ -221,7 +226,8 @@ const BASE_EVENTS: readonly GameEvent[] = [
   {
     id: 'extra',
     title: 'Horas extra',
-    text: 'El segundo entrenador te ofrece quedarte después de cada sesión para trabajar algo concreto.',
+    text: 'El segundo entrenador te ofrece quedarte después de cada sesión. Según el cuerpo técnico, esto es lo que el equipo necesita que mejores:',
+    trainingOptions: true,
     options: [
       {
         label: 'Definición: cien remates cada tarde',

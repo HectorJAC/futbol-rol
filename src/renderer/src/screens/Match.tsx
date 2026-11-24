@@ -4,21 +4,27 @@ import { ATTRIBUTES } from '../data/attributes'
 import { getClub } from '../data/clubs'
 import { t } from '../i18n/es'
 import { leagueTable, roundLabel } from '../logic/competitions'
+import { useMemo } from 'react'
 import {
   currentMoment,
   fillMomentText,
   finalScore,
+  finishLiveMatch,
   getMoment,
   isLiveMatchOver,
   liveMatchResult,
+  momentText,
+  needsLineup,
   scoreBefore
 } from '../logic/match'
 import { careerScale } from '../logic/playerAttributes'
 import {
+  advanceSeason,
   careerCurrency,
   checkChance,
   importanceOf,
   seasonContext,
+  seasonStep,
   type ImportanceReason
 } from '../logic/season'
 import { useGameStore } from '../store/gameStore'
@@ -46,9 +52,17 @@ export function Match(): React.JSX.Element {
   const chooseMoment = useGameStore((s) => s.chooseMoment)
   const continueMatch = useGameStore((s) => s.continueMatch)
   const finishMatch = useGameStore((s) => s.finishMatch)
+  const startMatch = useGameStore((s) => s.startMatch)
 
   const live = career?.seasonProgress?.liveMatch
+  const over = live ? isLiveMatchOver(live) : false
+  // Si al acabar este partido toca otro importante, el botón dice "Jugar partido".
+  const nextIsMatch = useMemo(
+    () => !!career && over && seasonStep(advanceSeason(finishLiveMatch(career))) === 'match',
+    [career, over]
+  )
   if (!career || !live) return <></>
+  const lineup = needsLineup(live)
 
   const reason = importanceOf(career, {
     slot: live.slot,
@@ -61,16 +75,17 @@ export function Match(): React.JSX.Element {
   })
   const own = getClub(career.clubId)
   const rival = getClub(live.opponentId)
-  const over = isLiveMatchOver(live)
-  const finished = over && !lastMoment
+  const finished = over && !lastMoment && !lineup
   const pending = currentMoment(live)
   const index = live.resolutions.length
 
-  const minute = finished
-    ? 90
-    : lastMoment
-      ? lastMoment.resolution.minute
-      : live.minutes[Math.min(index, live.minutes.length - 1)]
+  const minute = lineup
+    ? 0
+    : finished
+      ? 90
+      : lastMoment
+        ? lastMoment.resolution.minute
+        : (live.minutes[Math.min(index, live.minutes.length - 1)] ?? 90)
   const score = finished ? finalScore(live) : scoreBefore(live, minute + (lastMoment ? 1 : 0))
   const result = finished ? liveMatchResult(career, live) : null
 
@@ -86,8 +101,16 @@ export function Match(): React.JSX.Element {
       minute: r.minute,
       text: getMoment(r.momentId).title,
       tone: r.roll ? (r.roll.success ? 'up' : 'down') : 'neutral'
-    }))
+    })),
+    // Cambios: cuándo entras desde el banquillo y cuándo te sustituyen.
+    ...(live.enterMinute !== undefined && (finished || minute >= live.enterMinute)
+      ? [{ minute: live.enterMinute, text: t.match.youEnter, tone: 'neutral' }]
+      : []),
+    ...(live.exitMinute !== undefined && (finished || minute >= live.exitMinute)
+      ? [{ minute: live.exitMinute, text: t.match.subbedOff, tone: 'neutral' }]
+      : [])
   ].sort((a, b) => a.minute - b.minute)
+  const role = live.role ?? 'titular'
 
   const [homeClub, awayClub] = live.home ? [own, rival] : [rival, own]
   const [homeGoals, awayGoals] = live.home ? [score.for, score.against] : [score.against, score.for]
@@ -132,7 +155,11 @@ export function Match(): React.JSX.Element {
               </small>
             )}
             <span className="scoreboard__minute">
-              {finished ? t.match.finalWhistle : `${t.match.minute} ${minute}`}
+              {lineup
+                ? t.match.lineup
+                : finished
+                  ? t.match.finalWhistle
+                  : `${t.match.minute} ${minute}`}
             </span>
           </div>
           <div className="scoreboard__team">
@@ -156,24 +183,63 @@ export function Match(): React.JSX.Element {
             {reason && REASON_LABELS[reason] && (
               <span className="match-card__reason">{REASON_LABELS[reason]}</span>
             )}
+            <span className={`match-role match-role--${role}`} data-testid="match-role">
+              {t.match.roles[role]}
+            </span>
           </div>
-          {finished && result ? (
+          {lineup ? (
+            <div className="match-lineup" data-testid="match-lineup">
+              <span className="event-card__tag event-card__tag--neutral">{t.match.lineup}</span>
+              <h1 className="event-card__title">
+                {role === 'titular'
+                  ? t.match.starterTitle
+                  : role === 'suplente'
+                    ? t.match.subTitle
+                    : t.match.outTitle}
+              </h1>
+              <p className="event-card__text">
+                {role === 'titular'
+                  ? t.match.starterText
+                  : role === 'suplente'
+                    ? t.match.subText
+                    : t.match.outText}
+              </p>
+            </div>
+          ) : finished && result ? (
             <div className="match-final" data-testid="match-final">
               <h1 className="event-card__title">{t.match.finalWhistle}</h1>
-              <div className="stat-tiles">
-                <div className="stat-tile">
-                  <span className="stat-tile__value">{result.playerGoals}</span>
-                  <span className="stat-tile__label">{t.match.yourGoals}</span>
+              {live.enterMinute !== undefined && (
+                <p className="event-card__text">
+                  {t.match.enteredAt.replace('{n}', String(live.enterMinute))}
+                </p>
+              )}
+              {live.exitMinute !== undefined && (
+                <p className="event-card__text">
+                  {t.match.subbedAt.replace('{n}', String(live.exitMinute))}
+                </p>
+              )}
+              {!result.played ? (
+                <p className="event-card__text" data-testid="match-not-played">
+                  {t.match.notPlayed}
+                </p>
+              ) : (
+                <div className="stat-tiles">
+                  <div className="stat-tile">
+                    <span className="stat-tile__value">{result.playerGoals}</span>
+                    <span className="stat-tile__label">{t.match.yourGoals}</span>
+                  </div>
+                  <div className="stat-tile">
+                    <span className="stat-tile__value">{result.playerAssists}</span>
+                    <span className="stat-tile__label">{t.match.yourAssists}</span>
+                  </div>
+                  <div className="stat-tile">
+                    <span className="stat-tile__value" data-testid="match-rating">
+                      {result.rating?.toFixed(1)}
+                    </span>
+                    <span className="stat-tile__label">{t.match.rating}</span>
+                  </div>
                 </div>
-                <div className="stat-tile">
-                  <span className="stat-tile__value">{result.playerAssists}</span>
-                  <span className="stat-tile__label">{t.match.yourAssists}</span>
-                </div>
-                <div className="stat-tile">
-                  <span className="stat-tile__value">{result.rating?.toFixed(1)}</span>
-                  <span className="stat-tile__label">{t.match.rating}</span>
-                </div>
-              </div>
+              )}
             </div>
           ) : (
             momentShown && (
@@ -185,7 +251,9 @@ export function Match(): React.JSX.Element {
                 <h1 className="event-card__title" data-testid="moment-title">
                   {momentShown.title}
                 </h1>
-                <p className="event-card__text">{fillMomentText(momentShown.text, career, live)}</p>
+                <p className="event-card__text">
+                  {fillMomentText(momentText(momentShown, career), career, live)}
+                </p>
                 {!lastMoment ? (
                   <div className="event-options">
                     {momentShown.options.map((option, i) => {
@@ -256,9 +324,19 @@ export function Match(): React.JSX.Element {
 
       <footer className="action-bar action-bar--wide">
         <span />
-        {finished ? (
+        {lineup ? (
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={startMatch}
+            autoFocus
+            data-testid="start-match"
+          >
+            {role === 'noConvocado' ? t.match.watch : t.match.play}
+          </button>
+        ) : finished ? (
           <button type="button" className="btn btn--primary" onClick={finishMatch} autoFocus>
-            {t.match.continueSeason}
+            {nextIsMatch ? t.match.play : t.match.continueSeason}
           </button>
         ) : (
           lastMoment && (

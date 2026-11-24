@@ -87,9 +87,9 @@ export function setPieceMinimum(
   return { 20: 10, 30: 15, 50: 30 }[attributeScale(mode)]
 }
 
-/** Puntos libres al crear el personaje: 8, 12 o 20. */
+/** Puntos libres al crear el personaje: 8 en la Rápida, 12 en la Normal y 10 en la Completa. */
 export function freePointsFor(mode: Pick<GameMode, 'id' | 'seasons' | 'decisionInterval'>): number {
-  return { 20: 8, 30: 12, 50: 20 }[attributeScale(mode)]
+  return { 20: 8, 30: 12, 50: 10 }[attributeScale(mode)]
 }
 
 /** Tope de cualquier atributo al crear el personaje: 15, 22 o 37. */

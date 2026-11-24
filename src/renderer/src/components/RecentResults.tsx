@@ -4,6 +4,7 @@ import { getClub } from '../data/clubs'
 import { t } from '../i18n/es'
 import { leagueTable, roundLabel, slotsFor } from '../logic/competitions'
 import { matchResult, seasonContext } from '../logic/season'
+import { notPlayedText } from '../logic/notPlayed'
 import type { Career, CompetitionId } from '../types/career'
 
 const COMPETITION_SHORT: Record<CompetitionId, string> = {
@@ -124,9 +125,7 @@ export function RecentResults({
                 {(m.playerGoals > 0 || m.playerAssists > 0 || !m.played) && (
                   <span className={`recent-match__me${m.played ? '' : ' recent-match__me--off'}`}>
                     {!m.played
-                      ? m.injured
-                        ? t.competitions.injured
-                        : t.competitions.bench
+                      ? notPlayedText(m)
                       : [
                           m.playerGoals > 0 && `${m.playerGoals} ${t.competitions.goalShort}`,
                           m.playerAssists > 0 && `${m.playerAssists} ${t.competitions.assistShort}`

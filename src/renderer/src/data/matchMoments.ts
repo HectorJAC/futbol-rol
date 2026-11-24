@@ -194,6 +194,8 @@ export const MATCH_MOMENTS: readonly MatchMoment[] = [
     id: 'inicio-estadio-en-contra',
     title: 'Un estadio en contra',
     text: 'Minuto 4. Cada vez que tocas el balón, la grada de {rival} te silba con todas sus fuerzas. Tus compañeros más jóvenes parecen encogidos.',
+    youngText:
+      'Minuto 4. Cada vez que tocas el balón, la grada de {rival} te silba con todas sus fuerzas. Nunca habías jugado en un ambiente así y sientes el peso de cada pitido.',
     phase: 'inicio',
     options: [
       {

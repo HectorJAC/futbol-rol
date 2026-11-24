@@ -9,7 +9,7 @@ import { DEFAULT_POSITION_ID } from '../data/positions'
 import { canAllocate, createCareer, remainingPoints } from '../logic/career'
 import { normalizeName, validateName } from '../logic/characterName'
 import { buyItem } from '../logic/finance'
-import { finishLiveMatch, isLiveMatchOver, resolveMoment } from '../logic/match'
+import { finishLiveMatch, isLiveMatchOver, resolveMoment, startLiveMatch } from '../logic/match'
 import { toSaveFile } from '../logic/saveGame'
 import {
   advanceSeason,
@@ -146,6 +146,8 @@ interface GameState {
   chooseOption: (optionIndex: number) => Promise<void>
   /** Pasa a lo siguiente del calendario (evento, partido importante o resumen). */
   continueSeason: () => Promise<void>
+  /** Tras ver la convocatoria (titular, suplente o no convocado), empieza el partido. */
+  startMatch: () => Promise<void>
   /** Decide una jugada del partido importante (se guarda al momento). */
   chooseMoment: (optionIndex: number) => Promise<void>
   /** Tras ver el resultado de la jugada: pasa a la siguiente o al pitido final. */
@@ -394,6 +396,13 @@ export const useGameStore = create<GameState>()((set, get) => ({
       career: result.career,
       lastMoment: { resolution: result.resolution, effects: result.effects }
     })
+    await get().saveCareer()
+  },
+
+  startMatch: async () => {
+    const { career } = get()
+    if (!career?.seasonProgress?.liveMatch) return
+    set({ career: startLiveMatch(career), lastMoment: null })
     await get().saveCareer()
   },
 

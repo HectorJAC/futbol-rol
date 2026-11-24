@@ -76,6 +76,8 @@ export interface ClubMatch {
   played: boolean
   /** No jugaste por lesión. */
   injured?: boolean
+  /** Si no jugaste: 'banca' = convocado sin salir; 'fuera' = no convocado (desde la v0.11). */
+  squad?: 'banca' | 'fuera'
   playerGoals: number
   playerAssists: number
   /** Nota del partido (solo si jugaste). */
@@ -92,6 +94,9 @@ export interface MomentResolution {
   roll?: EventResolution['roll']
   text: string
 }
+
+/** Tu papel en un partido importante: titular, suplente (sales al campo) o no convocado. */
+export type MatchRole = 'titular' | 'suplente' | 'noConvocado'
 
 /** Partido importante en curso (modo con temporadas completas). */
 export interface LiveMatch {
@@ -117,6 +122,12 @@ export interface LiveMatch {
   playerAssists: number
   momentGoalsFor: number
   momentGoalsAgainst: number
+  /** Desde la v0.11: tu papel, el minuto en que entras (suplente) o en que te cambian (titular). */
+  role?: MatchRole
+  enterMinute?: number
+  exitMinute?: number
+  /** Ya viste la convocatoria y empezó el partido. */
+  started?: boolean
 }
 
 /** Temporada en curso. */

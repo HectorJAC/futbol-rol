@@ -1,6 +1,6 @@
 {
   "name": "futbol-rol",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Proyecto: Juego Futbol-Rol — carrera de futbolista con decisiones de RPG (escritorio, Steam)",
   "main": "./out/main/index.js",
   "author": "HectorJAC",

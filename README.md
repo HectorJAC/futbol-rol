@@ -4,7 +4,10 @@
 
 - Plataforma: **solo escritorio, distribuido por Steam**. Windows primero. No habrá versión web.
 - Plan completo e ideas de diseño: [PLAN.md](PLAN.md).
-- **Versión actual: v0.10**:
+- **Versión actual: v0.11**:
+  - Convocatoria en los partidos importantes (titular, suplente o no convocado) y cambios durante el partido.
+  - Notas de partido y de temporada parecidas a las de Sofascore; mercado de fichajes según tu nacionalidad y tu edad.
+  - "Horas extra" con las mejoras que necesita tu equipo.
   - Atributos de balón parado (córners, faltas y penaltis) y lanzadores; escala de atributos según el modo (20, 30 o 50).
   - Compañeros y excompañeros con nombre y relación, capitanía y buscador de equipos para fichar al final de la temporada.
   - Tres copas europeas según el puesto en liga y Copa Intercontinental para América y Asia.
@@ -536,13 +539,55 @@ No se instaló nada nuevo. Al empaquetar, electron-builder volvió a bajar a su 
 - `typecheck` y `lint` sin errores. Revisé las capturas a 1280×720.
 - El `.exe` regenerado abre la v0.10.
 
+### v0.11 — Nueve mejoras: convocatoria, notas realistas y mercado por nacionalidad (2026-11-24)
+
+No se descargó ni instaló nada. Para calibrar las notas se consultó cómo puntúa Sofascore (todos parten de 6,5, rara vez se baja de 6 y los goles pesan mucho).
+
+**Hecho**
+1. **Puntos libres al crear el personaje:** en la Completa pasan de 20 a 10. La Rápida sigue con 8 y la Normal con 12.
+2. **Por qué no jugaste:** en vez de "No jugó" sale "No convocado" o "Te quedaste en la banca" (o "Lesionado"). Los partidos anteriores a esta versión siguen diciendo "No jugó".
+3. **"Horas extra" dinámico.**
+   - Las tres opciones son los atributos que más necesita tu equipo: los más importantes para un delantero en los que estás más lejos de lo que pide el nivel de tu club.
+   - Cada opción muestra lo que mejora (por ejemplo "+3 Definición").
+   - Todas las decisiones muestran ahora los atributos que suben al elegir una opción.
+4. **Resultados de la temporada:** el panel es más ancho y ya no tiene scroll horizontal, solo vertical.
+5. **"Jugar partido":** si lo siguiente es un partido importante, el botón de después de una decisión (o del final de otro partido) dice "Jugar partido".
+6. **"Un estadio en contra":** con menos de 25 años el texto ya no habla de "tus compañeros más jóvenes". Ahora dice que nunca habías jugado en un ambiente así.
+7. **Convocatoria antes de cada partido importante.**
+   - Antes de empezar ves si eres titular, suplente o no vas convocado (depende de tus minutos en el equipo).
+   - El suplente sale al campo en la segunda parte y solo vive las jugadas desde que entra.
+   - Un titular puede ser sustituido (más probable con poca resistencia o con 31 años o más) y no vive jugadas después del cambio.
+   - Si no vas convocado, ves el resultado desde la grada.
+   - El cronograma marca cuándo entras y cuándo te cambian.
+8. **Notas más realistas** (al estilo de Sofascore).
+   - Todos parten de 6,6. Un gol suma 1 punto, cada gol más 0,9 y el hat-trick tiene un extra. Cada asistencia suma 0,65. El nivel y el resultado mueven algo la nota.
+   - Un suplente sin participar se queda cerca de 6,5.
+   - Marcar suele dar entre 7,4 y 8, un hat-trick ronda el 9 y un goleador de 0,75 goles por partido promedia alrededor de 7,5.
+   - En los partidos importantes, cada jugada bien resuelta suma 0,15 y cada una fallada resta 0,1.
+   - Los goles de las decisiones también cuentan en la nota de la temporada.
+   - Subí un poco los umbrales que dependen de la nota (premios, convocatoria con la selección, ofertas) para que no se regalen.
+9. **Mercado de fichajes según nacionalidad y edad.**
+   - Pesan mucho los clubes de tu país (y del país donde juegas).
+   - Con 20 años o menos, otras ligas de tu continente solo llaman si hiciste una gran temporada (nota de 7,2 o más, o mucha fama).
+   - Saltar a Europa desde otro continente exige destacar.
+   - Un europeo no recibe ofertas de Argentina o Brasil salvo de veterano. Estados Unidos y Japón son destino sobre todo a partir de los 30.
+   - Ejemplo: un inglés de 18 años recibe ofertas de clubes ingleses y, si destaca, de algún club europeo.
+
+- **Además:** al vivir menos jugadas (suplente o no convocado), los goles "de fondo" del partido aumentan para que el marcador siga siendo realista. Si te sustituyen, las jugadas siguen en orden de minuto.
+
+**Verificado**
+- **170 tests unitarios** en verde. Hay tests nuevos de convocatoria, cambios, notas, "Horas extra", texto por edad, motivo de no jugar y mercado por nacionalidad.
+- **22 tests e2e** en la app real. Pasan ahora por la convocatoria y el botón "Jugar partido".
+- `typecheck` y `lint` sin errores. Revisé las capturas a 1280×720.
+- El `.exe` regenerado abre la v0.11.
+
 ### Pendiente / siguientes pasos
 - Sexo femenino y más posiciones.
 - Más eventos y más clubes. Relaciones que cambien con eventos propios: agente, compañeros y pareja.
 - Ventana de invierno, cesiones y retirada.
 - Integración con Steamworks (logros y Cloud), traducción al inglés e instalador (`npm run build:win`).
 - `npm audit` sigue avisando de 6 vulnerabilidades moderadas en dependencias de desarrollo de la plantilla (sin cambios).
-- El repositorio git solo tiene el primer commit (PLAN.md y README.md); el código sigue sin commitear.
+- El código está en la rama `feature/v0.10` de GitHub (HectorJAC/futbol-rol), pendiente de pull request hacia `main`.
 
 ---
 
@@ -568,7 +613,7 @@ src/renderer/src/
                                leagues/ (primera y segunda división de cada país), playerNames, partnerNames,
                                events + eventsExtra + storyEvents + contextEvents + teamEvents, currencies,
                                matchTypes + matchMoments, gameModes, continentalCups,
-                               shop + shopCatalog + shopTraining, trophies, nationalTeams
+                               shop + shopCatalog + shopTraining, trainingFocus, trophies, nationalTeams
   logic/                       characterName, career (creación y puntos), saveGame (formato y migraciones),
                                season (eventos, tiradas, simulación y selección), random (aleatoriedad con semilla),
                                transfers (mercado de fichajes), records (comparativa de carreras),
@@ -576,7 +621,7 @@ src/renderer/src/
                                competitions (calendario, ligas, copas y goleadores), match (partidos importantes),
                                finance (contrato, sueldo y tienda), rating (media y valor de mercado),
                                playerAttributes (escala por modo y lanzadores),
-                               teammates (compañeros, excompañeros y capitanía)
+                               teammates (compañeros, excompañeros y capitanía), notPlayed
   types/                       character.ts, career.ts
   i18n/es.ts                   Textos
   assets/cursors/              Puntero "Flecha césped" (normal, sobre botones y desactivado)

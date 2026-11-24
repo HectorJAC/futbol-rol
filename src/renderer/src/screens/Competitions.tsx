@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ClubCrest } from '../components/ClubCrest'
+import { notPlayedText } from '../logic/notPlayed'
 import { getClub } from '../data/clubs'
 import { INTERCONTINENTAL_SPOTS, isEuropean } from '../data/continentalCups'
 import { t } from '../i18n/es'
@@ -323,10 +324,8 @@ export function Competitions(): React.JSX.Element {
                         </td>
                         <td className="calendar__me">
                           {m &&
-                            (m.injured ? (
-                              <span className="field__hint">{t.competitions.injured}</span>
-                            ) : !m.played ? (
-                              <span className="field__hint">{t.competitions.bench}</span>
+                            (!m.played ? (
+                              <span className="field__hint">{notPlayedText(m)}</span>
                             ) : (
                               <>
                                 {m.playerGoals > 0 && (

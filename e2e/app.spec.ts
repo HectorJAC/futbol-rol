@@ -71,6 +71,7 @@ const menuButton = (name: string | RegExp): Locator =>
  * en los eventos como en las jugadas de los partidos importantes.
  */
 let sawResults = false
+let sawLineup = false
 
 async function playUntilSummary(onMatch?: () => Promise<void>): Promise<void> {
   const summary = page.getByRole('heading', { name: 'Resumen de la temporada' })
@@ -85,7 +86,15 @@ async function playUntilSummary(onMatch?: () => Promise<void>): Promise<void> {
       }
       await page.getByTestId('event-option').first().click()
       await expect(page.getByTestId('event-result')).toBeVisible()
-      await page.getByRole('button', { name: /Continuar|Jugar el resto/ }).click()
+      await page.getByRole('button', { name: /Continuar|Jugar el resto|Jugar partido/ }).click()
+    } else if (await page.getByTestId('start-match').isVisible()) {
+      // Convocatoria: titular, suplente o no convocado.
+      await expect(page.getByTestId('match-lineup')).toBeVisible()
+      if (!sawLineup) {
+        sawLineup = true
+        await shot('10a-convocatoria')
+      }
+      await page.getByTestId('start-match').click()
     } else if (await page.getByTestId('moment-option').first().isVisible()) {
       if (onMatch) {
         await onMatch()
@@ -95,7 +104,7 @@ async function playUntilSummary(onMatch?: () => Promise<void>): Promise<void> {
       await expect(page.getByTestId('moment-result')).toBeVisible()
       await page.getByRole('button', { name: /Siguiente jugada|Pitido final/ }).click()
     } else if (await page.getByTestId('match-final').isVisible()) {
-      await page.getByRole('button', { name: 'Seguir la temporada' }).click()
+      await page.getByRole('button', { name: /Seguir la temporada|Jugar partido/ }).click()
     } else {
       await page.waitForTimeout(100)
     }
@@ -299,8 +308,8 @@ test('paso 4: repartir los puntos de atributo', async () => {
   await expect(page.getByRole('heading', { name: 'Reparte tus atributos' })).toBeVisible()
   const points = page.getByTestId('points-left')
   const next = page.getByRole('button', { name: 'Continuar' })
-  // Completa: 20 puntos libres y atributos de 1 a 50 (con balón parado).
-  await expect(points).toHaveText('20 / 20')
+  // Completa: 10 puntos libres y atributos de 1 a 50 (con balón parado).
+  await expect(points).toHaveText('10 / 10')
   await expect(next).toBeDisabled()
   await expect(page.getByTestId('attr-penalties')).toBeVisible()
   await expect(page.getByText('Con 30 o más eres el lanzador')).toBeVisible()
@@ -310,12 +319,12 @@ test('paso 4: repartir los puntos de atributo', async () => {
   await expect(page.getByTestId('attr-shortPassing')).toHaveText('18')
 
   const overallBefore = Number(await page.getByTestId('overall').textContent())
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 5; i++) {
     await page.getByRole('button', { name: 'Subir Definición' }).click()
   }
-  for (let i = 0; i < 10; i++) await page.getByRole('button', { name: 'Subir Pase corto' }).click()
-  await expect(points).toHaveText('0 / 20')
-  await expect(page.getByTestId('attr-finishing')).toHaveText('33')
+  for (let i = 0; i < 5; i++) await page.getByRole('button', { name: 'Subir Pase corto' }).click()
+  await expect(points).toHaveText('0 / 10')
+  await expect(page.getByTestId('attr-finishing')).toHaveText('28')
   expect(Number(await page.getByTestId('overall').textContent())).toBeGreaterThan(overallBefore)
   await expect(page.getByRole('button', { name: 'Subir Regate' })).toBeDisabled()
 
@@ -372,7 +381,7 @@ test('temporada 1 (modo completo): 10 decisiones, partidos importantes y resumen
   await page.getByTestId('event-option').first().click()
   await expect(page.getByTestId('event-result')).toBeVisible()
   await shot('10-evento-resultado')
-  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByRole('button', { name: /^(Continuar|Jugar partido)$/ }).click()
 
   let sawMatch = false
   await playUntilSummary(async () => {
@@ -386,7 +395,8 @@ test('temporada 1 (modo completo): 10 decisiones, partidos importantes y resumen
     }
     await shot('10b-partido-importante', BOTH)
   })
-  expect(sawMatch).toBe(true)
+  expect(sawMatch || sawLineup).toBe(true)
+  expect(sawLineup).toBe(true)
   // En la pantalla de decisiones se ven los resultados desde la última decisión.
   expect(sawResults).toBe(true)
 

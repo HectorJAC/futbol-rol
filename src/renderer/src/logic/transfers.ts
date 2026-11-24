@@ -2,6 +2,7 @@ import { overallRating } from '../data/attributes'
 import { ALL_CLUBS, getClub, type Club, type ClubTier } from '../data/clubs'
 import { COUNTRY_CURRENCY, CURRENCIES, formatMoney } from '../data/currencies'
 import { isDecisionSeason } from '../data/gameModes'
+import type { NationalityId } from '../data/nationalities'
 import type { Career } from '../types/career'
 import {
   buildContract,
@@ -11,7 +12,7 @@ import {
   roleFromMinutes
 } from './finance'
 import { baseAttributes } from './playerAttributes'
-import { clamp, createRng, randomInt, seedFor, shuffle } from './random'
+import { clamp, createRng, randomInt, seedFor, type Rng } from './random'
 import { playerRating } from './rating'
 import { hasProvenRecord, initialStanding, isCareerOver } from './season'
 import { teammatesAfterTransfer } from './teammates'
@@ -151,6 +152,70 @@ function rejectedClubIds(career: Career): string[] {
   return typeof value === 'string' && value ? value.split(',') : []
 }
 
+type Region = 'europa' | 'sudamerica' | 'norteamerica' | 'asia'
+
+const REGION: Record<NationalityId, Region> = {
+  ESP: 'europa',
+  ENG: 'europa',
+  FRA: 'europa',
+  GER: 'europa',
+  ITA: 'europa',
+  ARG: 'sudamerica',
+  BRA: 'sudamerica',
+  USA: 'norteamerica',
+  JPN: 'asia'
+}
+
+/**
+ * Probabilidad relativa de que un club te llame (0 = nunca). Pesa mucho tu
+ * nacionalidad: un chaval inglés de 18 años recibe ofertas de clubes ingleses
+ * y, solo si ha hecho una gran temporada, de algún club europeo. Las ligas de
+ * otros continentes llegan con la experiencia (y la MLS o Japón, al final de
+ * la carrera).
+ */
+export function marketWeight(career: Career, club: Club, rating: number): number {
+  const home = career.character.nationalityId
+  const current = getClub(career.clubId).countryId
+  const age = career.age
+  const rep = career.reputation
+  if (club.countryId === home) return 6
+  if (club.countryId === current) return 4
+  const target = REGION[club.countryId]
+  const sameRegion = target === REGION[home] || target === REGION[current]
+  if (sameRegion) {
+    if (age <= 20) return rating >= 7.2 || rep >= 45 ? 1.5 : 0
+    return rating >= 6.8 || rep >= 30 ? 2 : 0.7
+  }
+  if (target === 'europa') {
+    // Dar el salto a Europa desde otro continente: hace falta destacar.
+    if (age <= 20) return rating >= 7.5 || rep >= 60 ? 1 : 0
+    return rating >= 7.2 || rep >= 45 ? 1.2 : 0.3
+  }
+  if (target === 'sudamerica') return age >= 30 ? 0.3 : 0
+  // Estados Unidos y Japón: destino de veteranos.
+  if (age >= 30) return 2.5
+  if (age >= 24) return 0.4
+  return 0
+}
+
+/** Elige `count` clubes al azar según su peso (sin repetir). */
+function weightedPick(rng: Rng, clubs: Club[], weights: number[], count: number): Club[] {
+  const pool = clubs.map((club, i) => ({ club, weight: weights[i] })).filter((x) => x.weight > 0)
+  const picked: Club[] = []
+  while (picked.length < count && pool.length > 0) {
+    const total = pool.reduce((s, x) => s + x.weight, 0)
+    let roll = rng() * total
+    let index = 0
+    while (index < pool.length - 1 && roll >= pool[index].weight) {
+      roll -= pool[index].weight
+      index++
+    }
+    picked.push(pool[index].club)
+    pool.splice(index, 1)
+  }
+  return picked
+}
+
 /** Ofertas del mercado de verano. Deterministas por partida y temporada. */
 export function generateTransferMarket(career: Career): TransferMarket {
   const rng = createRng(seedFor(career.id, 'market', career.season))
@@ -160,17 +225,21 @@ export function generateTransferMarket(career: Career): TransferMarket {
   const overall = overallRating(baseAttributes(career))
 
   const tierOpen: Record<ClubTier, boolean> = {
-    grande: rep >= 55 || rating >= 7.4,
-    medio: rep >= 25 || rating >= 6.6,
+    grande: rep >= 55 || rating >= 7.5,
+    medio: rep >= 25 || rating >= 6.8,
     modesto: true
   }
 
-  // Llaman clubes de primera de cualquier país y los de segunda de tu país.
+  // Llaman clubes de primera y los de segunda de tu país (o del país donde juegas).
   const country = getClub(career.clubId).countryId
+  const home = career.character.nationalityId
   const inFirst = new Set(Object.values(career.divisions).flatMap(([first]) => first))
   const candidates = ALL_CLUBS.filter(
     (c) =>
-      c.id !== career.clubId && tierOpen[c.tier] && (inFirst.has(c.id) || c.countryId === country)
+      c.id !== career.clubId &&
+      tierOpen[c.tier] &&
+      (inFirst.has(c.id) || c.countryId === country || c.countryId === home) &&
+      marketWeight(career, c, rating) > 0
   )
   const rejected = rejectedClubIds(career)
   const closedDoors = candidates
@@ -180,7 +249,7 @@ export function generateTransferMarket(career: Career): TransferMarket {
       reason: 'No olvidan que rechazaste su oferta de primer contrato.'
     }))
 
-  const count = clamp(1 + Math.floor(rep / 30) + (rating >= 7.2 ? 1 : 0), 1, 3)
+  const count = clamp(1 + Math.floor(rep / 30) + (rating >= 7.3 ? 1 : 0), 1, 3)
 
   // El club del buscador: si cumples los requisitos te hace una oferta.
   let target: TransferMarket['target']
@@ -194,12 +263,13 @@ export function generateTransferMarket(career: Career): TransferMarket {
     }
   }
 
-  const randomClubs = shuffle(
+  const open = candidates.filter((c) => !rejected.includes(c.id) && c.id !== targetId)
+  const randomClubs = weightedPick(
     rng,
-    candidates.filter((c) => !rejected.includes(c.id) && c.id !== targetId)
-  )
-    .slice(0, count)
-    .sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || b.prestige - a.prestige)
+    open,
+    open.map((c) => marketWeight(career, c, rating)),
+    count
+  ).sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier] || b.prestige - a.prestige)
   const clubs = [...(target?.accepted ? [target.club] : []), ...randomClubs]
   const offers = clubs.map((club): TransferOffer => {
     const diff = overall - TIER_LEVEL[club.tier]

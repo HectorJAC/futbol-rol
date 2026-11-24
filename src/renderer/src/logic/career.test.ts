@@ -56,13 +56,13 @@ describe('atributos', () => {
 })
 
 describe('escala de atributos por modo', () => {
-  it('Rápida 1–20, Normal 1–30 y Completa 1–50 (con más puntos libres)', () => {
+  it('Rápida 1–20, Normal 1–30 y Completa 1–50; 8, 12 y 10 puntos libres', () => {
     expect(attributeScale(defaultMode('rapida'))).toBe(20)
     expect(attributeScale(defaultMode('normal'))).toBe(30)
     expect(attributeScale(defaultMode('completa'))).toBe(50)
     expect(freePointsFor(defaultMode('rapida'))).toBe(8)
     expect(freePointsFor(defaultMode('normal'))).toBe(12)
-    expect(freePointsFor(defaultMode('completa'))).toBe(20)
+    expect(freePointsFor(defaultMode('completa'))).toBe(10)
     // Lanzadores: 10 en la Rápida, 15 en la Normal y 30 en la Completa.
     expect(setPieceMinimum(defaultMode('rapida'))).toBe(10)
     expect(setPieceMinimum(defaultMode('normal'))).toBe(15)
@@ -74,9 +74,9 @@ describe('escala de atributos por modo', () => {
     const attrs = computeAttributes('arg-potrero', emptyAttributes(), completa)
     expect(attrs.dribbling).toBe(toScale(BASE_ATTRIBUTES.dribbling + 3, 50))
     expect(attrs.penalties).toBe(toScale(BASE_ATTRIBUTES.penalties, 50))
-    expect(remainingPoints(emptyAttributes(), completa)).toBe(20)
+    expect(remainingPoints(emptyAttributes(), completa)).toBe(10)
     // El tope al crear también se escala (37 en la Completa).
-    const allocation = { ...emptyAttributes(), shortPassing: 20 }
+    const allocation = { ...emptyAttributes(), shortPassing: 9 }
     expect(canAllocate('esp-cantera', allocation, 'shortPassing', 1, completa)).toBe(false)
   })
 

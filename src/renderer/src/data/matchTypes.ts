@@ -51,5 +51,7 @@ export interface MatchMoment {
   situations?: ScoreSituation[]
   /** Jugada de balón parado: solo sale si eres el lanzador (ver `setPieceRoles`). */
   setPiece?: SetPieceId
+  /** Texto para jugadores de menos de 25 años (si el normal no encaja con su edad). */
+  youngText?: string
   options: MatchMomentOption[]
 }

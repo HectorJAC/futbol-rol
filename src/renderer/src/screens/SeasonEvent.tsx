@@ -1,17 +1,20 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { EffectChips } from '../components/EffectChips'
 import { RecentResults } from '../components/RecentResults'
 import { ATTRIBUTES } from '../data/attributes'
 import { getEvent } from '../data/events'
 import { t } from '../i18n/es'
 import { leagueRounds, slotsFor } from '../logic/competitions'
-import { careerScale } from '../logic/playerAttributes'
+import { careerScale, scaledDeltas } from '../logic/playerAttributes'
 import { featuredExTeammate } from '../logic/teammates'
 import {
+  advanceSeason,
   careerCurrency,
   checkChance,
   consequenceSources,
+  eventOptions,
   fillEventText,
+  seasonStep,
   seasonYearLabel
 } from '../logic/season'
 import { useGameStore } from '../store/gameStore'
@@ -26,6 +29,11 @@ export function SeasonEvent(): React.JSX.Element {
   const continueSeason = useGameStore((s) => s.continueSeason)
   const backToHub = useGameStore((s) => s.backToHub)
   const [showOrigin, setShowOrigin] = useState(false)
+  // Tras decidir: si lo siguiente es un partido importante, el botón dice "Jugar partido".
+  const nextIsMatch = useMemo(
+    () => !!career && !!lastChoice && seasonStep(advanceSeason(career)) === 'match',
+    [career, lastChoice]
+  )
 
   const progress = career?.seasonProgress
   if (!career || !progress) return <></>
@@ -105,10 +113,17 @@ export function SeasonEvent(): React.JSX.Element {
 
           {!lastChoice ? (
             <div className="event-options">
-              {event.options.map((option, i) => {
+              {eventOptions(event, career).map((option, i) => {
                 const chance = option.check
                   ? Math.round(checkChance(career, option.check) * 100)
                   : null
+                // Atributos que mejora la opción (si hay tirada, si sale bien).
+                const gains = Object.entries(
+                  scaledDeltas(
+                    (option.outcome ?? option.check?.success)?.effects.attributes ?? {},
+                    careerScale(career)
+                  )
+                ).filter(([, n]) => (n ?? 0) > 0)
                 return (
                   <button
                     key={option.label}
@@ -117,7 +132,18 @@ export function SeasonEvent(): React.JSX.Element {
                     onClick={() => chooseOption(i)}
                     data-testid="event-option"
                   >
-                    <span className="event-option__label">{fill(option.label)}</span>
+                    <span className="event-option__label">
+                      {fill(option.label)}
+                      {gains.length > 0 && (
+                        <span className="event-option__gains" data-testid="option-gains">
+                          {gains.map(([id, n]) => (
+                            <span key={id} className="modifier modifier--up">
+                              +{n} {attributeName(id)}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </span>
                     {option.check && (
                       <span className="event-option__check">
                         🎲 {attributeName(option.check.attribute)} · <strong>{chance}%</strong>
@@ -161,7 +187,7 @@ export function SeasonEvent(): React.JSX.Element {
         </button>
         {lastChoice && (
           <button type="button" className="btn btn--primary" onClick={continueSeason} autoFocus>
-            {isLast ? t.season.playRest : t.continue}
+            {nextIsMatch ? t.match.play : isLast ? t.season.playRest : t.continue}
           </button>
         )}
       </footer>

@@ -120,7 +120,7 @@ Sin licencias **no se pueden usar** nombres reales de clubes, jugadores, ligas, 
 **Decisión del 2026-11-23 (v0.8):** los clubes usan nombres parecidos a los reales con una o dos letras cambiadas ("FC Barkelone", "Real Madrik") y las ligas nombres genéricos ("Primera División de España"). Jugadores, trofeos y escudos siguen siendo propios. Antes de publicar en Steam conviene revisar este criterio con alguien de temas legales.
 
 ### Roadmap tentativo
-Estado a 2026-11-24: v0.1–v0.10 hechas (ver el registro de trabajo en README.md).
+Estado a 2026-11-24: v0.1–v0.11 hechas (ver el registro de trabajo en README.md).
 
 - ✅ **v0.1** — Menú principal + creación de personaje (este plan).
 - ✅ **v0.2** — Orígenes y atributos iniciales, elección del primer club, guardado/carga local (JSON en la carpeta de usuario).
@@ -132,4 +132,5 @@ Estado a 2026-11-24: v0.1–v0.10 hechas (ver el registro de trabajo en README.m
 - ✅ **v0.8** — Media con estadísticas y valor de mercado, partidos importantes (grandes, clásico, derbi, segundo de la tabla, desde cuartos de copa), resultado de la eliminación al pasar el cursor, tienda rotativa, sueldo mensual, manita en los botones, historia de pareja, puntos de atributo al acabar cada temporada y clubes con nombres parecidos a los reales en primera y segunda división con ascensos y descensos.
 - ✅ **v0.9** — Resultados entre decisiones, moneda por país, origen de las consecuencias, título del partido importante dentro del recuadro, eventos que reaccionan al último partido (texto con el marcador real), eventos únicos ("La nómina de un grande", "Un país nuevo") y titularidad difícil para un joven en un club de 5 estrellas.
 - ✅ **v0.10** — Balón parado (córners, faltas, penaltis) y lanzadores, escala de atributos por modo (20/30/50), compañeros y excompañeros con relación, capitanía, buscador de equipos, tienda de 15 mejoras centrada en atributos, panel de resultados con tus números, puesto en liga en el marcador, tres copas europeas y Copa Intercontinental, y reparto de puntos cuando quieras.
+- ✅ **v0.11** — Convocatoria en los partidos importantes (titular, suplente, no convocado) y cambios, notas al estilo Sofascore, mercado según nacionalidad y edad, "Horas extra" según lo que necesita el equipo, 10 puntos libres en la Completa y motivos de no jugar.
 - **v1.0** — Steamworks (logros, Cloud), traducción al inglés, empaquetado y página de Steam.

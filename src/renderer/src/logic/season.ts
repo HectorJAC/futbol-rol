@@ -1,10 +1,12 @@
 import {
   ATTRIBUTES,
   clampAttribute,
+  DC_WEIGHTS,
   overallRating,
   scaleDelta,
   type AttributeId
 } from '../data/attributes'
+import { TRAINING_FOCUS } from '../data/trainingFocus'
 import { CONTINENTAL_FORMATS } from '../data/continentalCups'
 import { biggestClubs, getClub, isRivalry, type ClubTier } from '../data/clubs'
 import { COUNTRY_CURRENCY, formatMoney, type CurrencyId } from '../data/currencies'
@@ -13,6 +15,7 @@ import {
   getEvent,
   type EventContext,
   type EventEffects,
+  type EventOption,
   type FlagCondition,
   type GameEvent,
   type SkillCheck
@@ -349,6 +352,41 @@ function fillBasicText(text: string, career: Career): string {
     .replace(/\{dinero:(\d+)\}/g, (_, n: string) => formatMoney(Number(n), currency))
 }
 
+/**
+ * Atributos que tu equipo más necesita que mejores: los importantes para un
+ * delantero en los que estás más lejos de lo que pide el nivel de tu club.
+ */
+export function teamNeeds(career: Career, count = 3): AttributeId[] {
+  const club = getClub(career.clubId)
+  const values = baseAttributes(career)
+  const max = careerScale(career)
+  const target = clamp(6 + club.strength / 9, 10, 16.5)
+  return ATTRIBUTES.map(({ id }) => id)
+    .filter((id) => career.attributes[id] < max)
+    .map((id) => {
+      const gap = target - values[id]
+      return { id, need: DC_WEIGHTS[id] * gap + gap * 0.005 }
+    })
+    .sort((a, b) => b.need - a.need || a.id.localeCompare(b.id))
+    .slice(0, count)
+    .map((x) => x.id)
+}
+
+/** Opciones de un evento: las fijas o, en "Horas extra", las que necesita tu equipo. */
+export function eventOptions(event: GameEvent, career: Career): EventOption[] {
+  if (!event.trainingOptions) return event.options
+  const needs = teamNeeds(career)
+  if (needs.length === 0) return event.options
+  return needs.map((id) => {
+    const focus = TRAINING_FOCUS[id]
+    const name = ATTRIBUTES.find((a) => a.id === id)?.name ?? id
+    return {
+      label: `${name}: ${focus.label}`,
+      outcome: { text: focus.text, effects: { attributes: { [id]: 1 }, ...focus.extra } }
+    }
+  })
+}
+
 export interface ConsequenceSource {
   /** Temporada de la decisión (si se apuntó al tomarla). */
   season?: number
@@ -366,7 +404,10 @@ export function consequenceSources(event: GameEvent, career: Career): Consequenc
       result.push({
         season: recorded.season,
         eventTitle: fillEventText(source.title, career),
-        optionLabel: fillEventText(source.options[recorded.optionIndex]?.label ?? '', career)
+        optionLabel: fillEventText(
+          eventOptions(source, career)[recorded.optionIndex]?.label ?? '',
+          career
+        )
       })
       continue
     }
@@ -470,7 +511,7 @@ export function resolveChoice(career: Career, optionIndex: number): ResolvedChoi
   const eventId = progress.eventIds[eventIndex]
   if (!eventId) throw new Error('No quedan eventos en esta temporada')
   const event = getEvent(eventId)
-  const option = event.options[optionIndex]
+  const option = eventOptions(event, career)[optionIndex]
   if (!option) throw new Error(`Opción ${optionIndex} no existe en ${eventId}`)
   const featured = featuredExTeammate(career, event)?.id
 
@@ -609,7 +650,7 @@ export function hasProvenRecord(career: Pick<Career, 'history' | 'reputation'>):
   return (
     career.reputation >= 70 ||
     individual.length >= 2 ||
-    (last !== undefined && last.rating >= 7.5 && last.goals >= 20)
+    (last !== undefined && last.rating >= 7.6 && last.goals >= 20)
   )
 }
 
@@ -656,7 +697,13 @@ export function scoringChances(career: Career): { goal: number; assist: number }
   }
 }
 
-/** Nota de un partido (4,5–10). */
+/**
+ * Nota de un partido (5–10), al estilo de Sofascore: todos parten de 6,6 y la
+ * nota sube con los goles (+1 el primero, +0,9 los siguientes y un extra por
+ * el hat-trick) y las asistencias (+0,65), y algo con tu nivel y el resultado.
+ * Un suplente con pocos minutos se queda cerca de 6,5. Así, marcar suele dar
+ * 7,4–8 y un goleador de 0,75 goles por partido promedia ~7,5 en la temporada.
+ */
 export function matchRating(
   career: Career,
   goals: number,
@@ -666,16 +713,18 @@ export function matchRating(
   rng: Rng,
   sub = false
 ): number {
-  const result = goalsFor > goalsAgainst ? 0.3 : goalsFor < goalsAgainst ? -0.3 : 0
+  const margin = goalsFor - goalsAgainst
+  const result = margin > 0 ? 0.2 : margin === 0 ? 0 : margin <= -3 ? -0.45 : -0.25
+  const level = (overallRating(baseAttributes(career)) - 60) / 60
+  const goalPoints = goals > 0 ? 1 + (goals - 1) * 0.9 + (goals >= 3 ? 0.3 : 0) : 0
+  const involvement = sub ? 0.5 : 1
   const value =
-    6 +
-    (overallRating(baseAttributes(career)) - 60) / 30 +
-    result +
-    goals * 0.9 +
-    assists * 0.5 +
-    (rng() - 0.5) * 0.8 -
-    (sub ? 0.3 : 0)
-  return Math.round(clamp(value, 4.5, 10) * 10) / 10
+    6.6 +
+    (level + result) * involvement +
+    goalPoints * (sub ? 0.85 : 1) +
+    assists * 0.65 +
+    (rng() - 0.5) * 0.7 * involvement
+  return Math.round(clamp(value, 5, 10) * 10) / 10
 }
 
 /** Probabilidad de lesionarse en un partido: el físico la reduce. */
@@ -712,6 +761,9 @@ export function simulateClubMatch(career: Career, fixture: ClubFixture): ClubMat
   const starter = !injured && roll < share * 0.85
   const sub = !injured && !starter && roll < share
   const played = starter || sub
+  // Si no juegas: en el banquillo sin salir o, si cuentas poco, ni convocado.
+  const squad: ClubMatch['squad'] =
+    played || injured ? undefined : rng() < clamp(0.35 + share * 0.6, 0.3, 0.9) ? 'banca' : 'fuera'
   const stamina = 0.8 + baseAttributes(career).stamina * 0.01
   const factor = (starter ? 1 : sub ? 0.35 : 0) * stamina
   const chances = scoringChances(career)
@@ -745,6 +797,7 @@ export function simulateClubMatch(career: Career, fixture: ClubFixture): ClubMat
     penalties,
     played,
     ...(injured ? { injured: true } : {}),
+    ...(squad ? { squad } : {}),
     playerGoals,
     playerAssists,
     rating: played
@@ -899,7 +952,7 @@ export function isSeasonReadyToFinish(career: Career): boolean {
 
 /** ¿Te convoca tu selección? Depende de la nota de la temporada, la fama y la edad. */
 export function isCalledUp(career: Career, rating: number): boolean {
-  return career.age >= 18 && (rating >= 7.0 || career.reputation >= 50)
+  return career.age >= 18 && (rating >= 7.1 || career.reputation >= 50)
 }
 
 /** Partidos con la selección y, en verano de torneo, hasta dónde llegáis. */
@@ -920,7 +973,7 @@ export function simulateNationalTeam(
   if (tournamentId) {
     const base = NATIONAL_STRENGTH[career.character.nationalityId][tournamentId]
     // Tu nivel suma: una estrella puede llevar a su selección lejos.
-    const boost = clamp((rating - 7) * 0.06, -0.05, 0.15)
+    const boost = clamp((rating - 7.1) * 0.06, -0.05, 0.15)
     const winChance = clamp(base + boost, 0.01, 0.6)
     const roll = rng()
     let roundIndex: number
@@ -1011,7 +1064,7 @@ export function trainingPoints(career: Career, record: SeasonRecord): number {
   if (record.goals >= 15) points++
   if (record.goals >= 30) points++
   if (record.assists >= 10) points++
-  if (record.rating >= 7.3) points++
+  if (record.rating >= 7.4) points++
   if (record.trophies.length > 0) points++
   const rolls = (career.seasonProgress?.resolutions ?? []).filter((r) => r.roll)
   const wins = rolls.filter((r) => r.roll?.success).length
@@ -1031,9 +1084,17 @@ export function buildSeasonRecord(career: Career): SeasonRecord {
   const matches = (p?.clubMatches ?? []).filter((m) => m.played)
   const goals = matches.reduce((s, m) => s + m.playerGoals, 0) + (p?.bonusGoals ?? 0)
   const assists = matches.reduce((s, m) => s + m.playerAssists, 0)
+  // Nota media de los partidos jugados; los goles de las decisiones también cuentan.
+  const bonusBoost = matches.length > 0 ? ((p?.bonusGoals ?? 0) * 0.9) / matches.length : 0
   const rating =
     matches.length > 0
-      ? Math.round((matches.reduce((s, m) => s + (m.rating ?? 6), 0) / matches.length) * 10) / 10
+      ? Math.round(
+          clamp(
+            matches.reduce((s, m) => s + (m.rating ?? 6.6), 0) / matches.length + bonusBoost,
+            5,
+            10
+          ) * 10
+        ) / 10
       : 5.5
 
   const table = leagueTable(ctx)
@@ -1075,13 +1136,13 @@ export function buildSeasonRecord(career: Career): SeasonRecord {
   if (firstDivision && top(stats.assists)) trophies.push('asistente')
   if (
     career.reputation >= 60 &&
-    ((rating >= 8.2 && goals >= 30) || (wonWorldCup && rating >= 7.8 && goals >= 20))
+    ((rating >= 8.1 && goals >= 30) || (wonWorldCup && rating >= 7.8 && goals >= 20))
   ) {
     trophies.push('balon-dorado')
   }
-  if (firstDivision && rating >= 7.8 && matches.length >= 25) trophies.push('mvp')
-  if (firstDivision && rating >= 7.3 && matches.length >= 20) trophies.push('equipo-ideal')
-  if (career.age <= 21 && rating >= 6.9 && matches.length >= 15) trophies.push('joven')
+  if (firstDivision && rating >= 7.9 && matches.length >= 25) trophies.push('mvp')
+  if (firstDivision && rating >= 7.4 && matches.length >= 20) trophies.push('equipo-ideal')
+  if (career.age <= 21 && rating >= 7.0 && matches.length >= 15) trophies.push('joven')
 
   const share = matches.length / Math.max(1, (p?.clubMatches ?? []).length)
   const record: SeasonRecord = {
@@ -1145,7 +1206,7 @@ export function finishSeason(career: Career): { career: Career; record: SeasonRe
   const reputationGain = record.trophies.length * 4 + Math.round(record.goals / 5) + captain
   const family = career.flags.partner === 'casados' ? 2 : 0
   const moraleChange =
-    (record.rating >= 7 ? 5 : record.rating < 6.2 ? -5 : 0) + family + captain * 2
+    (record.rating >= 7.1 ? 5 : record.rating < 6.4 ? -5 : 0) + family + captain * 2
   // El sueldo que faltaba (meses de verano) y las primas se cobran al acabar.
   const salaryLeft = (12 - (career.seasonProgress?.salaryPaid ?? 0)) * monthlyWage(career.contract)
   const bonuses = record.earnings ? record.earnings.goalBonus + record.earnings.titleBonus : 0

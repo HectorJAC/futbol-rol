@@ -33,7 +33,7 @@ export function performanceScore(career: Career): number | null {
   const titles = career.history.reduce((s, r) => s + r.trophies.length, 0)
   return clamp(
     40 +
-      (rating - 6) * 16 +
+      (rating - 6.3) * 16 +
       goals * 18 +
       assists * 10 +
       career.reputation * 0.15 +
