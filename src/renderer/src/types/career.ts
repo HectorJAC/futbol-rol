@@ -76,8 +76,11 @@ export interface ClubMatch {
   played: boolean
   /** No jugaste por lesión. */
   injured?: boolean
-  /** Si no jugaste: 'banca' = convocado sin salir; 'fuera' = no convocado (desde la v0.11). */
-  squad?: 'banca' | 'fuera'
+  /**
+   * Tu papel en el partido. Si jugaste: titular o suplente (desde la v0.12).
+   * Si no: 'banca' = convocado sin salir; 'fuera' = no convocado (desde la v0.11).
+   */
+  squad?: 'titular' | 'suplente' | 'banca' | 'fuera'
   playerGoals: number
   playerAssists: number
   /** Nota del partido (solo si jugaste). */

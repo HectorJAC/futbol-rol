@@ -1,15 +1,17 @@
 import { useState } from 'react'
-import { FemaleIcon, LockIcon, MaleIcon } from '../components/icons'
+import { FemaleIcon, FootIcon, LockIcon, MaleIcon } from '../components/icons'
 import { NationalitySelector } from '../components/NationalitySelector'
 import { Stepper } from '../components/Stepper'
 import { POSITIONS } from '../data/positions'
 import { t } from '../i18n/es'
 import { NAME_MAX_LENGTH, validateName } from '../logic/characterName'
 import { useGameStore } from '../store/gameStore'
+import { FEET } from '../types/character'
 
 export function CharacterCreation(): React.JSX.Element {
   const character = useGameStore((s) => s.draft.character)
   const setDraftName = useGameStore((s) => s.setDraftName)
+  const setFoot = useGameStore((s) => s.setFoot)
   const changeNationality = useGameStore((s) => s.changeNationality)
   const confirmCharacter = useGameStore((s) => s.confirmCharacter)
   const backToMenu = useGameStore((s) => s.backToMenu)
@@ -90,6 +92,27 @@ export function CharacterCreation(): React.JSX.Element {
                   {t.comingSoon}
                 </span>
               </button>
+            </div>
+          </div>
+
+          <div className="field">
+            <span className="field__label">{t.creation.footLabel}</span>
+            <div className="option-row" role="radiogroup" aria-label={t.creation.footLabel}>
+              {FEET.map((foot) => (
+                <button
+                  key={foot}
+                  type="button"
+                  role="radio"
+                  aria-checked={character.foot === foot}
+                  className={`option option--foot${character.foot === foot ? ' option--selected' : ''}`}
+                  onClick={() => setFoot(foot)}
+                  data-testid={`foot-${foot}`}
+                >
+                  <FootIcon side={foot} />
+                  <span className="option__text">{t.creation.feet[foot]}</span>
+                  <span className="option__hint">{t.creation.footHint[foot]}</span>
+                </button>
+              ))}
             </div>
           </div>
 

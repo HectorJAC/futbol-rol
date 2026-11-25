@@ -1,6 +1,7 @@
 import { LEAGUES, type ClubSeed } from './leagues'
 import { NATIONALITIES, type NationalityId } from './nationalities'
 import { getOrigin, type OriginId } from './origins'
+import { createRng } from '../logic/random'
 
 export type ClubTier = 'grande' | 'medio' | 'modesto'
 export type Division = 1 | 2
@@ -112,36 +113,81 @@ export function isRivalry(clubId: string, opponentId: string): 'clasico' | 'derb
   return null
 }
 
-const SLOT_TERMS: Record<ClubTier, Pick<ClubOffer, 'minutes' | 'weeklyWage' | 'pitch'>> = {
-  grande: {
-    minutes: 'Pocos',
-    weeklyWage: 2500,
-    pitch:
-      'Un gigante con vitrinas llenas. Empezarás en el filial y tendrás que ganarte cada minuto.'
-  },
-  medio: {
-    minutes: 'Algunos',
-    weeklyWage: 1200,
-    pitch: 'Un club de primera que busca jóvenes con hambre. Rotarás con el primer equipo.'
-  },
-  modesto: {
-    minutes: 'Muchos',
-    weeklyWage: 600,
-    pitch: 'Un club de segunda que te quiere como titular desde el primer día. Escaparate perfecto.'
+const SLOT_TERMS: Record<ClubTier, Pick<ClubOffer, 'minutes' | 'weeklyWage'>> = {
+  grande: { minutes: 'Pocos', weeklyWage: 2500 },
+  medio: { minutes: 'Algunos', weeklyWage: 1200 },
+  modesto: { minutes: 'Muchos', weeklyWage: 600 }
+}
+
+/** Texto de la oferta según su papel y la división del club. */
+function pitchFor(slot: ClubTier, division: Division): string {
+  if (slot === 'grande') {
+    return 'Un gigante con vitrinas llenas. Empezarás en el filial y tendrás que ganarte cada minuto.'
   }
+  if (slot === 'medio') {
+    return division === 1
+      ? 'Un club de primera que busca jóvenes con hambre. Rotarás con el primer equipo.'
+      : 'Un club ambicioso de segunda que quiere subir. Rotarás con el primer equipo.'
+  }
+  return division === 1
+    ? 'Un club humilde de primera que te quiere como titular desde el primer día.'
+    : 'Un club de segunda que te quiere como titular desde el primer día. Escaparate perfecto.'
 }
 
 const SLOTS: ClubTier[] = ['grande', 'medio', 'modesto']
 
-/** Ofertas de primer contrato: un grande, un club medio de primera y uno de segunda. */
-export function getClubOffers(nationalityId: NationalityId, originId: OriginId): ClubOffer[] {
+/**
+ * Tres clubes al azar de tu país para el primer contrato: uno de 5 estrellas,
+ * uno de 4 o 3 y uno de 3 o 2. En los países sin clubes de 5 estrellas se
+ * cuenta desde el mejor nivel del país (4–3–2 o 3–2–1).
+ */
+export function randomFirstOffers(countryId: NationalityId, seed: number): string[] {
+  const rng = createRng(seed)
+  const clubs = ALL_CLUBS.filter((c) => c.countryId === countryId)
+  const top = Math.max(...clubs.map((c) => c.prestige))
+  const levels = [[top], [top - 1, top - 2], [top - 2, top - 3]]
+  const picked: string[] = []
+  for (const options of levels) {
+    // Primero las estrellas (mitad y mitad), luego el club; si no hay, el otro nivel.
+    const order = rng() < 0.5 ? options : [...options].reverse()
+    const fallback = clubs
+      .filter((c) => c.prestige <= Math.min(...options))
+      .sort((a, b) => b.prestige - a.prestige)
+    const pool =
+      order
+        .map((stars) => clubs.filter((c) => c.prestige === stars && !picked.includes(c.id)))
+        .find((list) => list.length > 0) ?? fallback.filter((c) => !picked.includes(c.id))
+    if (pool.length > 0) picked.push(pool[Math.floor(rng() * pool.length)].id)
+  }
+  return picked
+}
+
+/** Semilla nueva para las ofertas de una partida. */
+export function newOfferSeed(): number {
+  return Math.floor(Math.random() * 2 ** 31)
+}
+
+/**
+ * Ofertas de primer contrato: un grande, un club medio y uno modesto. Con
+ * `seed`, los clubes salen al azar (cada partida es distinta); sin ella, los
+ * de siempre (partidas antiguas y tests).
+ */
+export function getClubOffers(
+  nationalityId: NationalityId,
+  originId: OriginId,
+  seed?: number
+): ClubOffer[] {
   const bond = getOrigin(originId).clubBond
-  return LEAGUES[nationalityId].firstOffers.map((id, i) => {
+  const ids =
+    seed === undefined ? LEAGUES[nationalityId].firstOffers : randomFirstOffers(nationalityId, seed)
+  return ids.map((id, i) => {
     const slot = SLOTS[i]
+    const club = getClub(id)
     return {
-      club: getClub(id),
+      club,
       slot,
       ...SLOT_TERMS[slot],
+      pitch: pitchFor(slot, club.division),
       originTag: bond && slot === bond.tier ? bond.tag : undefined
     }
   })

@@ -336,6 +336,8 @@ export const TEAM_EVENTS: readonly GameEvent[] = [
     id: 'comp-ultima-temporada-veterano',
     minSeason: 3,
     once: true,
+    // Solo tiene sentido si los penaltis los tiras tú.
+    setPieceTaker: 'penalties',
     teammate: { role: 'veterano', min: 50 },
     title: 'Una última petición',
     text: '{veterano} anuncia que colgará las botas a final de temporada. En la cena de equipo se sienta a tu lado: "Me quiero despedir con un gol en casa. Si hay un penalti a favor y vamos ganando, déjamelo a mí".',

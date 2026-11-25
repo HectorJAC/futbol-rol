@@ -8,7 +8,13 @@ import { describeRelationships, describeTeammate } from './relationships'
 function career(overrides: Partial<Career> = {}): Career {
   const base = createCareer(
     {
-      character: { name: 'Test Relaciones', sex: 'M', position: 'DC', nationalityId: 'ITA' },
+      character: {
+        name: 'Test Relaciones',
+        sex: 'M',
+        foot: 'derecha',
+        position: 'DC',
+        nationalityId: 'ITA'
+      },
       mode: defaultMode(),
       originId: 'ita-hijo-del-halcon',
       allocation: emptyAttributes(),

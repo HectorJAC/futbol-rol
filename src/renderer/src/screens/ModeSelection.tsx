@@ -1,3 +1,4 @@
+import { LockIcon } from '../components/icons'
 import { Stepper } from '../components/Stepper'
 import {
   defaultMode,
@@ -14,7 +15,7 @@ import { useGameStore } from '../store/gameStore'
 
 const INTERVALS: DecisionInterval[] = [1, 2, 3]
 
-/** Paso 2 de la nueva partida: Rápida, Normal, Completa o Personalizada. */
+/** Paso 2 de la nueva partida: Completa o Personalizada (Rápida y Normal, por ahora cerradas). */
 export function ModeSelection(): React.JSX.Element {
   const mode = useGameStore((s) => s.draft.mode)
   const setMode = useGameStore((s) => s.setMode)
@@ -39,17 +40,28 @@ export function ModeSelection(): React.JSX.Element {
         {GAME_MODES.map((info) => {
           const selected = info.id === mode.id
           const shown = selected ? mode : defaultMode(info.id)
+          const locked = !info.available
           return (
             <button
               key={info.id}
               type="button"
               role="radio"
               aria-checked={selected}
-              className={`panel mode-card${selected ? ' mode-card--selected' : ''}`}
+              className={`panel mode-card${selected ? ' mode-card--selected' : ''}${locked ? ' mode-card--locked' : ''}`}
               onClick={() => !selected && setMode(defaultMode(info.id))}
+              disabled={locked}
+              title={locked ? t.mode.unavailable : undefined}
               data-testid={`mode-${info.id}`}
             >
-              <span className="mode-card__name">{info.name}</span>
+              <span className="mode-card__head">
+                <span className="mode-card__name">{info.name}</span>
+                {locked && (
+                  <span className="mode-card__lock">
+                    <LockIcon size={12} />
+                    {t.comingSoon}
+                  </span>
+                )}
+              </span>
               <span className="mode-card__desc">{info.description}</span>
               <dl className="mode-card__facts">
                 <div>

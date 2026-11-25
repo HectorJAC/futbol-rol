@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react'
 import { EffectChips } from '../components/EffectChips'
+import { MateText } from '../components/MateText'
+import { LockIcon } from '../components/icons'
+import { NextMatch } from '../components/NextMatch'
 import { RecentResults } from '../components/RecentResults'
 import { ATTRIBUTES } from '../data/attributes'
 import { getEvent } from '../data/events'
 import { t } from '../i18n/es'
 import { leagueRounds, slotsFor } from '../logic/competitions'
 import { careerScale, scaledDeltas } from '../logic/playerAttributes'
-import { featuredExTeammate } from '../logic/teammates'
+import { featuredExTeammate, mentionedTeammates } from '../logic/teammates'
+import { formatMoney } from '../data/shop'
 import {
   advanceSeason,
   careerCurrency,
@@ -14,6 +18,8 @@ import {
   consequenceSources,
   eventOptions,
   fillEventText,
+  isOptionLocked,
+  optionCost,
   seasonStep,
   seasonYearLabel
 } from '../logic/season'
@@ -29,11 +35,14 @@ export function SeasonEvent(): React.JSX.Element {
   const continueSeason = useGameStore((s) => s.continueSeason)
   const backToHub = useGameStore((s) => s.backToHub)
   const [showOrigin, setShowOrigin] = useState(false)
-  // Tras decidir: si lo siguiente es un partido importante, el botón dice "Jugar partido".
-  const nextIsMatch = useMemo(
-    () => !!career && !!lastChoice && seasonStep(advanceSeason(career)) === 'match',
-    [career, lastChoice]
-  )
+  // Tras decidir: si lo siguiente es un partido importante, se ve contra quién
+  // y el botón dice "Jugar partido".
+  const next = useMemo(() => {
+    if (!career || !lastChoice) return null
+    const advanced = advanceSeason(career)
+    return seasonStep(advanced) === 'match' ? (advanced.seasonProgress?.liveMatch ?? null) : null
+  }, [career, lastChoice])
+  const nextIsMatch = next !== null
 
   const progress = career?.seasonProgress
   if (!career || !progress) return <></>
@@ -54,6 +63,23 @@ export function SeasonEvent(): React.JSX.Element {
     : featuredExTeammate(career, event)?.id
   const exName = career.exTeammates.find((x) => x.id === featured)?.name
   const fill = (text: string): string => fillEventText(text, career, featured)
+  const options = eventOptions(event, career)
+  // Compañeros que nombra el evento: al pasar el cursor se ve tu relación con ellos.
+  const mates = mentionedTeammates(
+    career,
+    [
+      event.title,
+      event.text,
+      ...options.flatMap((o) => [
+        o.label,
+        o.outcome?.text ?? '',
+        o.check?.success.text ?? '',
+        o.check?.failure.text ?? ''
+      ])
+    ],
+    featured
+  )
+  const rich = (text: string): React.JSX.Element => <MateText text={text} mates={mates} />
 
   return (
     <div className="screen season-event">
@@ -107,13 +133,14 @@ export function SeasonEvent(): React.JSX.Element {
             </div>
           )}
           <h1 className="event-card__title" data-testid="event-title">
-            {fill(event.title)}
+            {rich(fill(event.title))}
           </h1>
-          <p className="event-card__text">{fill(event.text)}</p>
+          <p className="event-card__text">{rich(fill(event.text))}</p>
 
           {!lastChoice ? (
             <div className="event-options">
-              {eventOptions(event, career).map((option, i) => {
+              {options.map((option, i) => {
+                const locked = isOptionLocked(event, option, career)
                 const chance = option.check
                   ? Math.round(checkChance(career, option.check) * 100)
                   : null
@@ -128,22 +155,39 @@ export function SeasonEvent(): React.JSX.Element {
                   <button
                     key={option.label}
                     type="button"
-                    className="event-option"
+                    className={`event-option${locked ? ' event-option--locked' : ''}`}
                     onClick={() => chooseOption(i)}
+                    disabled={locked}
+                    title={locked ? t.season.noMoney : undefined}
                     data-testid="event-option"
                   >
                     <span className="event-option__label">
-                      {fill(option.label)}
-                      {gains.length > 0 && (
-                        <span className="event-option__gains" data-testid="option-gains">
-                          {gains.map(([id, n]) => (
-                            <span key={id} className="modifier modifier--up">
-                              +{n} {attributeName(id)}
-                            </span>
-                          ))}
-                        </span>
+                      <span>{rich(fill(option.label))}</span>
+                      {event.showEffects && option.outcome ? (
+                        <EffectChips
+                          inline
+                          effects={option.outcome.effects}
+                          currency={careerCurrency(career)}
+                          scale={careerScale(career)}
+                        />
+                      ) : (
+                        gains.length > 0 && (
+                          <span className="event-option__gains" data-testid="option-gains">
+                            {gains.map(([id, n]) => (
+                              <span key={id} className="modifier modifier--up">
+                                +{n} {attributeName(id)}
+                              </span>
+                            ))}
+                          </span>
+                        )
                       )}
                     </span>
+                    {locked && (
+                      <span className="event-option__locked" data-testid="option-locked">
+                        <LockIcon size={12} /> {t.season.noMoney}: {t.season.missing}{' '}
+                        {formatMoney(optionCost(option) - career.money, careerCurrency(career))}
+                      </span>
+                    )}
                     {option.check && (
                       <span className="event-option__check">
                         🎲 {attributeName(option.check.attribute)} · <strong>{chance}%</strong>
@@ -168,13 +212,14 @@ export function SeasonEvent(): React.JSX.Element {
                   </span>
                 </div>
               )}
-              <p className="event-result__text">{lastChoice.resolution.text}</p>
+              <p className="event-result__text">{rich(lastChoice.resolution.text)}</p>
               <EffectChips
                 effects={lastChoice.effects}
                 currency={careerCurrency(career)}
                 scale={careerScale(career)}
                 exName={exName}
               />
+              {next && <NextMatch career={career} live={next} />}
             </div>
           )}
         </article>

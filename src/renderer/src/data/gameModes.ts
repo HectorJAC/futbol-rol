@@ -16,6 +16,8 @@ export interface GameModeInfo {
   description: string
   /** Valores fijos (la personalizada los elige el jugador). */
   defaults: Omit<GameMode, 'id'>
+  /** Por ahora la Rápida y la Normal no se pueden elegir al crear partida. */
+  available: boolean
 }
 
 export const MIN_CUSTOM_SEASONS = 5
@@ -30,28 +32,40 @@ export const GAME_MODES: readonly GameModeInfo[] = [
     id: 'rapida',
     name: 'Rápida',
     description: '15 temporadas. Tomas decisiones cada dos temporadas. Atributos de 1 a 20.',
-    defaults: { seasons: 15, decisionInterval: 2 }
+    defaults: { seasons: 15, decisionInterval: 2 },
+    available: false
   },
   {
     id: 'normal',
     name: 'Normal',
     description: '20 temporadas. Tomas decisiones cada dos temporadas. Atributos de 1 a 30.',
-    defaults: { seasons: 20, decisionInterval: 2 }
+    defaults: { seasons: 20, decisionInterval: 2 },
+    available: false
   },
   {
     id: 'completa',
     name: 'Completa',
     description:
-      '20 temporadas. Decisiones en todas las temporadas y partidos importantes jugada a jugada. Atributos de 1 a 50.',
-    defaults: { seasons: 20, decisionInterval: 1 }
+      '15 temporadas. Decisiones en todas las temporadas y partidos importantes jugada a jugada. Atributos de 1 a 50.',
+    defaults: { seasons: 15, decisionInterval: 1 },
+    available: true
   },
   {
     id: 'personalizada',
     name: 'Personalizada',
     description: `Eliges cuántas temporadas (hasta ${MAX_CUSTOM_SEASONS}) y cada cuánto tomas decisiones.`,
-    defaults: { seasons: 20, decisionInterval: 1 }
+    defaults: { seasons: 20, decisionInterval: 1 },
+    available: true
   }
 ]
+
+/** Modo con el que empieza la creación de partida. */
+export const DEFAULT_MODE_ID: GameModeId = 'completa'
+
+/** ¿Se puede elegir este modo al crear una partida? (las guardadas en cualquier modo se cargan igual) */
+export function isModeAvailable(id: GameModeId): boolean {
+  return getGameModeInfo(id).available
+}
 
 export function getGameModeInfo(id: GameModeId): GameModeInfo {
   const info = GAME_MODES.find((m) => m.id === id)

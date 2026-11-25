@@ -73,7 +73,7 @@ export function setPieceRoles(
 }
 
 export const SET_PIECE_LABELS: Record<SetPieceId, string> = {
-  corners: 'Córners',
+  corners: 'Corners',
   freeKicks: 'Faltas',
   penalties: 'Penaltis'
 }

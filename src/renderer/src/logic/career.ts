@@ -73,12 +73,14 @@ interface NewCareerInput {
   originId: OriginId
   allocation: Attributes
   clubId: string
+  /** Semilla de las ofertas del primer contrato (sin ella, las de siempre). */
+  offerSeed?: number
 }
 
 /** Crea la carrera al firmar el primer contrato. */
 export function createCareer(input: NewCareerInput, now: Date = new Date()): Career {
-  const { character, mode, originId, allocation, clubId } = input
-  const offers = getClubOffers(character.nationalityId, originId)
+  const { character, mode, originId, allocation, clubId, offerSeed } = input
+  const offers = getClubOffers(character.nationalityId, originId, offerSeed)
   const chosen = offers.find((o) => o.club.id === clubId)
   if (!chosen) throw new Error(`El club ${clubId} no ofreció contrato`)
 

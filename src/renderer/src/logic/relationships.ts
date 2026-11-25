@@ -26,6 +26,8 @@ export interface Relationship {
   role: string
   level: RelationshipLevel
   text: string
+  /** Relación 0–100 para la barra (el míster y la afición, como en el vestuario). */
+  value?: number
 }
 
 /**
@@ -52,7 +54,13 @@ export function describeRelationships(career: Career): Relationship[] {
   } else {
     coach = { level: 'tenso', text: 'Apenas cuenta contigo.' }
   }
-  result.push({ id: 'coach', name: 'El míster', role: 'Entrenador', ...coach })
+  // La barra es la confianza del míster; un choque o una queja pública la limitan.
+  const coachValue = f.coachConflict
+    ? Math.min(career.trust, 15)
+    : f.publicComplaint
+      ? Math.min(career.trust, 35)
+      : career.trust
+  result.push({ id: 'coach', name: 'El míster', role: 'Entrenador', ...coach, value: coachValue })
 
   // Padre (solo con el origen "Hijo de una leyenda")
   if (getOrigin(career.originId).archetype === 'herencia') {
@@ -110,9 +118,21 @@ export function describeRelationships(career: Career): Relationship[] {
   } else {
     fans = { level: 'neutral', text: 'Aún no saben bien quién eres.' }
   }
-  result.push({ id: 'fans', name: 'La afición', role: 'Grada', ...fans })
+  result.push({ id: 'fans', name: 'La afición', role: 'Grada', ...fans, value: fansValue(career) })
 
   return result
+}
+
+/**
+ * Barra de la afición: parte de tu fama y se mueve con lo que han visto de ti
+ * (lealtad y obras benéficas suben; promesas rotas o mirar a otro club, bajan).
+ */
+export function fansValue(career: Pick<Career, 'reputation' | 'flags'>): number {
+  const f = career.flags
+  if (f.brokenPromise) return Math.min(career.reputation, 20)
+  if (f.foreignInterest) return Math.min(career.reputation, 35)
+  if (f.loyalToClub || f.charityBarrio) return Math.max(career.reputation, 75)
+  return career.reputation
 }
 
 const TEAMMATE_TEXT: Record<RelationshipLevel, string> = {

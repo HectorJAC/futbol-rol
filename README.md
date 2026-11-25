@@ -1,10 +1,19 @@
-# Futbol-Rol
+# Your Football Path
 
-**Proyecto: Juego Futbol-Rol** (nombre provisional). Es una carrera de futbolista con decisiones de RPG, al estilo de Mass Effect, Dragon Age o Baldur's Gate. No se juega al fútbol: se eligen opciones y esas decisiones marcan toda la carrera.
+**Your Football Path** (hasta la v0.14 se llamaba "Proyecto: Juego Futbol-Rol"). Es una carrera de futbolista con decisiones de RPG, al estilo de Mass Effect, Dragon Age o Baldur's Gate. No se juega al fútbol: se eligen opciones y esas decisiones marcan toda la carrera.
 
 - Plataforma: **solo escritorio, distribuido por Steam**. Windows primero. No habrá versión web.
 - Plan completo e ideas de diseño: [PLAN.md](PLAN.md).
-- **Versión actual: v0.11**:
+- **Versión actual: v0.15**:
+  - El juego ya tiene nombre: **Your Football Path**.
+  - Hub rediseñado: bandera junto al nombre, sueldo junto al club, tarjetas a su medida y titularidad en la situación.
+  - Pedir una mejora de contrato (una vez por temporada) y la tienda pasa a llamarse "Compras".
+  - Relación con cada compañero al pasar el cursor por su nombre en las decisiones.
+  - Pierna buena (derecha o izquierda) en el primer paso de la creación y nombre siempre en mayúsculas.
+  - Modo Completa de 15 temporadas; la Rápida y la Normal están cerradas por ahora.
+  - Resumen antes de firmar el primer contrato y tres ofertas de club al azar en cada partida.
+  - Moral que empieza en 50 y sube o baja con los partidos, el míster y el vestuario.
+  - De 3 a 5 jugadas en los partidos importantes según su relevancia, y contra quién juegas antes de empezar.
   - Convocatoria en los partidos importantes (titular, suplente o no convocado) y cambios durante el partido.
   - Notas de partido y de temporada parecidas a las de Sofascore; mercado de fichajes según tu nacionalidad y tu edad.
   - "Horas extra" con las mejoras que necesita tu equipo.
@@ -19,9 +28,9 @@
   - Historia de pareja a lo largo de la carrera; puntos de atributo al acabar cada temporada.
   - Sueldo mensual y tienda que cambia cada temporada.
   - Menú (con Extras) y puntero propio (flecha y manita sobre los botones).
-  - Creación del jugador en 5 pasos (jugador, modo de juego, origen, atributos y primer club).
+  - Creación del jugador en 6 pasos (jugador, modo de juego, origen, atributos, primer club y resumen).
   - 4 orígenes por país y 10 orígenes especiales.
-  - Modos Rápida, Normal, Completa y Personalizada, con fin de carrera.
+  - Modos Completa y Personalizada, con fin de carrera (la Rápida y la Normal, cerradas por ahora).
   - Temporadas con calendario, liga de 16 equipos, copa nacional y copa internacional.
   - Decisiones, tiradas de habilidad y partidos importantes jugada a jugada.
   - Contrato, dinero y tienda de mejoras.
@@ -41,10 +50,10 @@
 ### Opción A — ejecutable (doble clic)
 
 ```
-dist\win-unpacked\futbol-rol.exe
+dist\win-unpacked\your-football-path.exe
 ```
 
-También hay un acceso directo **Futbol-Rol** en el escritorio que apunta a ese `.exe`.
+También hay un acceso directo **Your Football Path** en el escritorio que apunta a ese `.exe`.
 
 La carpeta `dist/` no se sube a git. Para regenerarla después de cambiar el código, ejecuta:
 
@@ -78,7 +87,7 @@ F12 abre las herramientas de desarrollador.
 | `npm run typecheck` | Comprueba los tipos de TypeScript. |
 | `npm run lint` | Revisa el código con ESLint y Prettier. |
 | `npm run format` | Formatea el código con Prettier. |
-| `npm run build:unpack` | Genera `dist/win-unpacked/futbol-rol.exe`. |
+| `npm run build:unpack` | Genera `dist/win-unpacked/your-football-path.exe`. |
 | `npm run build:win` | Genera el instalador de Windows en `dist/`. |
 
 ---
@@ -581,6 +590,163 @@ No se descargó ni instaló nada. Para calibrar las notas se consultó cómo pun
 - `typecheck` y `lint` sin errores. Revisé las capturas a 1280×720.
 - El `.exe` regenerado abre la v0.11.
 
+### v0.12 — Nueve mejoras: resumen antes de firmar, clubes al azar y moral viva (2026-11-24)
+
+No se instaló nada. Al regenerar el `.exe`, electron-builder volvió a descargar Electron a su caché, porque no lo encontró allí.
+
+**Hecho**
+1. **Resumen antes de firmar.** Tras elegir club, una pantalla nueva ("Resumen", paso 6) enseña tu jugador, tus atributos y el contrato. El botón "Firmar contrato" está ahí; en la elección de club el botón pasa a ser "Continuar".
+2. **Clubes al azar en el primer contrato.**
+   - Cada partida ofrece un club de 5 estrellas, uno de 4 o 3 y uno de 3 o 2, elegidos al azar entre los de tu país.
+   - En los países sin clubes de 5 estrellas (Argentina, Brasil, Japón y Estados Unidos) se cuenta desde su mejor nivel.
+   - El texto de cada oferta dice si el club es de primera o de segunda. Las partidas guardadas no cambian.
+3. **Moral desde 50 y con vida.**
+   - La carrera empieza con 50 de moral.
+   - Después de cada partido, la moral se acerca poco a poco a un objetivo. El objetivo depende de:
+     - cómo te fueron los últimos cinco partidos (jugar, ganar, marcar, la nota, quedarte en la banca o fuera de la convocatoria);
+     - la confianza del míster y la relación con el vestuario;
+     - la capitanía y la familia.
+   - Lesionarte baja 3 puntos. Las decisiones siguen sumando o restando moral; ese cambio dura un tiempo y luego la moral vuelve hacia su objetivo.
+4. **"Tu primera nómina de verdad"** muestra en cada opción lo que cambia: dinero, moral, confianza del míster y fama.
+5. **Próximo partido importante.**
+   - Antes de un partido importante, la pantalla de decisiones enseña contra quién juegas, la competición, la ronda y el motivo (clásico, derbi, contra un grande…).
+   - Lo mismo al final de un partido importante si el siguiente también lo es.
+6. **"Tiros de esquina" pasa a llamarse "Corners".**
+7. **Sin pistas de lanzador:** se quitó el texto "Con 30 o más eres el lanzador" y la línea que marcaba el mínimo en los atributos de balón parado. El hub solo dice que eres lanzador cuando ya lo eres.
+8. **Titular o suplente en los resultados:** cada partido jugado dice si fuiste titular o saliste desde el banquillo, en el panel de resultados y en el calendario.
+9. **De 3 a 5 jugadas en los partidos importantes.**
+   - Como titular, el número de jugadas depende de la relevancia del partido:
+     - 3 contra un grande o en cuartos;
+     - 4 en un clásico, un derbi, una semifinal o la lucha por el título en el último tercio de la liga;
+     - 5 en una final;
+     - en las copas continentales, una más (hasta 5).
+   - Si te sustituyen, vives al menos 3 jugadas antes del cambio. Desde el banquillo son 2.
+   - Hay 6 jugadas nuevas (minutos 17, 22, 27, 72, 75 y 81) para tapar huecos.
+   - Con más jugadas tuyas hay menos goles "de fondo", para que el marcador siga siendo realista.
+   - Por qué salían solo 2: un joven en un club grande casi nunca es titular, y como suplente o sustituido se vivían 1 o 2 jugadas.
+
+**Verificado**
+- **186 tests unitarios** en verde (16 nuevos, en `v012.test.ts`):
+  - ofertas al azar por estrellas en los 9 países;
+  - moral, que empieza en 50 y se mueve con los partidos y las relaciones;
+  - número de jugadas por relevancia y papel, jugadas en orden y en su minuto;
+  - titular o suplente en los resultados, "Corners" y la nómina.
+- **22 tests e2e** en la app real. Ahora pasan por el resumen antes de firmar (con clubes al azar), el rival del próximo partido importante y el papel de titular o suplente en los resultados.
+- `typecheck` y `lint` sin errores. Revisé las capturas a 1280×720 y 1920×1080.
+- El `.exe` regenerado abre la v0.12.
+
+### v0.13 — Pierna buena, nombre en mayúsculas y modo Completa de 15 temporadas (2026-11-24)
+
+**Descargas:** al regenerar el `.exe`, electron-builder volvió a descargar Electron (no lo tenía en caché). No se instaló nada nuevo.
+
+**Hecho**
+1. **Completa de 15 temporadas** (antes 20). Las partidas ya guardadas en la Completa conservan su duración.
+2. **Rápida y Normal cerradas por ahora.**
+   - Se ven en la elección de modo, atenuadas, con "Próximamente", y no se pueden elegir.
+   - La nueva partida empieza en la Completa. La Personalizada sigue disponible.
+   - Las partidas guardadas en la Rápida o la Normal se cargan y se juegan igual.
+3. **Pierna buena en el primer paso.**
+   - Se elige entre derecha (diestro) e izquierda (zurdo); por defecto, derecha.
+   - Sale en el resumen antes de firmar y en la ficha del hub.
+   - Por ahora no cambia las tiradas.
+   - Las partidas guardadas (formato v5) pasan al formato v6 como diestras.
+4. **Nombre siempre en mayúsculas.** Se escribe en mayúsculas en el campo, con tildes y eñes (p. ej. "IÑAKI NÚÑEZ"), y así se guarda. Las partidas ya guardadas conservan su nombre.
+
+**Verificado**
+- **194 tests unitarios** en verde. Hay 8 nuevos:
+  - en `v013.test.ts`: Completa de 15 temporadas, modos disponibles, mayúsculas, pierna buena al guardar y cargar, migración v5 → v6 y una pierna inválida rechazada;
+  - en `gameStore.test.ts`: la Rápida y la Normal no se pueden elegir, y el nombre en mayúsculas y la pierna buena al ir y volver de paso.
+- **22 tests e2e** en la app real. Ahora comprueban:
+  - la pierna buena por defecto y que se puede cambiar a izquierda;
+  - el nombre en mayúsculas al escribirlo;
+  - la Rápida y la Normal deshabilitadas y la Completa de 15 temporadas;
+  - la pierna en el resumen y en el hub;
+  - "Temporada 1 de 15".
+- `typecheck` y `lint` sin errores.
+- Revisé las capturas: el paso 1, con la pierna buena, cabe entero en 1280×720 (en pantallas bajas los campos se compactan), y los modos cerrados se ven atenuados.
+- El `.exe` regenerado abre la v0.13.
+
+### v0.14 — Trece mejoras: hub, mejora de contrato, compañeros y colores de las copas (2026-11-24)
+
+**Descargas:** al regenerar el `.exe`, electron-builder vuelve a descargar Electron si no lo tiene en caché. No se instaló nada nuevo.
+
+**Hecho**
+1. **Barras del míster y la afición** en Relaciones, como las del vestuario.
+   - La del míster es su confianza; un choque con él o una queja pública la limitan.
+   - La de la afición sale de tu fama: la lealtad y las obras benéficas la suben, y una promesa rota o mirar a otro club la bajan.
+2. **Hub rediseñado.**
+   - La bandera va a la derecha del nombre.
+   - Las tarjetas miden lo que su contenido y se centran, sin hueco vacío debajo. Si no caben, hacen scroll.
+3. **Titularidad en la situación.** Indica si eres titular indiscutible, titular, rotación, suplente o reserva, con cinco niveles. Sale de los minutos que te da el míster (su confianza y tu nivel frente al de tu club).
+4. **"Mejoras" pasa a llamarse "Compras"** en Contrato y dinero.
+5. **"Alguien especial" con cinco escenarios.** El título es el mismo y la historia cambia:
+   - el cumpleaños de un compañero;
+   - tu amiga de la infancia;
+   - una visita al hospital infantil;
+   - la cafetería de cada mañana;
+   - un vuelo con retraso.
+
+   Sale primero el que menos veces ha salido.
+6. **"Tu primera nómina de verdad":** lo que cuesta más dinero del que tienes sale bloqueado, con lo que te falta. Ahorrar ya no cuesta nada (el asesor cobra si tu dinero crece), así que siempre hay una opción posible.
+7. **"Una última petición"** (dejarle un penalti al veterano que se retira) solo sale si eres el lanzador de penaltis.
+8. **Colores de las copas europeas** en la tabla de liga: azul para la Copa de Campeones (1º–4º), dorado para la Copa de Europa (5º y 6º) y verde para la Copa Conferencia (7º). La leyenda lo explica con sus colores.
+9. **Relación con los compañeros en las decisiones.**
+   - Los compañeros nombrados en una decisión salen subrayados, en verde si os lleváis bien y en rojo si hay roces.
+   - Al pasar el cursor se ve su papel y la relación (p. ej. "Veterano del vestuario · Relación 62 (Buena)").
+   - También en el resultado de la decisión.
+10. **Sueldo en el hub,** a la derecha de la tarjeta del club.
+11. **Pestaña "Mejorar contrato"** en Contrato y dinero.
+    - Hay tres peticiones: una subida moderada, lo que vales según tu rendimiento y una subida ambiciosa.
+    - Cada una enseña el sueldo nuevo, la probabilidad de que acepten (mejor con más confianza del míster) y lo que pierdes si dicen que no (confianza y moral).
+    - Si aceptan, firmas un contrato nuevo con ese sueldo y al menos 3 temporadas.
+    - Se puede pedir una vez por temporada, y no la misma temporada en que firmaste. La respuesta usa una semilla fija: recargar la partida no la cambia.
+12. **División de cada club** en las tarjetas del mercado de fichajes, también en la de quedarte.
+13. **Resumen de la temporada con muchos títulos:** la lista de títulos hace scroll y ya no tapa los botones.
+
+**Verificado**
+- **209 tests unitarios** en verde (15 nuevos, en `v014.test.ts`):
+  - barras del míster y la afición;
+  - titularidad;
+  - peticiones de mejora (probabilidades, una por temporada, aceptar o rechazar y semilla fija);
+  - los escenarios de "Alguien especial";
+  - el penalti solo si eres el lanzador;
+  - las opciones bloqueadas por dinero;
+  - la relación con los compañeros nombrados.
+- **22 tests e2e** en la app real. Ahora comprueban:
+  - la bandera a la derecha del nombre, el sueldo y la titularidad en el hub;
+  - los colores y la leyenda de la tabla;
+  - la pestaña "Compras" y pedir una mejora;
+  - la división en el mercado;
+  - las barras de Relaciones;
+  - que con 12 títulos la lista hace scroll sin tapar los botones;
+  - la relación con un compañero al pasar el cursor y las opciones bloqueadas, cuando salen en la temporada.
+- `typecheck` y `lint` sin errores.
+- El `.exe` regenerado abre la v0.14.
+
+### v0.15 — El juego se llama Your Football Path (2026-11-24)
+
+**Descargas:** al regenerar el `.exe`, electron-builder volvió a descargar Electron (no lo tenía en caché). No se instaló nada nuevo.
+
+**Hecho**
+- **Nombre nuevo en todo el juego.**
+  - En el menú principal, "Your" va pequeño y dorado encima de "Football Path".
+  - Cambian el título de la ventana, el nombre de la app (`productName`), su identificador (`com.yourfootballpath.game`) y el ejecutable, que pasa a `dist\win-unpacked\your-football-path.exe`.
+  - El acceso directo del escritorio pasa a llamarse "Your Football Path" y apunta al ejecutable nuevo; se quitó el antiguo `Futbol-Rol.lnk`.
+- **Las partidas y los ajustes se conservan.**
+  - Con el nombre nuevo, los datos van a `%APPDATA%\Your Football Path`.
+  - La primera vez que se abre el juego, copia las partidas (`saves`) y los ajustes (`settings.json`) de la carpeta antigua `%APPDATA%\futbol-rol`. Solo lo hace si la carpeta nueva aún no tiene ninguno (`src/main/legacyData.ts`).
+  - La carpeta antigua no se toca y queda como copia de seguridad.
+- El paquete npm pasa a `your-football-path`. La carpeta del proyecto y el repositorio de GitHub siguen llamándose `futbol-rol`.
+
+**Verificado**
+- **213 tests unitarios** en verde. Hay 4 nuevos, en `legacyData.test.ts`:
+  - copia partidas y ajustes, sin cachés, y deja intacta la carpeta antigua;
+  - no pisa nada si ya hay datos nuevos;
+  - no hace nada sin carpeta antigua, ni si la carpeta de datos ya es la antigua.
+- **22 tests e2e** en la app real (el título de la ventana y del menú es "Your Football Path").
+- `typecheck` y `lint` sin errores.
+- El `.exe` regenerado (`your-football-path.exe`) abre la v0.15. Al arrancar con los datos reales, copió la partida guardada y los ajustes a `%APPDATA%\Your Football Path`, y la partida aparece en "Cargar partida".
+
 ### Pendiente / siguientes pasos
 - Sexo femenino y más posiciones.
 - Más eventos y más clubes. Relaciones que cambien con eventos propios: agente, compañeros y pareja.
@@ -604,15 +770,17 @@ src/renderer/src/
   App.tsx                      Muestra la pantalla actual
   store/gameStore.ts           Estado del juego (Zustand): pantallas, borrador de partida y carrera
   screens/                     MainMenu, CharacterCreation, ModeSelection, OriginSelection, AttributeAllocation,
-                               ClubSelection, CareerHub, LoadGame, SeasonEvent, Match, SeasonSummary, TrophyRoom,
+                               ClubSelection, CreationSummary, CareerHub, LoadGame, SeasonEvent, Match,
+                               SeasonSummary, TrophyRoom,
                                TransferMarket, Records, Settings, Relationships, Competitions, Contract,
                                Extras, OriginCatalog, TrainingPoints, ClubSearch
   components/                  MenuButton, NationalitySelector, Stepper, ClubCrest, Stars,
-                               AttributeBar, EffectChips, TrophyIcon, GameTitle, RecentResults, OriginDetail, icons
+                               AttributeBar, EffectChips, TrophyIcon, GameTitle, RecentResults, OriginDetail,
+                               NextMatch, MateText, icons
   data/                        nationalities, positions, attributes, origins + originCatalog, clubs,
                                leagues/ (primera y segunda división de cada país), playerNames, partnerNames,
                                events + eventsExtra + storyEvents + contextEvents + teamEvents, currencies,
-                               matchTypes + matchMoments, gameModes, continentalCups,
+                               matchTypes + matchMoments + matchMomentsExtra, gameModes, continentalCups,
                                shop + shopCatalog + shopTraining, trainingFocus, trophies, nationalTeams
   logic/                       characterName, career (creación y puntos), saveGame (formato y migraciones),
                                season (eventos, tiradas, simulación y selección), random (aleatoriedad con semilla),
@@ -621,11 +789,12 @@ src/renderer/src/
                                competitions (calendario, ligas, copas y goleadores), match (partidos importantes),
                                finance (contrato, sueldo y tienda), rating (media y valor de mercado),
                                playerAttributes (escala por modo y lanzadores),
-                               teammates (compañeros, excompañeros y capitanía), notPlayed
+                               teammates (compañeros, excompañeros y capitanía), notPlayed,
+                               contractTalks (pedir una mejora de contrato)
   types/                       character.ts, career.ts
   i18n/es.ts                   Textos
   assets/cursors/              Puntero "Flecha césped" (normal, sobre botones y desactivado)
   styles/                      theme.css (tema y v0.1), career.css (v0.2), season.css (v0.3–v0.6), v07.css,
-                               v010.css
+                               v010.css, v012.css, v013.css, v014.css
 e2e/app.spec.ts                Tests de la app real con Playwright
 ```

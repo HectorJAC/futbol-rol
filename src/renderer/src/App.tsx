@@ -3,6 +3,7 @@ import { CareerHub } from './screens/CareerHub'
 import { CharacterCreation } from './screens/CharacterCreation'
 import { ClubSearch } from './screens/ClubSearch'
 import { ClubSelection } from './screens/ClubSelection'
+import { CreationSummary } from './screens/CreationSummary'
 import { Competitions } from './screens/Competitions'
 import { Contract } from './screens/Contract'
 import { Extras } from './screens/Extras'
@@ -31,6 +32,7 @@ const SCREENS: Record<Screen, () => React.JSX.Element> = {
   originSelection: OriginSelection,
   attributes: AttributeAllocation,
   clubSelection: ClubSelection,
+  creationSummary: CreationSummary,
   careerHub: CareerHub,
   seasonEvent: SeasonEvent,
   seasonSummary: SeasonSummary,

@@ -24,7 +24,13 @@ import {
 function career(overrides: Partial<Career> = {}): Career {
   const base = createCareer(
     {
-      character: { name: 'Test Media', sex: 'M', position: 'DC', nationalityId: 'ESP' },
+      character: {
+        name: 'Test Media',
+        sex: 'M',
+        foot: 'derecha',
+        position: 'DC',
+        nationalityId: 'ESP'
+      },
       mode: defaultMode('completa'),
       originId: 'esp-cantera',
       allocation: emptyAttributes(),

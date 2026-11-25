@@ -66,6 +66,7 @@ import { addAttributeDeltas, baseAttributes, careerScale, setPieceRoles } from '
 import { clamp, createRng, randomInt, seedFor, shuffle, type Rng } from './random'
 import {
   applyRelationEffects,
+  averageRelation,
   canBeCaptain,
   featuredExTeammate,
   losesCaptaincy,
@@ -82,7 +83,55 @@ export function initialStanding(
   originId: Career['originId']
 ): Pick<Career, 'trust' | 'morale' | 'reputation'> {
   const trust = { grande: 35, medio: 50, modesto: 65 }[tier]
-  return { trust, morale: 60, reputation: getOrigin(originId).reputation }
+  return { trust, morale: START_MORALE, reputation: getOrigin(originId).reputation }
+}
+
+/** Moral con la que empieza la carrera. */
+export const START_MORALE = 50
+
+/**
+ * Cómo te deja un partido, de −1 (lesionado o sin convocar) a +2 (victoria con
+ * gol y gran nota). Jugar ya anima; quedarte en el banquillo pesa.
+ */
+export function matchMood(m: ClubMatch): number {
+  if (m.injured) return -1
+  if (!m.played) return m.squad === 'banca' ? -0.5 : -1
+  const result = m.goalsFor > m.goalsAgainst ? 0.5 : m.goalsFor < m.goalsAgainst ? -0.5 : 0
+  const contribution = m.playerGoals > 0 ? 0.75 : m.playerAssists > 0 ? 0.4 : 0
+  const rating = m.rating ?? 6.5
+  return 0.25 + result + contribution + (rating >= 7.5 ? 0.5 : rating < 6.2 ? -0.5 : 0)
+}
+
+/**
+ * Hacia dónde tiende tu moral: cómo te han ido los últimos cinco partidos, la
+ * confianza del míster, la relación con el vestuario, la capitanía y la familia.
+ */
+export function moraleTarget(career: Career): number {
+  const recent = (career.seasonProgress?.clubMatches ?? []).slice(-5)
+  const form = recent.length > 0 ? recent.reduce((s, m) => s + matchMood(m), 0) / recent.length : 0
+  const team = career.teammates.length > 0 ? averageRelation(career) : 50
+  const target =
+    50 +
+    form * 10 +
+    (career.trust - 50) * 0.25 +
+    (team - 50) * 0.2 +
+    (career.captaincy ? 4 : 0) +
+    (career.flags.partner === 'casados' ? 3 : 0)
+  return Math.round(clamp(target, 10, 95))
+}
+
+/**
+ * Tras cada partido la moral se acerca un punto a su objetivo (dos si está muy
+ * lejos). Cuanto más lejos, más probable: lo que te dio o quitó una decisión
+ * dura un tiempo, pero no para siempre.
+ */
+export function driftMorale(career: Career, slot: number): Career {
+  const diff = moraleTarget(career) - career.morale
+  if (Math.abs(diff) < 3) return career
+  const rng = createRng(seedFor(career.id, 'morale', career.season, slot))
+  if (rng() >= Math.min(0.85, Math.abs(diff) / 18)) return career
+  const step = Math.abs(diff) >= 15 ? 2 : 1
+  return { ...career, morale: clamp(career.morale + Math.sign(diff) * step, 0, 100) }
 }
 
 /** ¿Se acabó la carrera? (se juegan las temporadas que marca el modo) */
@@ -189,6 +238,7 @@ export function isEventEligible(event: GameEvent, career: Career): boolean {
   if (event.conditions && !event.conditions.every((c) => conditionMet(c, career))) return false
   if (event.story && !event.story.repeatable && career.flags[seenFlag(event.id)]) return false
   if (event.captain !== undefined && event.captain !== !!career.captaincy) return false
+  if (event.setPieceTaker && !setPieceRoles(career)[event.setPieceTaker]) return false
   if (event.captaincyOffer && !canBeCaptain(career)) return false
   if (event.teammate) {
     const mate = teammateByRole(career, event.teammate.role)
@@ -387,6 +437,22 @@ export function eventOptions(event: GameEvent, career: Career): EventOption[] {
   })
 }
 
+/** Dinero que cuesta una opción (el peor caso si hay tirada). 0 si no cuesta nada. */
+export function optionCost(option: EventOption): number {
+  const spent = [option.outcome, option.check?.success, option.check?.failure].map(
+    (outcome) => -(outcome?.effects.money ?? 0)
+  )
+  return Math.max(0, ...spent)
+}
+
+/**
+ * En los eventos con `lockUnaffordable`, una opción que cuesta más de lo que
+ * tienes se ve pero no se puede elegir.
+ */
+export function isOptionLocked(event: GameEvent, option: EventOption, career: Career): boolean {
+  return !!event.lockUnaffordable && optionCost(option) > career.money
+}
+
 export interface ConsequenceSource {
   /** Temporada de la decisión (si se apuntó al tomarla). */
   season?: number
@@ -513,6 +579,7 @@ export function resolveChoice(career: Career, optionIndex: number): ResolvedChoi
   const event = getEvent(eventId)
   const option = eventOptions(event, career)[optionIndex]
   if (!option) throw new Error(`Opción ${optionIndex} no existe en ${eventId}`)
+  if (isOptionLocked(event, option, career)) throw new Error('No tienes dinero suficiente')
   const featured = featuredExTeammate(career, event)?.id
 
   let resolution: EventResolution
@@ -626,6 +693,27 @@ export function minutesShare(career: Career): number {
     0.97
   )
   return isUnprovenYoungsterAtGiant(career) ? Math.min(share * 0.55, 0.4) : share
+}
+
+export type SquadStatus = 'indiscutible' | 'titular' | 'rotacion' | 'suplente' | 'reserva'
+
+/**
+ * Tu sitio en el equipo según los minutos que te da el míster: de titular
+ * indiscutible a reserva. `share` es la parte de los partidos que juegas.
+ */
+export function squadStatus(career: Career): { status: SquadStatus; share: number } {
+  const share = minutesShare(career)
+  const status: SquadStatus =
+    share >= 0.85
+      ? 'indiscutible'
+      : share >= 0.65
+        ? 'titular'
+        : share >= 0.45
+          ? 'rotacion'
+          : share >= 0.25
+            ? 'suplente'
+            : 'reserva'
+  return { status, share }
 }
 
 /** Títulos colectivos (el resto son premios individuales). */
@@ -762,8 +850,15 @@ export function simulateClubMatch(career: Career, fixture: ClubFixture): ClubMat
   const sub = !injured && !starter && roll < share
   const played = starter || sub
   // Si no juegas: en el banquillo sin salir o, si cuentas poco, ni convocado.
-  const squad: ClubMatch['squad'] =
-    played || injured ? undefined : rng() < clamp(0.35 + share * 0.6, 0.3, 0.9) ? 'banca' : 'fuera'
+  const squad: ClubMatch['squad'] = starter
+    ? 'titular'
+    : sub
+      ? 'suplente'
+      : injured
+        ? undefined
+        : rng() < clamp(0.35 + share * 0.6, 0.3, 0.9)
+          ? 'banca'
+          : 'fuera'
   const stamina = 0.8 + baseAttributes(career).stamina * 0.01
   const factor = (starter ? 1 : sub ? 0.35 : 0) * stamina
   const chances = scoringChances(career)
@@ -910,6 +1005,7 @@ export function advanceSeason(career: Career): Career {
     }
 
     let injuredUntil = progress.injuredUntil
+    let morale = current.morale
     const clubMatches = [...progress.clubMatches]
     if (fixture) {
       const match = simulateClubMatch(current, fixture)
@@ -917,12 +1013,15 @@ export function advanceSeason(career: Career): Career {
       const rng = createRng(seedFor(current.id, 'injury', current.season, slot))
       if (match.played && rng() < injuryChance(current)) {
         injuredUntil = slot + 1 + randomInt(rng, 1, 5)
+        morale = Math.max(0, morale - 3) // lesionarse duele
       }
     }
     current = {
       ...current,
+      morale,
       seasonProgress: { ...progress, clubMatches, playedSlots: slot + 1, injuredUntil }
     }
+    if (fixture) current = driftMorale(current, slot)
   }
 }
 

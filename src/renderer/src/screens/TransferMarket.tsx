@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { ClubCrest } from '../components/ClubCrest'
 import { LockIcon } from '../components/icons'
 import { Stars } from '../components/Stars'
-import { getClub } from '../data/clubs'
+import { divisionName, getClub, type Club } from '../data/clubs'
 import { getNationality, NATIONALITIES, type NationalityId } from '../data/nationalities'
 import { COUNTRY_CURRENCY, formatMoney } from '../data/currencies'
 import { t } from '../i18n/es'
+import { divisionOf } from '../logic/competitions'
 import { careerCurrency, seasonYearLabel } from '../logic/season'
 import { renewedContract } from '../logic/finance'
 import { generateTransferMarket, stayRenews } from '../logic/transfers'
@@ -28,6 +29,8 @@ export function TransferMarket(): React.JSX.Element {
   if (!career) return <></>
   const current = getClub(career.clubId)
   const market = generateTransferMarket(career)
+  const division = (club: Club): string =>
+    divisionName(club.countryId, divisionOf(career.divisions, club.id))
 
   const confirm = async (): Promise<void> => {
     if (!selected) return
@@ -67,6 +70,9 @@ export function TransferMarket(): React.JSX.Element {
             {t.market.stayIn} {current.name}
           </span>
           <span className="offer__city">{current.city}</span>
+          <span className="offer__division" data-testid="offer-division">
+            {division(current)}
+          </span>
           <span className="offer__pitch">{t.market.stayPitch}</span>
           <span className="offer__contract" data-testid="stay-contract">
             {stayRenews(career)
@@ -95,6 +101,9 @@ export function TransferMarket(): React.JSX.Element {
               <span className="offer__city">
                 {offer.club.city} ({countryName(offer.club.countryId)}) ·{' '}
                 {t.club.tiers[offer.club.tier]}
+              </span>
+              <span className="offer__division" data-testid="offer-division">
+                {division(offer.club)}
               </span>
               <dl className="offer__stats">
                 <div>

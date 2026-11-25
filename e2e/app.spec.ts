@@ -33,7 +33,7 @@ async function launch(): Promise<void> {
   app = await electron.launch({
     args: ['.'],
     cwd: ROOT,
-    env: { ...process.env, FUTBOL_ROL_USER_DATA: USER_DATA }
+    env: { ...process.env, YFP_USER_DATA: USER_DATA }
   })
   page = await app.firstWindow()
   await page.waitForLoadState('domcontentloaded')
@@ -72,6 +72,16 @@ const menuButton = (name: string | RegExp): Locator =>
  */
 let sawResults = false
 let sawLineup = false
+let sawNextMatch = false
+let sawRole = false
+let sawMate = false
+let sawLocked = false
+/** Primera opción que se puede elegir (las que no puedes pagar salen bloqueadas). */
+const firstOption = (): Locator =>
+  page.locator('[data-testid="event-option"]:not([disabled])').first()
+/** Club elegido en el primer contrato y los dos rechazados (salen al azar en cada partida). */
+let myClub = ''
+let rejectedClubs: string[] = []
 
 async function playUntilSummary(onMatch?: () => Promise<void>): Promise<void> {
   const summary = page.getByRole('heading', { name: 'Resumen de la temporada' })
@@ -84,8 +94,47 @@ async function playUntilSummary(onMatch?: () => Promise<void>): Promise<void> {
         await expect(page.getByTestId('season-stats')).toBeVisible()
         await shot('09b-evento-resultados', BOTH)
       }
-      await page.getByTestId('event-option').first().click()
+      // Cada partido jugado dice si fuiste titular o suplente.
+      if (
+        !sawRole &&
+        (await page
+          .getByTestId('recent-match-me')
+          .filter({ hasText: /Titular|Suplente/ })
+          .count()) > 0
+      ) {
+        sawRole = true
+      }
+      // Compañeros nombrados: al pasar el cursor se ve la relación.
+      const mate = page.getByTestId('mate-ref').first()
+      if (!sawMate && (await mate.isVisible())) {
+        sawMate = true
+        await expect(mate).toHaveAttribute('data-tooltip', /Relación \d+ \(/)
+        await mate.hover()
+        await page.waitForTimeout(200)
+        await page.screenshot({ path: join(SCREENSHOTS, '09d-relacion-companero-1280x720.png') })
+      }
+      // Lo que no puedes pagar sale bloqueado (p. ej. en "Tu primera nómina de verdad").
+      if (!sawLocked && (await page.getByTestId('option-locked').count()) > 0) {
+        sawLocked = true
+        await expect(
+          page
+            .getByTestId('event-option')
+            .filter({ has: page.getByTestId('option-locked') })
+            .first()
+        ).toBeDisabled()
+        await page.waitForTimeout(500) // deja terminar la animación de entrada
+        await page.screenshot({ path: join(SCREENSHOTS, '09e-opcion-bloqueada-1280x720.png') })
+      }
+      await firstOption().click()
       await expect(page.getByTestId('event-result')).toBeVisible()
+      // Antes de un partido importante se ve contra quién.
+      if (await page.getByRole('button', { name: 'Jugar partido' }).isVisible()) {
+        await expect(page.getByTestId('next-match')).toBeVisible()
+        if (!sawNextMatch) {
+          sawNextMatch = true
+          await shot('09c-proximo-partido')
+        }
+      }
       await page.getByRole('button', { name: /Continuar|Jugar el resto|Jugar partido/ }).click()
     } else if (await page.getByTestId('start-match').isVisible()) {
       // Convocatoria: titular, suplente o no convocado.
@@ -125,8 +174,8 @@ test.afterAll(async () => {
 })
 
 test('menú principal: título, botones y puntero propio', async () => {
-  await expect(page).toHaveTitle('Proyecto: Juego Futbol-Rol')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Proyecto: Juego Futbol-Rol')
+  await expect(page).toHaveTitle('Your Football Path')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your Football Path')
 
   await expect(menuButton('Nueva Partida')).toBeEnabled()
   // Sin partidas guardadas, "Cargar Partida" está deshabilitado.
@@ -212,12 +261,17 @@ test('paso 1: valores por defecto y validación', async () => {
     'aria-checked',
     'true'
   )
+  // Pierna buena: diestro por defecto.
+  await expect(page.getByTestId('foot-derecha')).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByTestId('foot-izquierda')).toHaveAttribute('aria-checked', 'false')
 
   const next = page.getByRole('button', { name: 'Continuar' })
   await expect(next).toBeDisabled()
   await shot('02-creacion-vacia')
 
-  await page.getByLabel('Nombre').fill('A')
+  await page.getByLabel('Nombre').fill('a')
+  // El nombre se escribe siempre en mayúsculas.
+  await expect(page.getByLabel('Nombre')).toHaveValue('A')
   await expect(page.getByRole('alert')).toContainText('al menos 2')
   await expect(next).toBeDisabled()
 })
@@ -257,11 +311,22 @@ test('paso 1: las 9 nacionalidades con flechas y teclado', async () => {
 
 test('paso 2: modo de juego', async () => {
   await page.getByLabel('Nombre').fill('  Diego   Rivera ')
+  await expect(page.getByLabel('Nombre')).toHaveValue('  DIEGO   RIVERA ')
+  // Zurdo.
+  await page.getByTestId('foot-izquierda').click()
+  await expect(page.getByTestId('foot-izquierda')).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByTestId('foot-derecha')).toHaveAttribute('aria-checked', 'false')
   await shot('03-creacion-rellena', BOTH)
   await page.getByRole('button', { name: 'Continuar' }).click()
 
   await expect(page.getByRole('heading', { name: 'Elige el modo de juego' })).toBeVisible()
-  await expect(page.getByTestId('mode-normal')).toHaveAttribute('aria-checked', 'true')
+  // Por ahora solo la Completa (15 temporadas) y la Personalizada.
+  await expect(page.getByTestId('mode-completa')).toHaveAttribute('aria-checked', 'true')
+  await expect(page.getByTestId('mode-completa')).toContainText('15 temporadas')
+  await expect(page.getByTestId('mode-rapida')).toBeDisabled()
+  await expect(page.getByTestId('mode-normal')).toBeDisabled()
+  await expect(page.getByTestId('mode-normal')).toContainText('Próximamente')
+  await shot('03a-modos', BOTH)
 
   // Personalizada: hasta 25 temporadas y cada cuánto se decide.
   await page.getByTestId('mode-personalizada').click()
@@ -292,8 +357,9 @@ test('paso 3: orígenes del país y uno especial', async () => {
   // Atrás conserva el nombre y la nacionalidad.
   await page.getByRole('button', { name: 'Atrás' }).click()
   await page.getByRole('button', { name: 'Atrás' }).click()
-  await expect(page.getByLabel('Nombre')).toHaveValue('Diego Rivera')
+  await expect(page.getByLabel('Nombre')).toHaveValue('DIEGO RIVERA')
   await expect(page.getByTestId('nationality-name')).toHaveText('España')
+  await expect(page.getByTestId('foot-izquierda')).toHaveAttribute('aria-checked', 'true')
   await page.getByRole('button', { name: 'Continuar' }).click()
   await expect(page.getByTestId('mode-completa')).toHaveAttribute('aria-checked', 'true')
   await page.getByRole('button', { name: 'Continuar' }).click()
@@ -312,7 +378,10 @@ test('paso 4: repartir los puntos de atributo', async () => {
   await expect(points).toHaveText('10 / 10')
   await expect(next).toBeDisabled()
   await expect(page.getByTestId('attr-penalties')).toBeVisible()
-  await expect(page.getByText('Con 30 o más eres el lanzador')).toBeVisible()
+  // El jugador descubre solo cuándo es lanzador: sin pistas ni línea de mínimo.
+  await expect(page.getByText(/eres el lanzador/)).toHaveCount(0)
+  await expect(page.locator('.attr-bar__marker')).toHaveCount(0)
+  await expect(page.getByText('Corners', { exact: true })).toBeVisible()
 
   // Hijo del eterno capitán: liderazgo (5 + 4 = 9 en la escala de 20) → 23 de 50.
   await expect(page.getByTestId('attr-leadership')).toHaveText('23')
@@ -332,30 +401,58 @@ test('paso 4: repartir los puntos de atributo', async () => {
   await next.click()
 })
 
-test('paso 5: elegir club y firmar', async () => {
+test('paso 5: elegir club, ver el resumen y firmar', async () => {
   await expect(page.getByRole('heading', { name: 'Tu primer contrato' })).toBeVisible()
   const offers = page.getByRole('radio')
   await expect(offers).toHaveCount(3)
-  await expect(offers.nth(0)).toContainText('Atlético de Madrit')
-  await expect(offers.nth(2)).toContainText('Deportibo de La Coruña')
+  // Clubes al azar: un grande (5 estrellas), uno de 4 o 3 y uno de 3 o 2.
+  const names = await page.locator('.offer__name').allTextContents()
+  expect(new Set(names).size).toBe(3)
   // El origen crea un vínculo con el club medio.
   await expect(offers.nth(1)).toContainText('Tu padre fue su capitán')
 
-  const sign = page.getByRole('button', { name: 'Firmar contrato' })
-  await expect(sign).toBeDisabled()
+  const next = page.getByRole('button', { name: 'Continuar' })
+  await expect(next).toBeDisabled()
   await offers.nth(1).click()
+  myClub = names[1]
+  rejectedClubs = [names[0], names[2]]
   await shot('06-clubes', BOTH)
-  await sign.click()
+  await next.click()
 
-  await expect(page.getByTestId('hub-player-name')).toHaveText('Diego Rivera')
-  await expect(page.getByTestId('hub-club-name')).toHaveText('Valensia CF')
-  await expect(page.getByTestId('hub-season')).toContainText('Temporada 1 de 20')
+  // Resumen: jugador, atributos y contrato; aquí se firma.
+  await expect(page.getByRole('heading', { name: 'Resumen', exact: true })).toBeVisible()
+  await expect(page.getByTestId('summary-player')).toContainText('DIEGO RIVERA')
+  await expect(page.getByTestId('summary-foot')).toHaveText('Izquierda')
+  await expect(page.getByTestId('summary-club')).toHaveText(myClub)
+  await expect(page.getByTestId('summary-contract')).toContainText('3 temporadas')
+  await expect(page.getByTestId('summary-attributes')).toContainText('Corners')
+  await shot('06b-resumen', BOTH)
+  // "Atrás" lleva a los clubes sin perder la elección.
+  await page.getByRole('button', { name: 'Atrás' }).click()
+  await expect(offers.nth(1)).toHaveAttribute('aria-checked', 'true')
+  await next.click()
+  await page.getByTestId('sign-contract').click()
+
+  await expect(page.getByTestId('hub-player-name')).toHaveText('DIEGO RIVERA')
+  await expect(page.getByTestId('hub-foot')).toHaveText('Izquierda')
+  // La bandera, a la derecha del nombre; el sueldo, a la derecha del club.
+  await expect(page.getByTestId('hub-flag')).toHaveAttribute('alt', 'España')
+  const nameBox = await page.getByTestId('hub-player-name').boundingBox()
+  const flagBox = await page.getByTestId('hub-flag').boundingBox()
+  expect(flagBox && nameBox && flagBox.x > nameBox.x + nameBox.width - 1).toBe(true)
+  await expect(page.getByTestId('hub-wage')).toContainText('/sem')
+  // Titularidad en la situación: de reserva a titular indiscutible.
+  await expect(page.getByTestId('hub-squad')).toHaveText(
+    /^(Titular indiscutible|Titular|Rotación|Suplente|Reserva)$/
+  )
+  await expect(page.getByTestId('hub-club-name')).toHaveText(myClub)
+  await expect(page.getByTestId('hub-season')).toContainText('Temporada 1 de 15')
   await expect(page.getByTestId('hub-division')).toHaveText('Primera División de España')
   await expect(page.getByTestId('hub-market-value')).toContainText('€')
   await expect(page.getByTestId('hub-family')).toHaveText('Soltero')
-  // 15 atributos (con balón parado) en la escala 1–50; aún no eres lanzador.
+  // 15 atributos (con balón parado) en la escala 1–50; aún no eres lanzador (y no se dice).
   await expect(page.getByTestId('hub-attributes')).toContainText('1–50')
-  await expect(page.getByTestId('hub-set-pieces')).toContainText('Aún no eres lanzador')
+  await expect(page.getByTestId('hub-set-pieces')).toHaveCount(0)
   // Autoguardado al firmar.
   await expect(page.getByTestId('save-button')).toHaveText('Partida guardada')
   await shot('07-hub', BOTH)
@@ -366,7 +463,7 @@ test('competiciones antes de empezar: calendario y liga a cero', async () => {
   await expect(page.getByRole('heading', { name: 'Competiciones' })).toBeVisible()
   await expect(page.getByTestId('calendar').locator('tr')).not.toHaveCount(0)
   await page.getByTestId('competitions-tab-league').click()
-  await expect(page.getByTestId('my-table-row')).toContainText('Valensia CF')
+  await expect(page.getByTestId('my-table-row')).toContainText(myClub)
   await page.getByRole('button', { name: 'Volver' }).click()
 })
 
@@ -378,7 +475,7 @@ test('temporada 1 (modo completo): 10 decisiones, partidos importantes y resumen
   await expect(page.getByTestId('event-title')).toHaveText('Tu debut')
   await expect(page.getByText(/🎲 Compostura/)).toBeVisible()
   await shot('09-evento', BOTH)
-  await page.getByTestId('event-option').first().click()
+  await firstOption().click()
   await expect(page.getByTestId('event-result')).toBeVisible()
   await shot('10-evento-resultado')
   await page.getByRole('button', { name: /^(Continuar|Jugar partido)$/ }).click()
@@ -397,6 +494,8 @@ test('temporada 1 (modo completo): 10 decisiones, partidos importantes y resumen
   })
   expect(sawMatch || sawLineup).toBe(true)
   expect(sawLineup).toBe(true)
+  // Partidos jugados con su papel (titular o suplente) en los resultados.
+  expect(sawRole).toBe(true)
   // En la pantalla de decisiones se ven los resultados desde la última decisión.
   expect(sawResults).toBe(true)
 
@@ -415,6 +514,32 @@ test('temporada 1 (modo completo): 10 decisiones, partidos importantes y resumen
   await shot('11-resumen-temporada', BOTH)
   await cupRound.hover()
   await page.screenshot({ path: join(SCREENSHOTS, '11b-resumen-copa-tooltip-1280x720.png') })
+
+  // Con muchos títulos, la lista hace scroll y no tapa los botones.
+  await page.evaluate(() => {
+    const panel = document.querySelector('.summary-trophies') as HTMLElement
+    panel
+      .querySelector<HTMLElement>('.summary-trophies__empty')
+      ?.style.setProperty('display', 'none')
+    const list = document.createElement('ul')
+    list.className = 'trophy-list'
+    list.dataset.test = 'many-trophies'
+    list.innerHTML =
+      '<li class="trophy-chip trophy-chip--colectivo"><div><strong>Título de prueba</strong><span>Una descripción de prueba</span></div></li>'.repeat(
+        12
+      )
+    panel.appendChild(list)
+  })
+  const trophies = await page.locator('.summary-trophies').boundingBox()
+  const actions = await page.locator('.summary-screen .action-bar').boundingBox()
+  expect(trophies && actions && trophies.y + trophies.height <= actions.y + 1).toBe(true)
+  const scrolls = await page
+    .locator('[data-test="many-trophies"]')
+    .evaluate((el) => el.scrollHeight > el.clientHeight)
+  expect(scrolls).toBe(true)
+  await page.waitForTimeout(700) // deja terminar la animación de entrada de los títulos
+  await page.screenshot({ path: join(SCREENSHOTS, '11c-resumen-muchos-titulos-1280x720.png') })
+  await page.evaluate(() => document.querySelector('[data-test="many-trophies"]')?.remove())
 })
 
 test('Sala de trofeos: temporadas, vitrina y asistencias', async () => {
@@ -424,7 +549,7 @@ test('Sala de trofeos: temporadas, vitrina y asistencias', async () => {
   const rows = page.getByTestId('timeline-row')
   await expect(rows).toHaveCount(1)
   await expect(rows.first()).toContainText('2026/27')
-  await expect(rows.first()).toContainText('Valensia CF')
+  await expect(rows.first()).toContainText(myClub)
   await shot('12-sala-trofeos-temporadas', BOTH)
 
   await page.getByRole('tab', { name: 'Vitrina' }).click()
@@ -445,6 +570,13 @@ test('competiciones de la temporada jugada: tablas, copa y goleadores', async ()
   await shot('17-calendario', BOTH)
   await page.getByTestId('competitions-tab-league').click()
   await expect(page.getByTestId('my-table-row')).toContainText('38')
+  // Cada copa europea con su color: azul, dorado y verde.
+  await expect(page.getByTestId('table-legend')).toContainText('Azul: 1º–4º, Copa de Campeones')
+  await expect(page.getByTestId('table-legend')).toContainText('Dorado: 5º y 6º, Copa de Europa')
+  await expect(page.getByTestId('table-legend')).toContainText('Verde: 7º, Copa Conferencia')
+  await expect(page.locator('.standings .row--campeones')).toHaveCount(4)
+  await expect(page.locator('.standings .row--europa')).toHaveCount(2)
+  await expect(page.locator('.standings .row--conferencia')).toHaveCount(1)
   await shot('18-liga', BOTH)
   await page.getByTestId('competitions-tab-cup').click()
   await shot('19-copa')
@@ -458,13 +590,26 @@ test('competiciones de la temporada jugada: tablas, copa y goleadores', async ()
   await page.getByRole('button', { name: 'Volver' }).click()
 })
 
-test('contrato, mejoras y gastos', async () => {
+test('contrato, mejora de contrato, compras y gastos', async () => {
   await page.getByTestId('open-contract').click()
   await expect(page.getByRole('heading', { name: 'Contrato y dinero' })).toBeVisible()
   await expect(page.getByTestId('contract-terms')).toContainText('1.200 €')
+  await expect(page.getByTestId('contract-tab-shop')).toHaveText('Compras')
   await shot('22-contrato', BOTH)
 
   await expect(page.getByTestId('monthly-wage')).toContainText('5.200 €')
+
+  // Pedir una mejora: tres peticiones con su probabilidad; una vez por temporada.
+  await page.getByTestId('contract-tab-raise').click()
+  await expect(page.getByTestId('raise-option')).toHaveCount(3)
+  await expect(page.getByTestId('raise-option').first()).toContainText('%')
+  await shot('22b-mejorar-contrato', BOTH)
+  await page.getByTestId('raise-moderada').click()
+  await expect(page.getByTestId('raise-result')).toHaveText(/Aceptado|ha dicho que no/)
+  await expect(page.getByTestId('raise-option')).toHaveCount(0)
+  await expect(page.getByTestId('raise-blocked')).toContainText('Ya lo pediste esta temporada')
+  await shot('22c-mejora-respuesta')
+
   await page.getByTestId('contract-tab-shop').click()
   const moneyBefore = await page.getByTestId('money').textContent()
   const card = page
@@ -517,12 +662,19 @@ test('mercado de fichajes antes de la temporada 2', async () => {
     await page.getByRole('button', { name: 'Mercado de fichajes' }).click()
   }
   await expect(page.getByRole('heading', { name: 'Mercado de fichajes' })).toBeVisible()
-  await expect(page.getByTestId('market-stay')).toContainText('Quedarte en Valensia CF')
+  await expect(page.getByTestId('market-stay')).toContainText('Quedarte en ' + myClub)
   expect(await page.getByTestId('market-offer').count()).toBeGreaterThanOrEqual(1)
-  // Rechazaste a Atlético de Madrit y Deportibo en el primer contrato: si les tocaba llamar, no lo hacen.
-  await expect(
-    page.getByTestId('market-offer').filter({ hasText: 'Deportibo de La Coruña' })
-  ).toHaveCount(0)
+  // Rechazaste a los otros dos clubes en el primer contrato: si les tocaba llamar, no lo hacen.
+  for (const rejected of rejectedClubs) {
+    await expect(page.getByTestId('market-offer').filter({ hasText: rejected })).toHaveCount(0)
+  }
+  // Cada club dice en qué división juega.
+  await expect(page.getByTestId('market-stay').getByTestId('offer-division')).toHaveText(
+    'Primera División de España'
+  )
+  for (const offer of await page.getByTestId('market-offer').all()) {
+    await expect(offer.getByTestId('offer-division')).toHaveText(/^(Primera|Segunda) División de /)
+  }
   await shot('14-mercado', BOTH)
 
   await page.getByTestId('market-stay').click()
@@ -536,6 +688,15 @@ test('mercado de fichajes antes de la temporada 2', async () => {
   await expect(page.getByRole('heading', { name: 'Relaciones' })).toBeVisible()
   expect(await page.getByTestId('relationship').count()).toBeGreaterThanOrEqual(3)
   await expect(page.getByText('Tu padre')).toBeVisible()
+  // El míster y la afición llevan barra, como los compañeros.
+  for (const who of ['El míster', 'La afición']) {
+    await expect(
+      page.getByTestId('relationship').filter({ hasText: who }).locator('.relationship__meter')
+    ).toBeVisible()
+  }
+  await expect(
+    page.getByTestId('relationship').filter({ hasText: 'Tu padre' }).locator('.relationship__meter')
+  ).toHaveCount(0)
   await shot('15b-relaciones')
   await page.getByTestId('relationships-tab-teammates').click()
   await expect(page.getByTestId('relationship')).toHaveCount(5)
@@ -580,14 +741,14 @@ test('la partida se guarda en disco y sobrevive a reiniciar el juego', async () 
   await menuButton('Cargar Partida').click()
   const slots = page.getByTestId('save-slot')
   await expect(slots).toHaveCount(1)
-  await expect(slots.first()).toContainText('Diego Rivera')
-  await expect(slots.first()).toContainText('Valensia CF')
+  await expect(slots.first()).toContainText('DIEGO RIVERA')
+  await expect(slots.first()).toContainText(myClub)
   await expect(slots.first()).toContainText('Temporada 2')
   await shot('08-cargar-partida', BOTH)
 
   await slots.first().getByRole('button', { name: 'Cargar' }).click()
-  await expect(page.getByTestId('hub-player-name')).toHaveText('Diego Rivera')
-  await expect(page.getByTestId('hub-club-name')).toHaveText('Valensia CF')
+  await expect(page.getByTestId('hub-player-name')).toHaveText('DIEGO RIVERA')
+  await expect(page.getByTestId('hub-club-name')).toHaveText(myClub)
 })
 
 test('Records muestra todas las carreras guardadas', async () => {
@@ -597,7 +758,7 @@ test('Records muestra todas las carreras guardadas', async () => {
   await expect(page.getByRole('heading', { name: 'Records' })).toBeVisible()
   const rows = page.getByTestId('record-row')
   await expect(rows).toHaveCount(1)
-  await expect(rows.first()).toContainText('Diego Rivera')
+  await expect(rows.first()).toContainText('DIEGO RIVERA')
   await shot('16-records')
   await page.getByRole('button', { name: 'Volver al menú' }).click()
 })

@@ -129,6 +129,7 @@ describe('creación de la carrera', () => {
   const character = {
     name: 'Iñaki Núñez',
     sex: 'M' as const,
+    foot: 'derecha' as const,
     position: 'DC' as const,
     nationalityId: 'ESP' as const
   }

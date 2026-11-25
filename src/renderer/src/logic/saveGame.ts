@@ -12,6 +12,7 @@ import { SHOP_ITEMS } from '../data/shop'
 import { TROPHIES } from '../data/trophies'
 import { isValidSaveId, type SaveFile } from '../../../shared/saves'
 import type { Career, Flags, SeasonSetup, Teammate } from '../types/career'
+import { FEET } from '../types/character'
 import { validateName } from './characterName'
 import {
   buildSeasonSetup,
@@ -35,7 +36,7 @@ import { generateTeammates, MAX_EX_TEAMMATES, relationsFromFlags, ROSTER_ROLES }
  * - v5 (juego v0.10): atributos de balón parado y escala por modo (20/30/50),
  *   compañeros y excompañeros, capitanía, club objetivo y tres copas europeas.
  */
-export const SAVE_VERSION = 5
+export const SAVE_VERSION = 6
 
 export function toSaveFile(career: Career): SaveFile {
   return {
@@ -248,6 +249,12 @@ function migrateV2(c: Record<string, unknown>): Record<string, unknown> | null {
   }
 }
 
+/** v5 → v6. La pierna buena llega en la v0.13: las partidas anteriores son diestras. */
+function migrateV5(c: Record<string, unknown>): Record<string, unknown> | null {
+  if (!isObject(c.character)) return null
+  return { ...c, character: { foot: 'derecha', ...c.character } }
+}
+
 /** Lleva una partida antigua al formato actual. Devuelve `null` si la versión no se conoce. */
 function migrate(version: number, career: unknown): unknown {
   if (!isObject(career)) return null
@@ -286,6 +293,11 @@ function migrate(version: number, career: unknown): unknown {
     c = migrateV4(c)
     if (!c) return null
     version = 5
+  }
+  if (version === 5) {
+    c = migrateV5(c)
+    if (!c) return null
+    version = 6
   }
   return version === SAVE_VERSION ? c : null
 }
@@ -446,6 +458,7 @@ export function careerFromSaveFile(file: SaveFile): Career | null {
     typeof ch.name === 'string' &&
     validateName(ch.name) === null &&
     (ch.sex === 'M' || ch.sex === 'F') &&
+    FEET.some((f) => f === ch.foot) &&
     POSITIONS.some((p) => p.id === ch.position) &&
     NATIONALITIES.some((n) => n.id === ch.nationalityId)
 

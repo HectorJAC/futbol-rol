@@ -121,7 +121,7 @@ export const ATTRIBUTES: readonly AttributeInfo[] = [
   },
   {
     id: 'corners',
-    name: 'Tiros de esquina',
+    name: 'Corners',
     group: 'Balón parado',
     description: 'Poner el córner donde quieres: al primer palo, al punto de penalti o en corto.'
   },

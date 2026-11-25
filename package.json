@@ -1,7 +1,8 @@
 {
-  "name": "futbol-rol",
-  "version": "0.11.0",
-  "description": "Proyecto: Juego Futbol-Rol — carrera de futbolista con decisiones de RPG (escritorio, Steam)",
+  "name": "your-football-path",
+  "productName": "Your Football Path",
+  "version": "0.15.0",
+  "description": "Your Football Path — carrera de futbolista con decisiones de RPG (escritorio, Steam)",
   "main": "./out/main/index.js",
   "author": "HectorJAC",
   "homepage": "https://github.com/HectorJAC/futbol-rol",

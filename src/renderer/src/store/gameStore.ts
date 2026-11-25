@@ -1,13 +1,15 @@
 import { create } from 'zustand'
 import { emptyAttributes, type AttributeId, type Attributes } from '../data/attributes'
 import type { EventEffects } from '../data/events'
-import { defaultMode, type GameMode } from '../data/gameModes'
+import { newOfferSeed } from '../data/clubs'
+import { DEFAULT_MODE_ID, defaultMode, isModeAvailable, type GameMode } from '../data/gameModes'
 import type { MatchMomentEffects } from '../data/matchTypes'
 import { cycleNationality, DEFAULT_NATIONALITY_ID } from '../data/nationalities'
 import { getOrigin, randomExtraOrigin, type OriginId } from '../data/origins'
 import { DEFAULT_POSITION_ID } from '../data/positions'
 import { canAllocate, createCareer, remainingPoints } from '../logic/career'
-import { normalizeName, validateName } from '../logic/characterName'
+import { normalizeName, upperName, validateName } from '../logic/characterName'
+import { requestRaise as requestContractRaise, type RaiseLevel } from '../logic/contractTalks'
 import { buyItem } from '../logic/finance'
 import { finishLiveMatch, isLiveMatchOver, resolveMoment, startLiveMatch } from '../logic/match'
 import { toSaveFile } from '../logic/saveGame'
@@ -23,7 +25,7 @@ import {
 } from '../logic/season'
 import { applyTransferDecision, isMarketPending, setTransferTarget } from '../logic/transfers'
 import type { Career, EventResolution, MomentResolution, SeasonRecord } from '../types/career'
-import type { CharacterDraft } from '../types/character'
+import type { CharacterDraft, Foot } from '../types/character'
 
 export type Screen =
   | 'mainMenu'
@@ -32,6 +34,7 @@ export type Screen =
   | 'originSelection'
   | 'attributes'
   | 'clubSelection'
+  | 'creationSummary'
   | 'careerHub'
   | 'seasonEvent'
   | 'seasonSummary'
@@ -55,7 +58,8 @@ export const CREATION_STEPS = [
   'modeSelection',
   'originSelection',
   'attributes',
-  'clubSelection'
+  'clubSelection',
+  'creationSummary'
 ] as const satisfies readonly Screen[]
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -69,6 +73,8 @@ export interface NewGameDraft {
   /** Puntos libres repartidos en cada atributo. */
   allocation: Attributes
   clubId: string | null
+  /** Semilla de las tres ofertas de club (distintas en cada partida). */
+  offerSeed: number
 }
 
 export function createDefaultDraft(): NewGameDraft {
@@ -76,14 +82,16 @@ export function createDefaultDraft(): NewGameDraft {
     character: {
       name: '',
       sex: 'M',
+      foot: 'derecha',
       position: DEFAULT_POSITION_ID,
       nationalityId: DEFAULT_NATIONALITY_ID
     },
-    mode: defaultMode('normal'),
+    mode: defaultMode(DEFAULT_MODE_ID),
     originId: null,
     extraOriginId: randomExtraOrigin().id,
     allocation: emptyAttributes(),
-    clubId: null
+    clubId: null,
+    offerSeed: newOfferSeed()
   }
 }
 
@@ -109,7 +117,9 @@ interface GameState {
   backToMenu: () => void
 
   // Paso 1: jugador
+  /** El nombre se guarda siempre en mayúsculas. */
   setDraftName: (name: string) => void
+  setFoot: (foot: Foot) => void
   changeNationality: (step: 1 | -1) => void
   /** Valida el nombre; si es correcto pasa a elegir el modo de juego. */
   confirmCharacter: () => boolean
@@ -129,8 +139,12 @@ interface GameState {
 
   // Paso 4: club
   selectClub: (id: string) => void
+  /** Pasa al resumen con el club elegido. */
+  confirmClub: () => boolean
+
+  // Paso 5: resumen
   /** Firma con el club elegido: crea la carrera, la guarda y abre el hub. */
-  confirmClub: () => Promise<boolean>
+  signContract: () => Promise<boolean>
 
   /** Vuelve al paso anterior de la creación sin perder lo elegido. */
   previousStep: () => void
@@ -170,6 +184,8 @@ interface GameState {
   chooseTransferTarget: (clubId: string | null) => Promise<void>
   /** Compra una mejora de la tienda y guarda. */
   buyUpgrade: (itemId: string) => Promise<boolean>
+  /** Pide al club mejorar el contrato. `null` si no se pudo pedir; si no, si aceptaron. */
+  requestRaise: (level: RaiseLevel) => Promise<boolean | null>
   backToHub: () => void
 
   // Mercado de fichajes (entre temporadas)
@@ -221,7 +237,12 @@ export const useGameStore = create<GameState>()((set, get) => ({
     }),
 
   setDraftName: (name) =>
-    set((state) => ({ draft: { ...state.draft, character: { ...state.draft.character, name } } })),
+    set((state) => ({
+      draft: { ...state.draft, character: { ...state.draft.character, name: upperName(name) } }
+    })),
+
+  setFoot: (foot) =>
+    set((state) => ({ draft: { ...state.draft, character: { ...state.draft.character, foot } } })),
 
   changeNationality: (step) =>
     set((state) => {
@@ -255,7 +276,11 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   // Cambiar de modo cambia la escala de los atributos: se reinicia el reparto.
   setMode: (mode) =>
-    set((state) => ({ draft: { ...state.draft, mode, allocation: emptyAttributes() } })),
+    set((state) =>
+      isModeAvailable(mode.id)
+        ? { draft: { ...state.draft, mode, allocation: emptyAttributes() } }
+        : {}
+    ),
 
   confirmMode: () => set({ screen: 'originSelection' }),
 
@@ -295,7 +320,14 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   selectClub: (id) => set((state) => ({ draft: { ...state.draft, clubId: id } })),
 
-  confirmClub: async () => {
+  confirmClub: () => {
+    const { draft } = get()
+    if (!draft.originId || !draft.clubId) return false
+    set({ screen: 'creationSummary' })
+    return true
+  },
+
+  signContract: async () => {
     const { draft } = get()
     if (!draft.originId || !draft.clubId) return false
     const career = createCareer({
@@ -303,7 +335,8 @@ export const useGameStore = create<GameState>()((set, get) => ({
       mode: draft.mode,
       originId: draft.originId,
       allocation: draft.allocation,
-      clubId: draft.clubId
+      clubId: draft.clubId,
+      offerSeed: draft.offerSeed
     })
     set({ career, screen: 'careerHub', draft: createDefaultDraft(), saveStatus: 'idle' })
     await get().saveCareer() // autoguardado al empezar la carrera
@@ -355,7 +388,12 @@ export const useGameStore = create<GameState>()((set, get) => ({
   chooseOption: async (optionIndex) => {
     const { career, lastChoice } = get()
     if (!career?.seasonProgress || lastChoice) return
-    const result = resolveChoice(career, optionIndex)
+    let result: ReturnType<typeof resolveChoice>
+    try {
+      result = resolveChoice(career, optionIndex)
+    } catch {
+      return // p. ej. una opción bloqueada por falta de dinero
+    }
     set({
       career: result.career,
       lastChoice: { resolution: result.resolution, effects: result.effects }
@@ -469,6 +507,21 @@ export const useGameStore = create<GameState>()((set, get) => ({
     }
     await get().saveCareer()
     return true
+  },
+
+  requestRaise: async (level) => {
+    const { career } = get()
+    if (!career) return null
+    let accepted: boolean
+    try {
+      const result = requestContractRaise(career, level)
+      accepted = result.accepted
+      set({ career: result.career })
+    } catch {
+      return null
+    }
+    await get().saveCareer()
+    return accepted
   },
 
   backToHub: () =>

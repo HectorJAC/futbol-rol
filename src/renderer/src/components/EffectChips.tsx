@@ -21,7 +21,8 @@ export function EffectChips({
   effects,
   currency = 'EUR',
   scale = 20,
-  exName
+  exName,
+  inline = false
 }: {
   effects: EventEffects | MatchMomentEffects
   /** Moneda del país donde juegas (el dinero se guarda en euros). */
@@ -30,6 +31,8 @@ export function EffectChips({
   scale?: number
   /** Nombre del excompañero protagonista (para el cambio de relación). */
   exName?: string
+  /** Dentro de un botón (solo `span`, sin lista). */
+  inline?: boolean
 }): React.JSX.Element {
   const chips: Array<{ text: string; up: boolean }> = []
   for (const { id, name } of ATTRIBUTES) {
@@ -72,6 +75,17 @@ export function EffectChips({
   }
 
   if (chips.length === 0) return <></>
+  if (inline) {
+    return (
+      <span className="event-option__gains" data-testid="option-effects">
+        {chips.map((chip) => (
+          <span key={chip.text} className={`modifier modifier--${chip.up ? 'up' : 'down'}`}>
+            {chip.text}
+          </span>
+        ))}
+      </span>
+    )
+  }
   return (
     <ul className="modifier-list">
       {chips.map((chip) => (

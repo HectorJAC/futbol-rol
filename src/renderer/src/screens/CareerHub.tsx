@@ -18,9 +18,17 @@ import {
 } from '../logic/playerAttributes'
 import { formatMarketValue, marketValue, playerRating } from '../logic/rating'
 import { familyStatus } from '../logic/relationships'
-import { careerCurrency, isCareerOver, seasonYearLabel } from '../logic/season'
+import {
+  careerCurrency,
+  isCareerOver,
+  seasonYearLabel,
+  squadStatus,
+  type SquadStatus
+} from '../logic/season'
 import { isMarketPending } from '../logic/transfers'
 import { useGameStore } from '../store/gameStore'
+
+const SQUAD_ORDER: SquadStatus[] = ['reserva', 'suplente', 'rotacion', 'titular', 'indiscutible']
 
 /** Centro de la carrera: ficha, situación en el club y acceso a la temporada y a la Sala de trofeos. */
 export function CareerHub(): React.JSX.Element {
@@ -58,6 +66,8 @@ export function CareerHub(): React.JSX.Element {
   const takerOf = SET_PIECE_ATTRIBUTES.filter((id) => roles[id]).map((id) => SET_PIECE_LABELS[id])
   const canSpend = pendingPoints > 0 && !over
   const target = career.transferTarget ? getClub(career.transferTarget.clubId) : null
+  const squad = squadStatus(career)
+  const squadLevel = SQUAD_ORDER.indexOf(squad.status)
 
   const saveLabel = {
     idle: t.hub.save,
@@ -79,22 +89,40 @@ export function CareerHub(): React.JSX.Element {
             {t.hub.eyebrow} {seasonShown} {t.hub.seasonOf} {career.mode.seasons} ·{' '}
             {seasonYearLabel(seasonShown)} · {t.hub.mode} {modeName}
           </span>
-          <h1 className="screen-title hub__title" data-testid="hub-player-name">
-            {character.name}
-          </h1>
+          <div className="hub__name-row">
+            <h1 className="screen-title hub__title" data-testid="hub-player-name">
+              {character.name}
+            </h1>
+            <img
+              className="hub__flag"
+              src={nationality.flag}
+              alt={nationality.name}
+              title={nationality.name}
+              data-testid="hub-flag"
+            />
+          </div>
         </div>
-        <div className="hub__club-badge">
-          <ClubCrest club={club} size={44} />
-          <div>
-            <strong data-testid="hub-club-name">
-              {club.name}
-              {career.captaincy && (
-                <span className="captain-badge" title={t.hub.captain} data-testid="captain-badge">
-                  C
-                </span>
-              )}
+        <div className="hub__badges">
+          <div className="hub__club-badge">
+            <ClubCrest club={club} size={44} />
+            <div>
+              <strong data-testid="hub-club-name">
+                {club.name}
+                {career.captaincy && (
+                  <span className="captain-badge" title={t.hub.captain} data-testid="captain-badge">
+                    C
+                  </span>
+                )}
+              </strong>
+              <span data-testid="hub-division">{division}</span>
+            </div>
+          </div>
+          <div className="hub__wage-badge" data-testid="hub-wage">
+            <span>{t.hub.wage}</span>
+            <strong>
+              {formatMoney(career.contract.weeklyWage, currency)}
+              {t.club.perWeek}
             </strong>
-            <span data-testid="hub-division">{division}</span>
           </div>
         </div>
       </header>
@@ -129,7 +157,6 @@ export function CareerHub(): React.JSX.Element {
 
       <div className="hub__grid">
         <section className="panel hub-card">
-          <img className="hub-card__flag" src={nationality.flag} alt="" />
           <div className="rating rating--compact">
             <span className="rating__value" data-testid="hub-rating">
               {playerRating(career)}
@@ -142,6 +169,10 @@ export function CareerHub(): React.JSX.Element {
               <dd>
                 <span className="tag">{position.short}</span> {position.name}
               </dd>
+            </div>
+            <div>
+              <dt>{t.creation.footLabel}</dt>
+              <dd data-testid="hub-foot">{t.creation.feet[character.foot]}</dd>
             </div>
             <div>
               <dt>{t.creation.nationalityLabel}</dt>
@@ -221,19 +252,18 @@ export function CareerHub(): React.JSX.Element {
                     {attr.name}
                     {taker && <span className="taker-tag">{t.hub.setPieces}</span>}
                   </span>
-                  <AttributeBar
-                    value={career.attributes[attr.id]}
-                    max={max}
-                    marker={setPiece ? setPieceMin : undefined}
-                  />
+                  <AttributeBar value={career.attributes[attr.id]} max={max} />
                   <span className="attr-row__value">{career.attributes[attr.id]}</span>
                 </div>
               )
             })
           )}
-          <p className="hub-attrs__takers" data-testid="hub-set-pieces">
-            {takerOf.length > 0 ? `${t.hub.setPieces}: ${takerOf.join(' · ')}` : t.hub.noSetPieces}
-          </p>
+          {/* Que eres el lanzador se descubre al llegar al nivel: no se dice cuál es. */}
+          {takerOf.length > 0 && (
+            <p className="hub-attrs__takers" data-testid="hub-set-pieces">
+              {t.hub.setPieces}: {takerOf.join(' · ')}
+            </p>
+          )}
         </section>
 
         <section className="panel hub-next">
@@ -267,6 +297,21 @@ export function CareerHub(): React.JSX.Element {
                 <span className="meter__value">{career[key]}</span>
               </div>
             ))}
+            <div
+              className={`meter meter--squad squad--${squad.status}`}
+              title={t.hub.squadHint}
+              data-testid="meter-squad"
+            >
+              <span className="meter__label">{t.hub.squad}</span>
+              <span className="squad-level">
+                <span className="squad-level__steps" aria-hidden="true">
+                  {SQUAD_ORDER.map((level, i) => (
+                    <i key={level} className={i <= squadLevel ? 'on' : undefined} />
+                  ))}
+                </span>
+                <b data-testid="hub-squad">{t.hub.squadLevels[squad.status]}</b>
+              </span>
+            </div>
           </div>
 
           <nav className="hub-nav" aria-label={t.hub.club}>

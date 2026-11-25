@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AttributeBar } from '../components/AttributeBar'
 import { ATTRIBUTE_GROUPS, ATTRIBUTES, type Attributes } from '../data/attributes'
 import { t } from '../i18n/es'
-import { careerScale, setPieceThreshold } from '../logic/playerAttributes'
+import { careerScale } from '../logic/playerAttributes'
 import { useGameStore } from '../store/gameStore'
 
 /**
@@ -17,7 +17,6 @@ export function TrainingPoints(): React.JSX.Element {
 
   if (!career) return <></>
   const max = careerScale(career)
-  const setPieceMin = setPieceThreshold(career)
   const spent = Object.values(allocation).reduce((s, n) => s + (n ?? 0), 0)
   const left = career.pendingPoints - spent
   const value = (id: keyof Attributes): number => career.attributes[id] + (allocation[id] ?? 0)
@@ -36,22 +35,11 @@ export function TrainingPoints(): React.JSX.Element {
         <section className="panel attr-panel">
           {ATTRIBUTE_GROUPS.map((group) => (
             <div key={group} className="attr-group">
-              <h2 className="attr-group__title">
-                {group}
-                {group === 'Balón parado' && (
-                  <span className="attr-group__hint">
-                    {t.attributes.setPieceHint.replace('{n}', String(setPieceMin))}
-                  </span>
-                )}
-              </h2>
+              <h2 className="attr-group__title">{group}</h2>
               {ATTRIBUTES.filter((a) => a.group === group).map((attr) => (
                 <div key={attr.id} className="attr-row" title={attr.description}>
                   <span className="attr-row__name">{attr.name}</span>
-                  <AttributeBar
-                    value={value(attr.id)}
-                    max={max}
-                    marker={group === 'Balón parado' ? setPieceMin : undefined}
-                  />
+                  <AttributeBar value={value(attr.id)} max={max} />
                   <span className="attr-row__mods">
                     {(allocation[attr.id] ?? 0) > 0 && (
                       <span className="mini-mod mini-mod--points">+{allocation[attr.id]}</span>

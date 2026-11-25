@@ -5,7 +5,7 @@ import { isValidSaveId, type SaveFile, type SaveSummary } from '../shared/saves'
 
 /**
  * Partidas guardadas como JSON en la carpeta de datos del usuario:
- * %APPDATA%/futbol-rol/saves/<id>.json en Windows.
+ * %APPDATA%/Your Football Path/saves/<id>.json en Windows.
  */
 export function savesDir(): string {
   return join(app.getPath('userData'), 'saves')

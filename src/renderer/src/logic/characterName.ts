@@ -8,6 +8,11 @@ export function normalizeName(raw: string): string {
   return raw.trim().replace(/\s+/g, ' ')
 }
 
+/** El nombre se escribe siempre en mayúsculas. */
+export function upperName(raw: string): string {
+  return raw.toLocaleUpperCase('es-ES')
+}
+
 /** Devuelve el error del nombre o `null` si es válido. */
 export function validateName(raw: string): NameError | null {
   const name = normalizeName(raw)

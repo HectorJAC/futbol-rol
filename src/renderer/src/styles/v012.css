@@ -1,0 +1,184 @@
+/* ==========================================================================
+   v0.12: resumen antes de firmar, próximo partido importante y papel en cada
+   partido (titular o suplente).
+   ========================================================================== */
+
+/* ---------- Resumen de la nueva partida ---------- */
+
+.creation-summary__grid {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1180px;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 300px;
+  gap: 20px;
+}
+
+.creation-summary__grid > .panel {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.creation-summary__player {
+  align-items: center;
+  gap: 14px;
+}
+
+.creation-summary__player .panel-title {
+  align-self: stretch;
+  margin-bottom: 0;
+}
+
+.creation-summary__rating {
+  width: clamp(84px, 12vh, 120px);
+}
+
+.creation-summary__facts {
+  align-self: stretch;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.creation-summary__facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.creation-summary__facts dt {
+  color: var(--text-dim);
+}
+
+.creation-summary__facts dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.creation-summary__attrs .panel-title {
+  margin-bottom: 8px;
+}
+
+.creation-summary__attrs .panel-title .field__hint {
+  margin-left: 6px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.creation-summary__attr-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 4px 20px;
+}
+
+.creation-summary__attr-list .attr-group__title {
+  margin: 6px 0 2px;
+}
+
+.creation-summary__attr-list .attr-row--readonly {
+  grid-template-columns: 104px minmax(0, 1fr) 26px;
+  min-height: 24px;
+  gap: 8px;
+}
+
+.creation-summary__attr-list .attr-row__name {
+  font-size: 13px;
+}
+
+.creation-summary__contract {
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.creation-summary__contract .panel-title {
+  align-self: stretch;
+  text-align: left;
+}
+
+.creation-summary__contract .creation-summary__facts {
+  margin-top: 8px;
+  text-align: left;
+}
+
+/* ---------- Próximo partido importante ---------- */
+
+.next-match {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(243, 199, 90, 0.35);
+  border-radius: 12px;
+  background: rgba(243, 199, 90, 0.06);
+  display: grid;
+  gap: 8px;
+}
+
+.next-match__eyebrow {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.next-match__teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.next-match__team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.next-match__team strong {
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.next-match__team--away {
+  justify-content: flex-end;
+}
+
+.next-match__vs {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.next-match__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* ---------- Calendario: titular o suplente ---------- */
+
+.calendar__role {
+  margin-right: 6px;
+  font-size: 12px;
+}

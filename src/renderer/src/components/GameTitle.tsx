@@ -1,6 +1,6 @@
 import { t } from '../i18n/es'
 
-/** Título provisional del juego: "Proyecto: Juego Futbol-Rol". */
+/** Título del juego: "Your Football Path" ("Your" pequeño encima de "Football Path"). */
 export function GameTitle(): React.JSX.Element {
   return (
     <h1 className="game-title">

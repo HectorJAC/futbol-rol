@@ -9,7 +9,13 @@ import { advanceSeason, startSeason } from './season'
 
 const career = createCareer(
   {
-    character: { name: 'Diego Rivera', sex: 'M', position: 'DC', nationalityId: 'ARG' },
+    character: {
+      name: 'Diego Rivera',
+      sex: 'M',
+      foot: 'derecha',
+      position: 'DC',
+      nationalityId: 'ARG'
+    },
     mode: defaultMode('normal'),
     originId: 'arg-potrero',
     allocation: { ...emptyAttributes(), finishing: 4, pace: 4 },

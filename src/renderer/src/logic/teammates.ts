@@ -263,3 +263,39 @@ export function canBeCaptain(career: Career): boolean {
 export function losesCaptaincy(career: Career): boolean {
   return !!career.captaincy && (career.trust < 30 || averageRelation(career) < 30)
 }
+
+/** Un compañero (o excompañero) que sale nombrado en un evento. */
+export interface MentionedMate {
+  name: string
+  /** Papel en el vestuario ("Veterano del vestuario") o el club donde coincidisteis. */
+  label: string
+  relation: number
+}
+
+/**
+ * Compañeros que nombra un evento (por sus `{veterano}`, `{amigo}`… o el
+ * `{excompanero}` protagonista), para enseñar la relación al pasar el cursor.
+ */
+export function mentionedTeammates(
+  career: Pick<Career, 'teammates' | 'exTeammates'>,
+  texts: readonly string[],
+  featuredExId?: string
+): MentionedMate[] {
+  const all = texts.join('\n')
+  const result: MentionedMate[] = []
+  for (const role of ROSTER_ROLES) {
+    const mate = teammateByRole(career, role)
+    if (mate && all.includes(ROLE_PLACEHOLDERS[role])) {
+      result.push({ name: mate.name, label: ROLE_LABELS[role], relation: mate.relation })
+    }
+  }
+  const ex = career.exTeammates.find((x) => x.id === featuredExId)
+  if (ex && all.includes('{excompanero}')) {
+    result.push({
+      name: ex.name,
+      label: `Excompañero en el ${getClub(ex.clubId).name}`,
+      relation: ex.relation
+    })
+  }
+  return result
+}

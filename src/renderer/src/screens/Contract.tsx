@@ -13,10 +13,11 @@ import {
   shopOffer,
   totalSpent
 } from '../logic/finance'
+import { canRequestRaise, raiseOptions, type RaiseLevel } from '../logic/contractTalks'
 import { careerScale, scaledDeltas } from '../logic/playerAttributes'
 import { useGameStore } from '../store/gameStore'
 
-type Tab = 'contract' | 'shop' | 'expenses'
+type Tab = 'contract' | 'raise' | 'shop' | 'expenses'
 
 const CATEGORIES: ShopCategory[] = [
   'Entrenamiento',
@@ -26,11 +27,12 @@ const CATEGORIES: ShopCategory[] = [
   'Familia'
 ]
 
-/** Contrato actual, tienda de mejoras con el dinero ganado y lista de gastos. */
+/** Contrato actual, petición de mejora, compras con el dinero ganado y lista de gastos. */
 export function Contract(): React.JSX.Element {
   const career = useGameStore((s) => s.career)
   const backToHub = useGameStore((s) => s.backToHub)
   const buyUpgrade = useGameStore((s) => s.buyUpgrade)
+  const requestRaise = useGameStore((s) => s.requestRaise)
   const [tab, setTab] = useState<Tab>('contract')
   const [busy, setBusy] = useState(false)
 
@@ -49,6 +51,15 @@ export function Contract(): React.JSX.Element {
     setBusy(false)
   }
 
+  const askRaise = async (level: RaiseLevel): Promise<void> => {
+    setBusy(true)
+    await requestRaise(level)
+    setBusy(false)
+  }
+  const raiseCheck = canRequestRaise(career)
+  const raiseResult =
+    career.flags.raiseSeason === career.season ? String(career.flags.raiseResult) : null
+
   return (
     <div className="screen contract-screen">
       <header className="competitions__header">
@@ -66,6 +77,7 @@ export function Contract(): React.JSX.Element {
         {(
           [
             ['contract', t.contract.contractTab],
+            ['raise', t.contract.raiseTab],
             ['shop', t.contract.shopTab],
             ['expenses', t.contract.expensesTab]
           ] as const
@@ -169,6 +181,84 @@ export function Contract(): React.JSX.Element {
                 </table>
               )}
             </div>
+          </div>
+        )}
+
+        {tab === 'raise' && (
+          <div className="raise" data-testid="raise">
+            <p className="competitions__note">{t.contract.raiseIntro}</p>
+            <p className="raise__current">
+              {t.contract.raiseCurrent}:{' '}
+              <strong>
+                {money(contract.weeklyWage)}
+                {t.contract.perWeek}
+              </strong>{' '}
+              · {t.contract.until} {contract.endSeason} ({seasonYearLabel(contract.endSeason)})
+            </p>
+            {raiseResult && (
+              <p
+                className={`hub__message${raiseResult === 'aceptada' ? ' hub__message--gold' : ''}`}
+                role="status"
+                data-testid="raise-result"
+              >
+                {raiseResult === 'aceptada'
+                  ? t.contract.raiseAccepted
+                      .replace('{wage}', `${money(contract.weeklyWage)}${t.contract.perWeek}`)
+                      .replace('{season}', String(contract.endSeason))
+                  : t.contract.raiseRejected}
+              </p>
+            )}
+            {!raiseCheck.ok && (
+              <p className="field__hint" data-testid="raise-blocked">
+                {raiseCheck.reason}
+              </p>
+            )}
+            {/* Tras pedirla, solo se ve la respuesta hasta la próxima temporada. */}
+            {raiseResult === null && (
+              <div className="raise-grid">
+                {raiseOptions(career).map((option) => {
+                  const increase = Math.round((option.weeklyWage / contract.weeklyWage - 1) * 100)
+                  return (
+                    <article
+                      key={option.level}
+                      className={`raise-card raise-card--${option.level}`}
+                      data-testid="raise-option"
+                    >
+                      <strong className="raise-card__name">
+                        {t.contract.raiseLevels[option.level]}
+                      </strong>
+                      <span className="raise-card__wage">
+                        {money(option.weeklyWage)}
+                        {t.contract.perWeek} <em>+{increase}%</em>
+                      </span>
+                      <p>{t.contract.raiseDescriptions[option.level]}</p>
+                      <dl className="raise-card__facts">
+                        <div>
+                          <dt>{t.contract.raiseChance}</dt>
+                          <dd>🎲 {Math.round(option.chance * 100)}%</dd>
+                        </div>
+                        <div>
+                          <dt>{t.contract.raiseIfNo}</dt>
+                          <dd className="raise-card__risk">
+                            {option.onReject.trust} {t.hub.trust.toLowerCase()} ·{' '}
+                            {option.onReject.morale} {t.hub.morale.toLowerCase()}
+                          </dd>
+                        </div>
+                      </dl>
+                      <button
+                        type="button"
+                        className="btn btn--primary btn--compact"
+                        onClick={() => askRaise(option.level)}
+                        disabled={!raiseCheck.ok || busy}
+                        data-testid={`raise-${option.level}`}
+                      >
+                        {t.contract.raiseAsk}
+                      </button>
+                    </article>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
 

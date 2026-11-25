@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { ClubCrest } from '../components/ClubCrest'
 import { Stars } from '../components/Stars'
 import { Stepper } from '../components/Stepper'
@@ -12,14 +11,11 @@ export function ClubSelection(): React.JSX.Element {
   const selectClub = useGameStore((s) => s.selectClub)
   const confirmClub = useGameStore((s) => s.confirmClub)
   const previousStep = useGameStore((s) => s.previousStep)
-  const [signing, setSigning] = useState(false)
-
-  const offers = getClubOffers(draft.character.nationalityId, draft.originId ?? draft.extraOriginId)
-
-  const sign = async (): Promise<void> => {
-    setSigning(true)
-    await confirmClub()
-  }
+  const offers = getClubOffers(
+    draft.character.nationalityId,
+    draft.originId ?? draft.extraOriginId,
+    draft.offerSeed
+  )
 
   return (
     <div className="screen clubs">
@@ -88,10 +84,10 @@ export function ClubSelection(): React.JSX.Element {
         <button
           type="button"
           className="btn btn--primary"
-          onClick={sign}
-          disabled={!draft.clubId || signing}
+          onClick={confirmClub}
+          disabled={!draft.clubId}
         >
-          {t.club.sign}
+          {t.continue}
         </button>
       </footer>
     </div>

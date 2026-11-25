@@ -7,7 +7,7 @@ import {
   normalizeAttributes,
   scaleDelta
 } from '../data/attributes'
-import { attributeScale, freePointsFor, setPieceMinimum } from '../data/gameModes'
+import { attributeScale, freePointsFor } from '../data/gameModes'
 import { getNationality } from '../data/nationalities'
 import { getOrigin } from '../data/origins'
 import { t } from '../i18n/es'
@@ -28,7 +28,6 @@ export function AttributeAllocation(): React.JSX.Element {
   const mode = draft.mode
   const max = attributeScale(mode)
   const freePoints = freePointsFor(mode)
-  const setPieceMin = setPieceMinimum(mode)
   const attributes = computeAttributes(originId, draft.allocation, mode)
   const left = remainingPoints(draft.allocation, mode)
   const score = Math.round(attributeScore(normalizeAttributes(attributes, max)))
@@ -46,14 +45,7 @@ export function AttributeAllocation(): React.JSX.Element {
         <section className="panel attr-panel">
           {ATTRIBUTE_GROUPS.map((group) => (
             <div key={group} className="attr-group">
-              <h2 className="attr-group__title">
-                {group}
-                {group === 'Balón parado' && (
-                  <span className="attr-group__hint">
-                    {t.attributes.setPieceHint.replace('{n}', String(setPieceMin))}
-                  </span>
-                )}
-              </h2>
+              <h2 className="attr-group__title">{group}</h2>
               {ATTRIBUTES.filter((a) => a.group === group).map((attr) => {
                 const value = attributes[attr.id]
                 const fromOrigin = scaleDelta(origin.modifiers[attr.id] ?? 0, max)
@@ -61,11 +53,7 @@ export function AttributeAllocation(): React.JSX.Element {
                 return (
                   <div key={attr.id} className="attr-row" title={attr.description}>
                     <span className="attr-row__name">{attr.name}</span>
-                    <AttributeBar
-                      value={value}
-                      max={max}
-                      marker={group === 'Balón parado' ? setPieceMin : undefined}
-                    />
+                    <AttributeBar value={value} max={max} />
                     <span className="attr-row__mods">
                       {fromOrigin !== 0 && (
                         <span className={`mini-mod mini-mod--${fromOrigin > 0 ? 'up' : 'down'}`}>

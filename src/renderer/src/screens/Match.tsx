@@ -1,5 +1,6 @@
 import { ClubCrest } from '../components/ClubCrest'
 import { EffectChips } from '../components/EffectChips'
+import { NextMatch } from '../components/NextMatch'
 import { ATTRIBUTES } from '../data/attributes'
 import { getClub } from '../data/clubs'
 import { t } from '../i18n/es'
@@ -24,20 +25,11 @@ import {
   checkChance,
   importanceOf,
   seasonContext,
-  seasonStep,
-  type ImportanceReason
+  seasonStep
 } from '../logic/season'
 import { useGameStore } from '../store/gameStore'
 
 const attributeName = (id: string): string => ATTRIBUTES.find((a) => a.id === id)?.name ?? id
-
-/** Por qué es un partido importante (las rondas de copa ya salen en el título). */
-const REASON_LABELS: Partial<Record<ImportanceReason, string>> = {
-  grande: 'Contra un grande',
-  segundo: 'Duelo en la parte alta',
-  clasico: 'Clásico',
-  derbi: 'Derbi'
-}
 
 const COMPETITION_NAME = {
   liga: t.competitions.league,
@@ -57,10 +49,12 @@ export function Match(): React.JSX.Element {
   const live = career?.seasonProgress?.liveMatch
   const over = live ? isLiveMatchOver(live) : false
   // Si al acabar este partido toca otro importante, el botón dice "Jugar partido".
-  const nextIsMatch = useMemo(
-    () => !!career && over && seasonStep(advanceSeason(finishLiveMatch(career))) === 'match',
-    [career, over]
-  )
+  const next = useMemo(() => {
+    if (!career || !over) return null
+    const advanced = advanceSeason(finishLiveMatch(career))
+    return seasonStep(advanced) === 'match' ? (advanced.seasonProgress?.liveMatch ?? null) : null
+  }, [career, over])
+  const nextIsMatch = next !== null
   if (!career || !live) return <></>
   const lineup = needsLineup(live)
 
@@ -180,8 +174,8 @@ export function Match(): React.JSX.Element {
               { competition: live.competition, round: live.round },
               career.seasonProgress?.setup
             )}
-            {reason && REASON_LABELS[reason] && (
-              <span className="match-card__reason">{REASON_LABELS[reason]}</span>
+            {reason && t.match.reasons[reason] && (
+              <span className="match-card__reason">{t.match.reasons[reason]}</span>
             )}
             <span className={`match-role match-role--${role}`} data-testid="match-role">
               {t.match.roles[role]}
@@ -240,6 +234,7 @@ export function Match(): React.JSX.Element {
                   </div>
                 </div>
               )}
+              {next && <NextMatch career={career} live={next} />}
             </div>
           ) : (
             momentShown && (

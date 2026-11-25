@@ -1,4 +1,4 @@
-# Plan v0.1 — "Proyecto: Juego Futbol-Rol"
+# Plan — "Your Football Path" (nombre provisional hasta la v0.14: "Proyecto: Juego Futbol-Rol")
 
 ## Contexto
 Juego que fusiona el modo carrera de jugador (FIFA/PES, Copero) con el RPG narrativo (Mass Effect, Dragon Age, Baldur's Gate): no se juega al fútbol, se toman decisiones que marcan toda la carrera. Objetivo final: publicarlo en **Steam**; **solo se jugará como app de escritorio desde Steam, no habrá versión web** (Windows primero). La carpeta `C:\Users\USER\Documents\Futbol-Rol` está vacía (no es repo git). Hay Node 22 / npm 10 instalados.
@@ -120,7 +120,7 @@ Sin licencias **no se pueden usar** nombres reales de clubes, jugadores, ligas, 
 **Decisión del 2026-11-23 (v0.8):** los clubes usan nombres parecidos a los reales con una o dos letras cambiadas ("FC Barkelone", "Real Madrik") y las ligas nombres genéricos ("Primera División de España"). Jugadores, trofeos y escudos siguen siendo propios. Antes de publicar en Steam conviene revisar este criterio con alguien de temas legales.
 
 ### Roadmap tentativo
-Estado a 2026-11-24: v0.1–v0.11 hechas (ver el registro de trabajo en README.md).
+Estado a 2026-11-24: v0.1–v0.15 hechas (ver el registro de trabajo en README.md).
 
 - ✅ **v0.1** — Menú principal + creación de personaje (este plan).
 - ✅ **v0.2** — Orígenes y atributos iniciales, elección del primer club, guardado/carga local (JSON en la carpeta de usuario).
@@ -133,4 +133,8 @@ Estado a 2026-11-24: v0.1–v0.11 hechas (ver el registro de trabajo en README.m
 - ✅ **v0.9** — Resultados entre decisiones, moneda por país, origen de las consecuencias, título del partido importante dentro del recuadro, eventos que reaccionan al último partido (texto con el marcador real), eventos únicos ("La nómina de un grande", "Un país nuevo") y titularidad difícil para un joven en un club de 5 estrellas.
 - ✅ **v0.10** — Balón parado (córners, faltas, penaltis) y lanzadores, escala de atributos por modo (20/30/50), compañeros y excompañeros con relación, capitanía, buscador de equipos, tienda de 15 mejoras centrada en atributos, panel de resultados con tus números, puesto en liga en el marcador, tres copas europeas y Copa Intercontinental, y reparto de puntos cuando quieras.
 - ✅ **v0.11** — Convocatoria en los partidos importantes (titular, suplente, no convocado) y cambios, notas al estilo Sofascore, mercado según nacionalidad y edad, "Horas extra" según lo que necesita el equipo, 10 puntos libres en la Completa y motivos de no jugar.
+- ✅ **v0.12** — Resumen antes de firmar, tres clubes al azar en el primer contrato (5 estrellas, 4–3 y 3–2), moral desde 50 que se mueve con partidos y relaciones, de 3 a 5 jugadas en los partidos importantes según su relevancia, rival del próximo partido importante en las decisiones, titular o suplente en los resultados, "Corners" y sin pistas de lanzador.
+- ✅ **v0.13** — Pierna buena (derecha o izquierda) al crear el jugador, nombre siempre en mayúsculas, modo Completa de 15 temporadas y Rápida y Normal cerradas por ahora.
+- ✅ **v0.14** — Hub rediseñado (bandera, sueldo, tarjetas a medida y titularidad), pedir una mejora de contrato, "Compras", barras del míster y la afición, cinco escenarios para conocer pareja, opciones bloqueadas sin dinero, penalti del veterano solo para el lanzador, colores de cada copa europea en la tabla, relación con los compañeros al pasar el cursor, división en el mercado y resumen con scroll.
+- ✅ **v0.15** — Nombre definitivo: **Your Football Path** (título, ventana, ejecutable y acceso directo; las partidas y los ajustes pasan a la carpeta nueva).
 - **v1.0** — Steamworks (logros, Cloud), traducción al inglés, empaquetado y página de Steam.

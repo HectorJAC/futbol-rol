@@ -9,18 +9,13 @@ function attributeTone(value: number, max: number): 'low' | 'mid' | 'good' | 'gr
   return 'low'
 }
 
-/**
- * Barra horizontal de un atributo (1–`max`). Con `marker` se dibuja una línea
- * en ese valor (por ejemplo, el mínimo para ser el lanzador de penaltis).
- */
+/** Barra horizontal de un atributo (1–`max`). */
 export function AttributeBar({
   value,
-  max = ATTRIBUTE_MAX,
-  marker
+  max = ATTRIBUTE_MAX
 }: {
   value: number
   max?: number
-  marker?: number
 }): React.JSX.Element {
   return (
     <span className="attr-bar" aria-hidden="true">
@@ -28,9 +23,6 @@ export function AttributeBar({
         className={`attr-bar__fill attr-bar__fill--${attributeTone(value, max)}`}
         style={{ width: `${(value / max) * 100}%` }}
       />
-      {marker !== undefined && (
-        <span className="attr-bar__marker" style={{ left: `${(marker / max) * 100}%` }} />
-      )}
     </span>
   )
 }

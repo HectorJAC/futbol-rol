@@ -135,6 +135,165 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     ]
   },
 
+  // Otras formas de conocer a alguien: mismo título, otra historia. Sale la que
+  // menos veces ha salido (y, entre ellas, una al azar).
+  {
+    id: 'pareja-conocer-infancia',
+    title: 'Alguien especial',
+    text: 'Vuelves a casa en vacaciones y te cruzas con tu amiga de la infancia, la que jugaba contigo al fútbol en la calle hasta que se hacía de noche y te ganaba a los penaltis. Os sentáis en el banco de siempre y, sin daros cuenta, se os hace de madrugada.',
+    story: { id: 'pareja', repeatable: true },
+    minAge: 18,
+    conditions: [{ flag: 'partner', oneOf: [null] }],
+    options: [
+      {
+        label: 'Confesarle que siempre te ha gustado',
+        check: {
+          attribute: 'composure',
+          difficulty: 9,
+          success: {
+            text: 'Se queda callada un segundo eterno y luego se ríe: "Llevo desde los doce años esperando que lo dijeras". Vuelves a la ciudad deportiva con la cabeza en las nubes.',
+            effects: { morale: 10, flags: { partner: 'pareja' } }
+          },
+          failure: {
+            text: 'Te mira con cariño y te da un abrazo: "Eres como mi hermano". Volvéis a casa en silencio. La amistad sigue ahí, pero escuece.',
+            effects: { morale: -4 }
+          }
+        }
+      },
+      {
+        label: 'Proponerle veros cada vez que vuelvas a casa',
+        outcome: {
+          text: 'Un café cada vez que vuelves, mensajes a diario entre medias. Una noche te das cuenta de que ya no os despedís como amigos.',
+          effects: { morale: 7, flags: { partner: 'pareja' } }
+        }
+      },
+      {
+        label: 'Dejarlo estar: no quieres estropear una amistad de toda la vida',
+        outcome: {
+          text: 'Os despedís con un abrazo largo. Ella vuelve a su vida y tú a la tuya, aunque esa noche te cuesta dormir.',
+          effects: { morale: -2, trust: 2 }
+        }
+      }
+    ]
+  },
+  {
+    id: 'pareja-conocer-hospital',
+    title: 'Alguien especial',
+    text: 'El club organiza una visita al hospital infantil. La voluntaria que os acompaña por las habitaciones no se impresiona con los autógrafos, pero se le ilumina la cara cuando te sientas en el suelo a jugar con los niños.',
+    story: { id: 'pareja', repeatable: true },
+    minAge: 18,
+    conditions: [{ flag: 'partner', oneOf: [null] }],
+    options: [
+      {
+        label: 'Esperarla a la salida e invitarla a cenar',
+        check: {
+          attribute: 'composure',
+          difficulty: 10,
+          success: {
+            text: '"Solo si es un sitio donde nadie te pida fotos", te dice. Encontráis uno. Es la primera de muchas cenas.',
+            effects: { morale: 8, flags: { partner: 'pareja' } }
+          },
+          failure: {
+            text: 'Te dice que no sale con futbolistas, con una sonrisa que no admite réplica. Al menos los niños te han pedido que vuelvas.',
+            effects: { morale: -3, reputation: 1 }
+          }
+        }
+      },
+      {
+        label: 'Apuntarte como voluntario y volver cada semana',
+        outcome: {
+          text: 'Vuelves los martes, sin cámaras. Entre cuentos y partidas de cartas, una tarde ella te espera a la salida con dos cafés.',
+          effects: { morale: 7, reputation: 2, flags: { partner: 'pareja' } }
+        }
+      },
+      {
+        label: 'Darle las gracias y volver a lo tuyo',
+        outcome: {
+          text: 'Firmas los últimos balones y te vas al entrenamiento. Su sonrisa se te queda en la cabeza más de lo que te gustaría admitir.',
+          effects: { trust: 2, morale: -1 }
+        }
+      }
+    ]
+  },
+  {
+    id: 'pareja-conocer-cafeteria',
+    title: 'Alguien especial',
+    text: 'Cada mañana paras en la misma cafetería antes de entrenar. La chica de la barra ya te pone el café sin preguntar y hoy, por primera vez, te ha dejado una nota en el vaso: "¿Y si un día te lo tomas sentado?".',
+    story: { id: 'pareja', repeatable: true },
+    minAge: 18,
+    conditions: [{ flag: 'partner', oneOf: [null] }],
+    options: [
+      {
+        label: 'Sentarte en la barra y darle conversación',
+        check: {
+          attribute: 'composure',
+          difficulty: 10,
+          success: {
+            text: 'Llegas tarde al entrenamiento por primera vez en tu vida y te da igual. Esa noche cenáis juntos.',
+            effects: { morale: 8, trust: -1, flags: { partner: 'pareja' } }
+          },
+          failure: {
+            text: 'Entra el grupo de las ocho, se llena la barra y no os da tiempo ni a presentaros. Al día siguiente la nota ya no está.',
+            effects: { morale: -3 }
+          }
+        }
+      },
+      {
+        label: 'Contestarle con otra nota y tu número',
+        outcome: {
+          text: 'Notas que van y vienen durante semanas, hasta que un domingo os veis fuera de la cafetería. Ya no hay vuelta atrás.',
+          effects: { morale: 6, flags: { partner: 'pareja' } }
+        }
+      },
+      {
+        label: 'Cambiar de cafetería: no estás para distracciones',
+        outcome: {
+          text: 'El café nuevo está peor y la camarera ni te mira. Llegas puntual a todos los entrenamientos.',
+          effects: { trust: 3, morale: -2 }
+        }
+      }
+    ]
+  },
+  {
+    id: 'pareja-conocer-vuelo',
+    title: 'Alguien especial',
+    text: 'Una tormenta deja el vuelo de vuelta de un partido fuera tres horas en tierra. La chica del asiento de al lado te presta un cargador, luego medio bocadillo y, al final, te cuenta su vida entera. No sabe quién eres hasta que los de la otra fila te piden una foto.',
+    story: { id: 'pareja', repeatable: true },
+    minAge: 18,
+    conditions: [{ flag: 'partner', oneOf: [null] }],
+    options: [
+      {
+        label: 'Pedirle una cita antes de aterrizar',
+        check: {
+          attribute: 'composure',
+          difficulty: 10,
+          success: {
+            text: '"Me debes medio bocadillo", te contesta. La semana siguiente se lo devuelves en el mejor restaurante de la ciudad.',
+            effects: { morale: 8, flags: { partner: 'pareja' } }
+          },
+          failure: {
+            text: 'Aterrizáis, se despide con prisa y se pierde entre la gente del aeropuerto. Ni siquiera sabes su apellido.',
+            effects: { morale: -4 }
+          }
+        }
+      },
+      {
+        label: 'Invitarla a ver tu próximo partido en casa',
+        outcome: {
+          text: 'Viene al partido, no entiende el fuera de juego y grita tu gol más que nadie. Al acabar te espera en la puerta del estadio.',
+          effects: { morale: 6, flags: { partner: 'pareja' } }
+        }
+      },
+      {
+        label: 'Ponerte los cascos y repasar vídeos del rival',
+        outcome: {
+          text: 'Aprovechas las horas muertas para estudiar al próximo rival. El míster te ve concentrado; ella se duerme con la cabeza en la ventanilla.',
+          effects: { trust: 3, morale: -2 }
+        }
+      }
+    ]
+  },
+
   // -------------------------------------------------------------------------
   // Primeros tiempos de novios.
   // -------------------------------------------------------------------------

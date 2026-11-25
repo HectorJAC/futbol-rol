@@ -1,9 +1,10 @@
+import { EXTRA_MATCH_MOMENTS } from './matchMomentsExtra'
 import type { MatchMoment } from './matchTypes'
 
 /**
  * Jugadas clave de los partidos importantes (derbis, finales de copa y finales
- * continentales). En cada partido salen 3–4, en orden: una de inicio, una o dos
- * del medio y una del final. El marcador se actualiza tras cada decisión.
+ * continentales). En cada partido salen de 3 a 5 según su relevancia (2 si
+ * sales desde el banquillo), en orden de minuto. El marcador se actualiza tras cada decisión.
  */
 export const MATCH_MOMENTS: readonly MatchMoment[] = [
   // -------------------------------------------------------------------------
@@ -1287,5 +1288,6 @@ export const MATCH_MOMENTS: readonly MatchMoment[] = [
         }
       }
     ]
-  }
+  },
+  ...EXTRA_MATCH_MOMENTS
 ]

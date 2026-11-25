@@ -1,0 +1,380 @@
+/* ==========================================================================
+   v0.14: hub rediseñado, titularidad, mejora de contrato, colores de las
+   copas en la tabla, relación con los compañeros y resumen con scroll.
+   ========================================================================== */
+
+/* ---------- Hub: bandera junto al nombre y sueldo junto al club ---------- */
+
+.hub__name-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hub__flag {
+  flex: none;
+  height: 36px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.hub__badges {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.hub__wage-badge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-panel);
+}
+
+.hub__wage-badge span {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.hub__wage-badge strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* Las tarjetas miden lo que su contenido (sin hueco vacío debajo) y, si no
+   caben, hacen scroll. */
+.hub__grid {
+  grid-template-rows: minmax(0, max-content);
+  align-content: center;
+}
+
+.hub-next__soon {
+  margin-top: 6px;
+}
+
+/* ---------- Hub: titularidad ---------- */
+
+.meter--squad .squad-level {
+  grid-column: 2 / 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.squad-level__steps {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+}
+
+.squad-level__steps i {
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.squad-level__steps i.on {
+  background: linear-gradient(90deg, #3a86ff, var(--accent));
+}
+
+.squad-level b {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.squad--indiscutible b,
+.squad--titular b {
+  color: var(--accent);
+}
+
+.squad--rotacion b {
+  color: var(--gold);
+}
+
+.squad--suplente b,
+.squad--reserva b {
+  color: var(--text-dim);
+}
+
+/* ---------- Contrato: pedir una mejora ---------- */
+
+.raise__current {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.raise__current strong {
+  color: var(--text);
+}
+
+.raise .hub__message {
+  margin: 0 0 12px;
+}
+
+.raise-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.raise-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: rgba(5, 8, 15, 0.45);
+}
+
+.raise-card__name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.raise-card__wage {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--gold);
+}
+
+.raise-card__wage em {
+  margin-left: 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.raise-card p {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.raise-card__facts {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.raise-card__facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.raise-card__facts dt {
+  color: var(--text-dim);
+}
+
+.raise-card__facts dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.raise-card__risk {
+  color: var(--danger);
+}
+
+.raise-card .btn {
+  align-self: flex-end;
+}
+
+/* ---------- Decisiones: opciones sin dinero y relación con los compañeros ---------- */
+
+.event-option--locked,
+.event-option--locked:hover {
+  opacity: 0.55;
+  border-color: var(--line);
+  background: rgba(5, 8, 15, 0.5);
+  transform: none;
+  cursor: var(--cursor-disabled);
+}
+
+.event-option__locked {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 122, 122, 0.4);
+  color: var(--danger);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.mate-ref {
+  position: relative;
+  border-bottom: 1px dotted currentColor;
+  cursor: var(--cursor-default);
+}
+
+.mate-ref--aliado,
+.mate-ref--bien {
+  border-bottom-color: var(--accent);
+}
+
+.mate-ref--tenso,
+.mate-ref--enemigo {
+  border-bottom-color: var(--danger);
+}
+
+/* Debajo del nombre (arriba se cortaría en el título de la tarjeta). */
+.mate-ref::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+  z-index: 20;
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: rgb(14, 22, 38);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.mate-ref:hover::after {
+  opacity: 1;
+}
+
+/* ---------- Tabla de liga: cada copa europea con su color ---------- */
+
+.row--campeones td:first-child {
+  box-shadow: inset 3px 0 0 #3a86ff;
+}
+
+.row--europa td:first-child {
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.row--conferencia td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.table-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.table-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.table-legend__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.table-legend__swatch--campeones {
+  background: #3a86ff;
+}
+
+.table-legend__swatch--europa {
+  background: var(--gold);
+}
+
+.table-legend__swatch--conferencia {
+  background: var(--accent);
+}
+
+.table-legend__swatch--descenso {
+  background: var(--danger);
+}
+
+/* ---------- Mercado: división de cada club ---------- */
+
+.offer__division {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ---------- Resumen de temporada: muchos títulos hacen scroll ---------- */
+
+.summary-grid {
+  grid-template-rows: minmax(0, max-content);
+}
+
+.summary-grid > .panel {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.summary-grid > .summary-trophies {
+  overflow: hidden;
+}
+
+.summary-trophies .trophy-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+/* En ventanas bajas (1280×720 con un aviso arriba) la tarjeta del club cabe sin scroll. */
+@media (max-height: 760px) {
+  .hub-next {
+    gap: 6px;
+  }
+
+  .hub-nav .btn {
+    height: 30px;
+    min-height: 30px;
+  }
+
+  .hub-next__soon {
+    margin-top: 2px;
+    padding: 8px 12px;
+  }
+
+  .hub-next .panel-title {
+    margin-bottom: 4px;
+  }
+}

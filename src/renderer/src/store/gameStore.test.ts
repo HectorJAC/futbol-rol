@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { attributeScale } from '../data/gameModes'
+import { getClubOffers } from '../data/clubs'
+import { attributeScale, defaultMode, type GameModeId } from '../data/gameModes'
+import { getEvent } from '../data/events'
 import { shopOffer } from '../logic/finance'
+import { currentEventId, eventOptions, isOptionLocked } from '../logic/season'
 import { useGameStore } from './gameStore'
 
 const store = useGameStore
@@ -40,15 +43,46 @@ function toOrigins(name = 'Test'): void {
   s().confirmMode()
 }
 
-async function signWithArgentinianStreetOrigin(name: string): Promise<void> {
+/**
+ * Firma con el origen "potrero" de Argentina. La Rápida y la Normal ya no se eligen al
+ * crear partida, pero las guardadas siguen jugándose: aquí se fuerza el modo en el borrador.
+ */
+async function signWithArgentinianStreetOrigin(
+  name: string,
+  modeId: GameModeId = 'completa'
+): Promise<void> {
   s().startNewGame()
+  store.setState((st) => ({ draft: { ...st.draft, mode: defaultMode(modeId) } }))
   toOrigins(name)
   s().selectOrigin('arg-potrero')
   s().confirmOrigin()
   spendAllPoints()
   s().confirmAttributes()
-  s().selectClub('arg-quilmez')
-  await s().confirmClub()
+  s().selectClub(offeredClub(2))
+  s().confirmClub()
+  await s().signContract()
+}
+
+/** Primera opción que se puede elegir (las que no puedes pagar salen bloqueadas). */
+function firstAvailableOption(): number {
+  const career = s().career
+  const eventId = career && currentEventId(career)
+  if (!career || !eventId) return 0
+  const event = getEvent(eventId)
+  return Math.max(
+    0,
+    eventOptions(event, career).findIndex((o) => !isOptionLocked(event, o, career))
+  )
+}
+
+/** Club de la oferta `index` (0 grande, 1 medio, 2 modesto) de esta partida. */
+function offeredClub(index: number): string {
+  const { draft } = s()
+  return getClubOffers(
+    draft.character.nationalityId,
+    draft.originId ?? draft.extraOriginId,
+    draft.offerSeed
+  )[index].club.id
 }
 
 describe('flujo de nueva partida', () => {
@@ -64,11 +98,13 @@ describe('flujo de nueva partida', () => {
     expect(s().draft.character).toEqual({
       name: '',
       sex: 'M',
+      foot: 'derecha',
       position: 'DC',
       nationalityId: 'ARG'
     })
     expect(s().draft.originId).toBeNull()
-    expect(s().draft.mode).toEqual({ id: 'normal', seasons: 20, decisionInterval: 2 })
+    // Por ahora solo la Completa (15 temporadas) y la Personalizada.
+    expect(s().draft.mode).toEqual({ id: 'completa', seasons: 15, decisionInterval: 1 })
     expect(s().draft.extraOriginId).toMatch(/^extra-/)
   })
 
@@ -85,7 +121,8 @@ describe('flujo de nueva partida', () => {
     s().changeNationality(1)
     expect(s().confirmCharacter()).toBe(true)
     expect(s().screen).toBe('modeSelection')
-    expect(s().draft.character.name).toBe('Lionel Test')
+    // El nombre va siempre en mayúsculas.
+    expect(s().draft.character.name).toBe('LIONEL TEST')
     expect(s().draft.character.nationalityId).toBe('ESP')
   })
 
@@ -97,6 +134,29 @@ describe('flujo de nueva partida', () => {
     s().confirmMode()
     expect(s().screen).toBe('originSelection')
     expect(s().draft.mode.seasons).toBe(25)
+  })
+
+  it('paso 1: el nombre se escribe en mayúsculas (con tildes y eñes) y se elige la pierna buena', () => {
+    s().startNewGame()
+    expect(s().draft.character.foot).toBe('derecha')
+    s().setDraftName('iñaki núñez')
+    expect(s().draft.character.name).toBe('IÑAKI NÚÑEZ')
+    s().setFoot('izquierda')
+    expect(s().draft.character.foot).toBe('izquierda')
+    s().confirmCharacter()
+    s().previousStep()
+    expect(s().draft.character.foot).toBe('izquierda')
+  })
+
+  it('paso 2: la Rápida y la Normal no se pueden elegir por ahora', () => {
+    s().startNewGame()
+    s().setDraftName('Test')
+    s().confirmCharacter()
+    s().setMode(defaultMode('rapida'))
+    s().setMode(defaultMode('normal'))
+    expect(s().draft.mode.id).toBe('completa')
+    s().setMode(defaultMode('personalizada'))
+    expect(s().draft.mode.id).toBe('personalizada')
   })
 
   it('cambiar de país descarta un origen nacional pero conserva el especial', () => {
@@ -149,27 +209,38 @@ describe('flujo de nueva partida', () => {
     expect(s().screen).toBe('modeSelection')
     s().previousStep()
     expect(s().screen).toBe('characterCreation')
-    expect(s().draft.character.name).toBe('Test')
+    expect(s().draft.character.name).toBe('TEST')
   })
 
   it('firmar crea la carrera y abre el hub', async () => {
     s().startNewGame()
+    s().setFoot('izquierda')
     toOrigins('Test Final') // Argentina
     s().selectOrigin('arg-hijo-del-tanque')
     s().confirmOrigin()
     spendAllPoints()
     s().confirmAttributes()
-    s().selectClub('arg-lanuz')
-    expect(await s().confirmClub()).toBe(true)
+    const club = offeredClub(1)
+    s().selectClub(club)
+    expect(s().confirmClub()).toBe(true)
+    // Antes de firmar, el resumen.
+    expect(s().screen).toBe('creationSummary')
+    expect(s().career).toBeNull()
+    s().previousStep()
+    expect(s().screen).toBe('clubSelection')
+    expect(s().draft.clubId).toBe(club)
+    s().confirmClub()
+    expect(await s().signContract()).toBe(true)
 
     const career = s().career
     expect(s().screen).toBe('careerHub')
-    expect(career?.character.name).toBe('Test Final')
-    expect(career?.clubId).toBe('arg-lanuz')
+    expect(career?.character.name).toBe('TEST FINAL')
+    expect(career?.clubId).toBe(club)
     expect(career?.season).toBe(1)
     expect(career?.age).toBe(17)
     expect(career?.flags.firstClubOriginBond).toBe(true) // el club donde su padre es ídolo
-    expect(career?.mode.id).toBe('normal')
+    expect(career?.mode).toEqual({ id: 'completa', seasons: 15, decisionInterval: 1 })
+    expect(career?.character.foot).toBe('izquierda')
   })
 
   it('Volver al menú descarta el borrador', () => {
@@ -200,7 +271,7 @@ describe('temporada', () => {
   beforeEach(() => s().backToMenu())
 
   it('modo normal: temporada con decisiones, temporada simulada y mercado', async () => {
-    await signWithArgentinianStreetOrigin('Test Temporada')
+    await signWithArgentinianStreetOrigin('Test Temporada', 'normal')
 
     s().playSeason()
     expect(s().screen).toBe('seasonEvent')
@@ -209,7 +280,7 @@ describe('temporada', () => {
 
     for (let i = 0; i < total; i++) {
       expect(s().screen).toBe('seasonEvent')
-      await s().chooseOption(0)
+      await s().chooseOption(firstAvailableOption())
       expect(s().lastChoice).not.toBeNull()
       // No se puede elegir dos veces el mismo evento.
       await s().chooseOption(1)

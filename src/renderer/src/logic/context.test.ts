@@ -22,7 +22,13 @@ import {
 function career(overrides: Partial<Career> = {}): Career {
   const base = createCareer(
     {
-      character: { name: 'Test Contexto', sex: 'M', position: 'DC', nationalityId: 'ARG' },
+      character: {
+        name: 'Test Contexto',
+        sex: 'M',
+        foot: 'derecha',
+        position: 'DC',
+        nationalityId: 'ARG'
+      },
       mode: defaultMode('completa'),
       originId: 'arg-potrero',
       allocation: emptyAttributes(),
@@ -129,7 +135,8 @@ describe('eventos que reaccionan al último partido', () => {
 describe('eventos únicos y de fichaje', () => {
   it('"Tu primera nómina" solo sale una vez', () => {
     const c = atEvent(career({ age: 17 }), [], 'primer-sueldo')
-    const { career: after } = resolveChoice(c, 0)
+    // Sin dinero, solo se puede ahorrar (la opción que no cuesta nada).
+    const { career: after } = resolveChoice(c, 2)
     expect(isEventEligible(getEvent('primer-sueldo'), { ...after, season: 2 })).toBe(false)
   })
 

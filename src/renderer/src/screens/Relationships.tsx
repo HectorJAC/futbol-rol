@@ -82,7 +82,7 @@ export function Relationships(): React.JSX.Element {
       {tab === 'people' && (
         <div className="relationship-grid">
           {people.map((r) => (
-            <RelationshipCard key={r.id} r={r} />
+            <RelationshipCard key={r.id} r={r} relation={r.value} />
           ))}
         </div>
       )}

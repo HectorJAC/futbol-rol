@@ -8,7 +8,7 @@ import { careerRecordRow, rankCareers } from './records'
 function careerWith(name: string, history: Partial<SeasonRecord>[]): Career {
   const base = createCareer(
     {
-      character: { name, sex: 'M', position: 'DC', nationalityId: 'BRA' },
+      character: { name, sex: 'M', foot: 'derecha', position: 'DC', nationalityId: 'BRA' },
       mode: defaultMode(),
       originId: 'bra-futsal',
       allocation: emptyAttributes(),

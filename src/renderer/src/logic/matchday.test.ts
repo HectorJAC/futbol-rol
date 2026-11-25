@@ -31,7 +31,13 @@ import { generateTransferMarket, marketWeight } from './transfers'
 function career(overrides: Partial<Career> = {}): Career {
   const base = createCareer(
     {
-      character: { name: 'Test Jornada', sex: 'M', position: 'DC', nationalityId: 'ENG' },
+      character: {
+        name: 'Test Jornada',
+        sex: 'M',
+        foot: 'derecha',
+        position: 'DC',
+        nationalityId: 'ENG'
+      },
       mode: defaultMode('completa'),
       originId: 'eng-academia-londres',
       allocation: emptyAttributes(),

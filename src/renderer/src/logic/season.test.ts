@@ -33,7 +33,13 @@ const ORIGIN = 'esp-cantera'
 function newCareer(overrides: Partial<Career> = {}): Career {
   const career = createCareer(
     {
-      character: { name: 'Test Nueve', sex: 'M', position: 'DC', nationalityId: 'ESP' },
+      character: {
+        name: 'Test Nueve',
+        sex: 'M',
+        foot: 'derecha',
+        position: 'DC',
+        nationalityId: 'ESP'
+      },
       mode: defaultMode('completa'),
       originId: ORIGIN,
       allocation: { ...emptyAttributes(), finishing: 4, offTheBall: 4 },

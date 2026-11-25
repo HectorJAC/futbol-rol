@@ -1,4 +1,7 @@
 import { NAME_MAX_LENGTH, NAME_MIN_LENGTH, type NameError } from '../logic/characterName'
+import type { RaiseLevel } from '../logic/contractTalks'
+import type { ImportanceReason, SquadStatus } from '../logic/season'
+import type { Foot } from '../types/character'
 
 /**
  * Todos los textos del juego en un solo sitio.
@@ -6,10 +9,10 @@ import { NAME_MAX_LENGTH, NAME_MIN_LENGTH, type NameError } from '../logic/chara
  */
 export const es = {
   gameTitle: {
-    prefix: 'Proyecto:',
-    main: 'Juego Futbol-Rol'
+    prefix: 'Your',
+    main: 'Football Path'
   },
-  version: 'v0.11',
+  version: 'v0.15',
   comingSoon: 'Próximamente',
   back: 'Atrás',
   continue: 'Continuar',
@@ -28,7 +31,8 @@ export const es = {
     modeSelection: 'Modo',
     originSelection: 'Origen',
     attributes: 'Atributos',
-    clubSelection: 'Club'
+    clubSelection: 'Club',
+    creationSummary: 'Resumen'
   },
   creation: {
     eyebrow: 'Nueva partida',
@@ -44,6 +48,9 @@ export const es = {
     sexLabel: 'Sexo',
     male: 'Masculino',
     female: 'Femenino',
+    footLabel: 'Pierna buena',
+    feet: { derecha: 'Derecha', izquierda: 'Izquierda' } satisfies Record<Foot, string>,
+    footHint: { derecha: 'Diestro', izquierda: 'Zurdo' } satisfies Record<Foot, string>,
     positionLabel: 'Posición',
     nationalityLabel: 'Nacionalidad',
     previousNationality: 'Nacionalidad anterior',
@@ -76,7 +83,8 @@ export const es = {
     customSeasons: 'Número de temporadas',
     customInterval: 'Cada cuánto decides',
     fewer: 'Menos temporadas',
-    more: 'Más temporadas'
+    more: 'Más temporadas',
+    unavailable: 'Este modo no está disponible por ahora.'
   },
   extras: {
     eyebrow: 'Extras',
@@ -109,8 +117,7 @@ export const es = {
     decrease: 'Bajar',
     capHint: 'Hay un máximo por atributo al empezar.',
     mustSpend: 'Reparte todos los puntos para continuar.',
-    scale: 'atributos de 1 a {n}',
-    setPieceHint: 'Con {n} o más eres el lanzador'
+    scale: 'atributos de 1 a {n}'
   },
   club: {
     title: 'Tu primer contrato',
@@ -123,7 +130,27 @@ export const es = {
     perWeek: '/sem',
     tiers: { grande: 'Grande', medio: 'Ambicioso', modesto: 'Modesto' },
     sign: 'Firmar contrato',
-    choose: 'Elige un club para firmar.'
+    choose: 'Elige un club para continuar.'
+  },
+  creationSummary: {
+    title: 'Resumen',
+    subtitle: 'Revísalo todo antes de estampar tu firma. Desde aquí, no hay vuelta atrás.',
+    player: 'Tu jugador',
+    position: 'Posición',
+    foot: 'Pierna buena',
+    nationality: 'Nacionalidad',
+    age: 'Edad',
+    years: 'años',
+    mode: 'Modo de juego',
+    seasons: 'temporadas',
+    origin: 'Origen',
+    attributes: 'Atributos',
+    contract: 'Tu primer contrato',
+    division: 'División',
+    duration: 'Duración',
+    durationValue: '3 temporadas',
+    role: 'Papel',
+    sign: 'Firmar contrato'
   },
   hub: {
     eyebrow: 'Temporada',
@@ -137,6 +164,16 @@ export const es = {
     resume: 'Continuar temporada',
     standing: 'Situación',
     trust: 'Confianza del míster',
+    squad: 'Titularidad',
+    squadLevels: {
+      indiscutible: 'Titular indiscutible',
+      titular: 'Titular',
+      rotacion: 'Rotación',
+      suplente: 'Suplente',
+      reserva: 'Reserva'
+    } satisfies Record<SquadStatus, string>,
+    squadHint: 'Depende de la confianza del míster y de tu nivel frente al de tu club.',
+    wage: 'Sueldo',
     morale: 'Moral',
     reputation: 'Fama',
     lastSeason: 'Última temporada',
@@ -163,7 +200,6 @@ export const es = {
     attributesHint: 'Pulsa para repartir tus puntos pendientes',
     pointsShort: 'puntos por repartir',
     setPieces: 'Lanzador',
-    noSetPieces: 'Aún no eres lanzador de balón parado',
     captain: 'Capitán',
     captainNamed: 'El vestuario te ha elegido capitán del equipo.',
     searchClub: 'Buscar equipo',
@@ -208,6 +244,8 @@ export const es = {
     injured: 'Lesionado',
     bench: 'No jugó',
     notCalledUp: 'No convocado',
+    starter: 'Titular',
+    cameOn: 'Suplente',
     unusedSub: 'Te quedaste en la banca',
     important: 'Partido importante',
     home: 'Local',
@@ -226,8 +264,10 @@ export const es = {
     penalties: 'pen.',
     emptyStats: 'Todavía no hay goles en la liga.',
     legendFirst: 'Dorado: plazas de la Copa Intercontinental. Rojo: descenso a segunda.',
-    legendEurope:
-      'Dorado: 1º–4º, Copa de Campeones; 5º y 6º, Copa de Europa; 7º, Copa Conferencia. Rojo: descenso.',
+    legendChampions: 'Azul: 1º–4º, Copa de Campeones',
+    legendEuropa: 'Dorado: 5º y 6º, Copa de Europa',
+    legendConference: 'Verde: 7º, Copa Conferencia',
+    legendRelegation: 'Rojo: descenso',
     legendSecond: 'Dorado: ascenso a primera. Rojo: zona baja.',
     goalShort: 'gol',
     assistShort: 'asist.',
@@ -278,14 +318,41 @@ export const es = {
     enteredAt: 'Saliste del banquillo en el minuto {n}.',
     subbedAt: 'Te sustituyeron en el minuto {n}.',
     notPlayed: 'No jugaste: no fuiste convocado.',
-    leaguePosition: 'en la liga'
+    leaguePosition: 'en la liga',
+    next: 'Próximo partido importante',
+    vs: 'vs',
+    reasons: {
+      grande: 'Contra un grande',
+      segundo: 'Duelo en la parte alta',
+      clasico: 'Clásico',
+      derbi: 'Derbi'
+    } as Partial<Record<ImportanceReason, string>>
   },
   contract: {
     eyebrow: 'Tu carrera',
     title: 'Contrato y dinero',
     contractTab: 'Contrato',
-    shopTab: 'Mejoras',
+    raiseTab: 'Mejorar contrato',
+    shopTab: 'Compras',
     expensesTab: 'Gastos',
+    raiseIntro:
+      'Pide al club que mejore tu contrato. Solo puedes pedirlo una vez por temporada y, si te dicen que no, bajan la confianza del míster y tu moral.',
+    raiseCurrent: 'Sueldo actual',
+    raiseLevels: {
+      moderada: 'Subida moderada',
+      mercado: 'Lo que vales',
+      ambiciosa: 'Subida ambiciosa'
+    } satisfies Record<RaiseLevel, string>,
+    raiseDescriptions: {
+      moderada: 'Un pequeño ajuste. Es difícil que te lo nieguen.',
+      mercado: 'Lo que el club cree que vale tu rendimiento.',
+      ambiciosa: 'Mucho más de lo que creen que vales. Si sale bien, te cambia la vida.'
+    } satisfies Record<RaiseLevel, string>,
+    raiseChance: 'Probabilidad de que acepten',
+    raiseIfNo: 'Si dicen que no',
+    raiseAsk: 'Pedir',
+    raiseAccepted: '¡Aceptado! Nuevo contrato: {wage} hasta la temporada {season}.',
+    raiseRejected: 'El club ha dicho que no. Este año no habrá mejora.',
     club: 'Club',
     role: 'Rol',
     wage: 'Sueldo',
@@ -311,7 +378,7 @@ export const es = {
     bought: 'Comprado',
     once: 'Una vez',
     perSeasonLimit: 'Una vez por temporada',
-    expensesEmpty: 'Todavía no has comprado ninguna mejora.',
+    expensesEmpty: 'Todavía no has comprado nada.',
     item: 'Compra',
     cost: 'Coste',
     gained: 'Lo que obtuviste',
@@ -400,6 +467,9 @@ export const es = {
     failure: 'Fallo',
     rollOf: 'Tirada de',
     chance: 'de probabilidad',
+    relation: 'Relación',
+    noMoney: 'No tienes dinero suficiente',
+    missing: 'te faltan',
     finish: 'Terminar temporada',
     playRest: 'Jugar el resto de la temporada',
     toHub: 'Volver al hub',

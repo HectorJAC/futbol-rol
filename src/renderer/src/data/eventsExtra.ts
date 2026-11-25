@@ -11,6 +11,8 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
   {
     id: 'primer-sueldo',
     once: true,
+    showEffects: true,
+    lockUnaffordable: true,
     title: 'Tu primera nómina de verdad',
     text: 'Te llega el primer sueldo de futbolista profesional. En el aparcamiento del club, tus compañeros comparan coches que cuestan más que la casa de tus padres.',
     maxAge: 21,
@@ -32,8 +34,8 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
       {
         label: 'Ahorrar y buscar un asesor financiero',
         outcome: {
-          text: 'Un asesor serio te prepara un plan. Los veteranos se ríen de tu utilitario; tú duermes tranquilo.',
-          effects: { money: -5000, morale: 2, trust: 3 }
+          text: 'Un asesor serio te prepara un plan y solo cobra si tu dinero crece. Los veteranos se ríen de tu utilitario; tú duermes tranquilo.',
+          effects: { morale: 2, trust: 3 }
         }
       }
     ]

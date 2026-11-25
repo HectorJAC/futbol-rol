@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { ClubCrest } from '../components/ClubCrest'
-import { notPlayedText } from '../logic/notPlayed'
+import { notPlayedText, playedRoleText } from '../logic/notPlayed'
 import { getClub } from '../data/clubs'
-import { INTERCONTINENTAL_SPOTS, isEuropean } from '../data/continentalCups'
+import { EUROPEAN_SPOTS, INTERCONTINENTAL_SPOTS, isEuropean } from '../data/continentalCups'
 import { t } from '../i18n/es'
 import {
   buildSeasonView,
@@ -74,16 +74,29 @@ function scoreText(home: number, away: number, pens?: [number, number]): string 
   return `${home}-${away}${pens ? ` (${pens[0]}-${pens[1]} ${t.competitions.penalties})` : ''}`
 }
 
+type Zone = 'campeones' | 'europa' | 'conferencia'
+
+/** Copa europea a la que da plaza cada puesto de una primera división europea. */
+function europeanZone(index: number): Zone | undefined {
+  const position = index + 1
+  return (Object.keys(EUROPEAN_SPOTS) as Zone[]).find((cup) =>
+    EUROPEAN_SPOTS[cup].includes(position)
+  )
+}
+
 function StandingsTable({
   rows,
   mine,
   highlightTop = 0,
-  highlightBottom = 0
+  highlightBottom = 0,
+  zoneFor
 }: {
   rows: TableRow[]
   mine: string
   highlightTop?: number
   highlightBottom?: number
+  /** Color de cada puesto según la copa europea a la que da plaza. */
+  zoneFor?: (index: number) => Zone | undefined
 }): React.JSX.Element {
   return (
     <table className="data-table standings">
@@ -103,7 +116,7 @@ function StandingsTable({
         {rows.map((row, i) => (
           <tr
             key={row.clubId}
-            className={`${row.clubId === mine ? 'row--mine' : ''}${i < highlightTop ? ' row--top' : ''}${i >= rows.length - highlightBottom ? ' row--bottom' : ''}`}
+            className={`${row.clubId === mine ? 'row--mine' : ''}${zoneFor?.(i) ? ` row--${zoneFor(i)}` : i < highlightTop ? ' row--top' : ''}${i >= rows.length - highlightBottom ? ' row--bottom' : ''}`}
             data-testid={row.clubId === mine ? 'my-table-row' : undefined}
           >
             <td className="num">{i + 1}</td>
@@ -328,6 +341,11 @@ export function Competitions(): React.JSX.Element {
                               <span className="field__hint">{notPlayedText(m)}</span>
                             ) : (
                               <>
+                                {playedRoleText(m) && (
+                                  <span className="field__hint calendar__role">
+                                    {playedRoleText(m)}
+                                  </span>
+                                )}
                                 {m.playerGoals > 0 && (
                                   <span className="stat-pill stat-pill--goal">
                                     {m.playerGoals} {t.competitions.goalShort}
@@ -361,21 +379,34 @@ export function Competitions(): React.JSX.Element {
                   rows={view.leagueTable}
                   mine={mine}
                   highlightTop={
-                    view.division === 1
-                      ? isEuropean(view.countryId)
-                        ? 7
-                        : (INTERCONTINENTAL_SPOTS[view.countryId] ?? 0)
-                      : 3
+                    view.division === 1 ? (INTERCONTINENTAL_SPOTS[view.countryId] ?? 0) : 3
+                  }
+                  zoneFor={
+                    view.division === 1 && isEuropean(view.countryId) ? europeanZone : undefined
                   }
                   highlightBottom={3}
                 />
-                <p className="field__hint competitions__legend">
-                  {view.division === 1
-                    ? isEuropean(view.countryId)
-                      ? t.competitions.legendEurope
-                      : t.competitions.legendFirst
-                    : t.competitions.legendSecond}
-                </p>
+                {view.division === 1 && isEuropean(view.countryId) ? (
+                  <ul className="table-legend" data-testid="table-legend">
+                    {(
+                      [
+                        ['campeones', t.competitions.legendChampions],
+                        ['europa', t.competitions.legendEuropa],
+                        ['conferencia', t.competitions.legendConference],
+                        ['descenso', t.competitions.legendRelegation]
+                      ] as const
+                    ).map(([zone, label]) => (
+                      <li key={zone}>
+                        <span className={`table-legend__swatch table-legend__swatch--${zone}`} />
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="field__hint competitions__legend">
+                    {view.division === 1 ? t.competitions.legendFirst : t.competitions.legendSecond}
+                  </p>
+                )}
               </>
             )}
 

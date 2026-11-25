@@ -4,7 +4,7 @@ import { getClub } from '../data/clubs'
 import { t } from '../i18n/es'
 import { leagueTable, roundLabel, slotsFor } from '../logic/competitions'
 import { matchResult, seasonContext } from '../logic/season'
-import { notPlayedText } from '../logic/notPlayed'
+import { notPlayedText, playedRoleText } from '../logic/notPlayed'
 import type { Career, CompetitionId } from '../types/career'
 
 const COMPETITION_SHORT: Record<CompetitionId, string> = {
@@ -98,6 +98,7 @@ export function RecentResults({
             const opponent = getClub(m.opponentId)
             const info = slots[m.slot]
             const isNew = m.slot >= fromSlot
+            const role = playedRoleText(m)
             return (
               <li
                 key={m.slot}
@@ -122,11 +123,15 @@ export function RecentResults({
                     {m.penalties && ` (${m.penalties.for}-${m.penalties.against})`}
                   </span>
                 </span>
-                {(m.playerGoals > 0 || m.playerAssists > 0 || !m.played) && (
-                  <span className={`recent-match__me${m.played ? '' : ' recent-match__me--off'}`}>
+                {(m.playerGoals > 0 || m.playerAssists > 0 || !m.played || role) && (
+                  <span
+                    className={`recent-match__me${m.played ? '' : ' recent-match__me--off'}`}
+                    data-testid="recent-match-me"
+                  >
                     {!m.played
                       ? notPlayedText(m)
                       : [
+                          role,
                           m.playerGoals > 0 && `${m.playerGoals} ${t.competitions.goalShort}`,
                           m.playerAssists > 0 && `${m.playerAssists} ${t.competitions.assistShort}`
                         ]

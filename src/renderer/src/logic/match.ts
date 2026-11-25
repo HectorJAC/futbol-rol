@@ -7,21 +7,25 @@ import type {
   ScoreSituation
 } from '../data/matchTypes'
 import type { Career, ClubMatch, LiveMatch, MatchRole, MomentResolution } from '../types/career'
-import { penaltyShootout, seasonStrength, type ClubFixture } from './competitions'
+import { leagueRounds, penaltyShootout, seasonStrength, type ClubFixture } from './competitions'
 import { baseAttributes, setPieceRoles } from './playerAttributes'
 import { clamp, createRng, poisson, randomInt, seedFor, shuffle, type Rng } from './random'
 import {
   applyEffects,
   checkChance,
   clubStrengthWithPlayer,
+  driftMorale,
+  importanceOf,
   matchRating,
-  minutesShare
+  minutesShare,
+  seasonContext
 } from './season'
 
 /**
  * Partidos importantes jugados jugada a jugada (temporadas completas).
- * Hay goles "de fondo" que no dependen de ti (compañeros y rival) y 3–4 jugadas
- * en las que decides tú. El marcador se actualiza después de cada decisión.
+ * Hay goles "de fondo" que no dependen de ti (compañeros y rival) y de 3 a 5
+ * jugadas en las que decides tú (2 si sales desde el banquillo). El marcador se
+ * actualiza después de cada decisión.
  */
 
 export function getMoment(id: string): MatchMoment {
@@ -92,48 +96,101 @@ export function lineupFor(career: Career, rng: Rng): Lineup {
   return { role: 'noConvocado' }
 }
 
+/**
+ * Jugadas que vives como titular según la relevancia del partido: 3 en un
+ * partido grande, 4 en un clásico, un derbi, una semifinal o la lucha por el
+ * título al final de la liga, y 5 en una final. En las copas continentales,
+ * una más (hasta 5).
+ */
+export function momentCount(career: Career, fixture: ClubFixture): number {
+  const reason = importanceOf(career, fixture)
+  let count = 3
+  if (reason === 'final') count = 5
+  else if (reason === 'semifinal' || reason === 'clasico' || reason === 'derbi') count = 4
+  else if (reason === 'segundo') {
+    const rounds = leagueRounds(seasonContext(career).setup)
+    if (fixture.round >= Math.floor((rounds * 2) / 3)) count = 4
+  }
+  if (fixture.competition === 'continental') count++
+  return clamp(count, 3, 5)
+}
+
+/** Rangos de minutos de cada jugada (titular sin cambio), de 3 a 5 jugadas. */
+const TITULAR_PLAN: Record<number, Array<[MatchPhase, number, number]>> = {
+  3: [
+    ['inicio', 8, 28],
+    ['medio', 36, 66],
+    ['final', 76, 88]
+  ],
+  4: [
+    ['inicio', 8, 24],
+    ['medio', 31, 46],
+    ['medio', 52, 68],
+    ['final', 76, 88]
+  ],
+  5: [
+    ['inicio', 5, 12],
+    ['inicio', 16, 28],
+    ['medio', 33, 46],
+    ['medio', 52, 68],
+    ['final', 75, 88]
+  ]
+}
+
 /** Fases y minutos de las jugadas que vives según la convocatoria. */
 function momentPlan(
   lineup: Lineup,
-  isFinal: boolean,
+  count: number,
   rng: Rng
 ): { phases: MatchPhase[]; minutes: number[] } {
   if (lineup.role === 'noConvocado') return { phases: [], minutes: [] }
   if (lineup.role === 'suplente') {
+    // Desde el banquillo: dos jugadas desde que entras.
     const enter = lineup.enterMinute ?? 60
     return enter <= 62
       ? {
           phases: ['medio', 'final'],
           minutes: [randomInt(rng, enter + 2, 69), randomInt(rng, 76, 88)]
         }
-      : { phases: ['final'], minutes: [randomInt(rng, Math.max(76, enter + 2), 88)] }
+      : {
+          phases: ['final', 'final'],
+          minutes: [randomInt(rng, enter + 2, 80), randomInt(rng, 83, 89)]
+        }
   }
   if (lineup.exitMinute !== undefined) {
-    const lastMedio = Math.max(50, Math.min(64, lineup.exitMinute - 2))
-    return isFinal
-      ? {
-          phases: ['inicio', 'medio', 'medio'],
-          minutes: [randomInt(rng, 8, 26), randomInt(rng, 31, 48), randomInt(rng, 50, lastMedio)]
-        }
-      : {
-          phases: ['inicio', 'medio'],
-          minutes: [randomInt(rng, 8, 28), randomInt(rng, 36, lastMedio)]
-        }
+    // Titular sustituido: todas las jugadas antes del cambio (al menos 3).
+    const last = lineup.exitMinute - 2
+    const plan: Array<[MatchPhase, number, number]> =
+      count >= 5
+        ? [
+            ['inicio', 5, 14],
+            ['inicio', 17, 28],
+            ['medio', 33, 44],
+            ['medio', 47, 56],
+            ['medio', 58, last]
+          ]
+        : count === 4
+          ? [
+              ['inicio', 6, 14],
+              ['inicio', 17, 28],
+              ['medio', 33, 48],
+              ['medio', 52, last]
+            ]
+          : [
+              ['inicio', 8, 26],
+              ['medio', 31, 48],
+              ['medio', 52, last]
+            ]
+    return {
+      phases: plan.map(([phase]) => phase),
+      minutes: plan.map(([, from, to]) => randomInt(rng, from, Math.max(from, to)))
+    }
   }
-  return isFinal
-    ? {
-        phases: ['inicio', 'medio', 'medio', 'final'],
-        minutes: [
-          randomInt(rng, 8, 26),
-          randomInt(rng, 31, 48),
-          randomInt(rng, 54, 70),
-          randomInt(rng, 77, 88)
-        ]
-      }
-    : {
-        phases: ['inicio', 'medio', 'final'],
-        minutes: [randomInt(rng, 8, 28), randomInt(rng, 36, 66), randomInt(rng, 76, 88)]
-      }
+  const plan = TITULAR_PLAN[clamp(count, 3, 5)]
+  return {
+    phases: plan.map(([phase]) => phase),
+    minutes: plan.map(([, from, to]) => randomInt(rng, from, to))
+  }
 }
 
 /**
@@ -202,17 +259,19 @@ function withMoment(career: Career, live: LiveMatch, index: number): LiveMatch {
 /** Prepara un partido importante: minutos de las jugadas y goles de fondo. */
 export function createLiveMatch(career: Career, fixture: ClubFixture): LiveMatch {
   const rng = createRng(seedFor(career.id, 'live', career.season, fixture.slot))
-  const isFinal = fixture.knockout && fixture.neutral
+  const count = momentCount(career, fixture)
   const lineup = lineupFor(career, rng)
-  const { phases, minutes } = momentPlan(lineup, isFinal, rng)
+  const { phases, minutes } = momentPlan(lineup, count, rng)
 
   // Los goles de fondo son menos que en un partido normal: el resto depende de
   // tus jugadas. Cuantas menos jugadas vives (suplente, no convocado), más goles de fondo.
-  const share = phases.length / (isFinal ? 4 : 3)
+  const share = Math.min(1, phases.length / count)
   const own = clubStrengthWithPlayer(career)
   const opp = seasonStrength(career.id, getClub(fixture.opponentId), career.season)
   const diff = own - opp + (fixture.neutral ? 0 : fixture.home ? 3 : -3)
-  const lambdaFor = clamp(1.25 + diff * 0.045, 0.25, 3.4) * (0.55 + 0.45 * (1 - share))
+  // Con más jugadas tuyas, menos goles de fondo a favor (el marcador sigue siendo realista).
+  const ownPart = clamp(0.55 - (count - 3) * 0.15, 0.25, 0.55)
+  const lambdaFor = clamp(1.25 + diff * 0.045, 0.25, 3.4) * (ownPart + (1 - ownPart) * (1 - share))
   const lambdaAgainst = clamp(1.15 - diff * 0.04, 0.2, 3) * (0.75 + 0.25 * (1 - share))
   const background: LiveMatch['background'] = []
   for (let i = poisson(rng, lambdaFor); i > 0; i--) {
@@ -383,7 +442,7 @@ export function liveMatchResult(career: Career, live: LiveMatch): ClubMatch {
     goalsAgainst: score.against,
     penalties,
     played,
-    ...(played ? {} : { squad: 'fuera' as const }),
+    squad: live.role === 'titular' ? 'titular' : live.role === 'suplente' ? 'suplente' : 'fuera',
     playerGoals: live.playerGoals,
     playerAssists: live.playerAssists,
     rating: played ? Math.round(rating * 10) / 10 : undefined,
@@ -396,13 +455,16 @@ export function finishLiveMatch(career: Career): Career {
   const progress = career.seasonProgress
   const live = progress?.liveMatch
   if (!progress || !live || !isLiveMatchOver(live)) return career
-  return {
-    ...career,
-    seasonProgress: {
-      ...progress,
-      clubMatches: [...progress.clubMatches, liveMatchResult(career, live)],
-      playedSlots: live.slot + 1,
-      liveMatch: null
-    }
-  }
+  return driftMorale(
+    {
+      ...career,
+      seasonProgress: {
+        ...progress,
+        clubMatches: [...progress.clubMatches, liveMatchResult(career, live)],
+        playedSlots: live.slot + 1,
+        liveMatch: null
+      }
+    },
+    live.slot
+  )
 }

@@ -1,4 +1,4 @@
-import type { AttributeId, Attributes } from './attributes'
+import type { AttributeId, Attributes, SetPieceId } from './attributes'
 import type { ClubTier } from './clubs'
 import { CONTEXT_EVENTS } from './contextEvents'
 import { EXTRA_EVENTS } from './eventsExtra'
@@ -132,6 +132,15 @@ export interface GameEvent {
   context?: EventContext
   /** Solo puede salir una vez en toda la carrera. */
   once?: boolean
+  /** Cada opción muestra todo lo que cambia al elegirla (moral, confianza, dinero…). */
+  showEffects?: boolean
+  /**
+   * Las opciones que cuestan más dinero del que tienes se ven, pero bloqueadas
+   * (en el resto de eventos se paga lo que tengas).
+   */
+  lockUnaffordable?: boolean
+  /** Solo si eres el lanzador designado de esa jugada a balón parado. */
+  setPieceTaker?: SetPieceId
   /** Evento de historia larga (ver `StoryInfo`). */
   story?: StoryInfo
   /**

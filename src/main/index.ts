@@ -2,15 +2,17 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { importLegacyData } from './legacyData'
 import { deleteSave, listSaves, readSave, writeSave } from './saves'
 import { fitToScreen, loadSettings, updateSettings } from './settings'
 import { parseWindowSize, type GameSettings } from '../shared/settings'
 
-const GAME_TITLE = 'Proyecto: Juego Futbol-Rol'
+const GAME_TITLE = 'Your Football Path'
 
 // Los tests e2e usan una carpeta de datos aparte para no tocar las partidas reales.
-if (process.env['FUTBOL_ROL_USER_DATA']) {
-  app.setPath('userData', process.env['FUTBOL_ROL_USER_DATA'])
+const testUserData = process.env['YFP_USER_DATA']
+if (testUserData) {
+  app.setPath('userData', testUserData)
 }
 
 function createWindow(settings: GameSettings): void {
@@ -53,7 +55,12 @@ function createWindow(settings: GameSettings): void {
 }
 
 app.whenReady().then(async () => {
-  electronApp.setAppUserModelId('com.futbolrol.game')
+  electronApp.setAppUserModelId('com.yourfootballpath.game')
+
+  // Hasta la v0.14 el juego se llamaba "Futbol-Rol": sus partidas y ajustes pasan a la carpeta nueva.
+  if (!testUserData) {
+    await importLegacyData(app.getPath('userData'), app.getPath('appData')).catch(() => false)
+  }
 
   // F12 abre DevTools en desarrollo; Ctrl+R se ignora en producción.
   app.on('browser-window-created', (_, window) => {

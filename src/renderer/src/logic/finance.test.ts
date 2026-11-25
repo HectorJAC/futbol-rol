@@ -23,7 +23,13 @@ import { careerScale } from './playerAttributes'
 function career(overrides: Partial<Career> = {}): Career {
   const base = createCareer(
     {
-      character: { name: 'Test Dinero', sex: 'M', position: 'DC', nationalityId: 'ESP' },
+      character: {
+        name: 'Test Dinero',
+        sex: 'M',
+        foot: 'derecha',
+        position: 'DC',
+        nationalityId: 'ESP'
+      },
       mode: defaultMode('completa'),
       originId: 'esp-cantera',
       allocation: emptyAttributes(),

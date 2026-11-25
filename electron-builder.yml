@@ -1,5 +1,5 @@
-appId: com.futbolrol.game
-productName: Futbol-Rol
+appId: com.yourfootballpath.game
+productName: Your Football Path
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: futbol-rol
+  executableName: your-football-path
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
