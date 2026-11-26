@@ -603,6 +603,8 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
   // -------------------------------------------------------------------------
   {
     id: 'rondo',
+    // Lo de meter al chaval en el centro del rondo: para jóvenes o recién llegados.
+    maxAgeUnlessNew: 25,
     title: 'En el centro del rondo',
     text: 'Calentamiento. Los veteranos te meten en el centro del rondo y se pasan el balón entre risas. Llevas dos minutos sin olerla.',
     options: [

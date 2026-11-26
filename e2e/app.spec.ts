@@ -14,17 +14,8 @@ const SCREENSHOTS = join(__dirname, 'screenshots')
 // Carpeta de datos aparte: los tests nunca tocan las partidas reales del jugador.
 const USER_DATA = join(__dirname, '.results', 'user-data')
 
-const NATIONS = [
-  'Argentina',
-  'Brasil',
-  'España',
-  'Francia',
-  'Inglaterra',
-  'Alemania',
-  'Italia',
-  'Japón',
-  'Estados Unidos'
-]
+/** Por ahora solo las europeas; Argentina, Brasil, Japón y EE. UU. salen bloqueadas. */
+const NATIONS = ['España', 'Francia', 'Inglaterra', 'Alemania', 'Italia']
 
 let app: ElectronApplication
 let page: Page
@@ -207,7 +198,10 @@ test('Extras: catálogo de orígenes por país y especiales', async () => {
   await expect(page.getByTestId('catalog-origin')).toHaveCount(4)
   await shot('01c-extras-origenes', BOTH)
 
-  await page.getByTestId('catalog-tab-JPN').click()
+  // Los orígenes de las nacionalidades bloqueadas no se pueden consultar.
+  await expect(page.getByTestId('catalog-tab-JPN')).toBeDisabled()
+  await expect(page.getByTestId('catalog-tab-ARG')).toBeDisabled()
+  await page.getByTestId('catalog-tab-ITA').click()
   await expect(page.getByTestId('catalog-origin')).toHaveCount(4)
   await page.getByTestId('catalog-tab-extra').click()
   await expect(page.getByTestId('catalog-origin')).toHaveCount(10)
@@ -251,7 +245,9 @@ test('paso 1: valores por defecto y validación', async () => {
   await menuButton('Nueva Partida').click()
   await expect(page.getByRole('heading', { name: 'Crea tu jugador' })).toBeVisible()
 
-  await expect(page.getByTestId('nationality-name')).toHaveText('Argentina')
+  await expect(page.getByTestId('nationality-name')).toHaveText('España')
+  // Las nacionalidades no europeas, bloqueadas por ahora.
+  await expect(page.getByTestId('locked-nationalities').locator('img')).toHaveCount(4)
   await expect(page.getByRole('radio', { name: /Masculino/ })).toHaveAttribute(
     'aria-checked',
     'true'
@@ -261,6 +257,10 @@ test('paso 1: valores por defecto y validación', async () => {
     'aria-checked',
     'true'
   )
+  // Las otras cinco posiciones se ven, pero bloqueadas.
+  for (const id of ['POR', 'DFC', 'LAT', 'MCD', 'MP']) {
+    await expect(page.getByTestId(`position-${id}`)).toBeDisabled()
+  }
   // Pierna buena: diestro por defecto.
   await expect(page.getByTestId('foot-derecha')).toHaveAttribute('aria-checked', 'true')
   await expect(page.getByTestId('foot-izquierda')).toHaveAttribute('aria-checked', 'false')
@@ -276,7 +276,7 @@ test('paso 1: valores por defecto y validación', async () => {
   await expect(next).toBeDisabled()
 })
 
-test('paso 1: las 9 nacionalidades con flechas y teclado', async () => {
+test('paso 1: las 5 nacionalidades europeas con flechas y teclado', async () => {
   const name = page.getByTestId('nationality-name')
   const next = page.getByRole('button', { name: 'Nacionalidad siguiente' })
   const prev = page.getByRole('button', { name: 'Nacionalidad anterior' })
@@ -295,17 +295,17 @@ test('paso 1: las 9 nacionalidades con flechas y teclado', async () => {
       .toBe(true)
     await next.click()
   }
-  await expect(name).toHaveText('Argentina') // vuelta completa
+  await expect(name).toHaveText('España') // vuelta completa
 
   await prev.click()
-  await expect(name).toHaveText('Estados Unidos')
+  await expect(name).toHaveText('Italia')
 
   // Teclado: → avanza cuando no se está escribiendo en el nombre.
   await page.locator('body').click({ position: { x: 5, y: 5 } })
   await page.keyboard.press('ArrowRight')
-  await expect(name).toHaveText('Argentina')
+  await expect(name).toHaveText('España')
   await page.keyboard.press('ArrowRight')
-  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowLeft')
   await expect(name).toHaveText('España')
 })
 
@@ -320,24 +320,15 @@ test('paso 2: modo de juego', async () => {
   await page.getByRole('button', { name: 'Continuar' }).click()
 
   await expect(page.getByRole('heading', { name: 'Elige el modo de juego' })).toBeVisible()
-  // Por ahora solo la Completa (15 temporadas) y la Personalizada.
+  // Por ahora solo la Completa (15 temporadas); las demás, cerradas.
   await expect(page.getByTestId('mode-completa')).toHaveAttribute('aria-checked', 'true')
   await expect(page.getByTestId('mode-completa')).toContainText('15 temporadas')
-  await expect(page.getByTestId('mode-rapida')).toBeDisabled()
-  await expect(page.getByTestId('mode-normal')).toBeDisabled()
-  await expect(page.getByTestId('mode-normal')).toContainText('Próximamente')
+  for (const id of ['rapida', 'normal', 'personalizada']) {
+    await expect(page.getByTestId(`mode-${id}`)).toBeDisabled()
+    await expect(page.getByTestId(`mode-${id}`)).toContainText('Próximamente')
+  }
+  await expect(page.getByTestId('mode-custom')).toHaveCount(0)
   await shot('03a-modos', BOTH)
-
-  // Personalizada: hasta 25 temporadas y cada cuánto se decide.
-  await page.getByTestId('mode-personalizada').click()
-  await expect(page.getByTestId('mode-custom')).toBeVisible()
-  for (let i = 0; i < 5; i++) await page.getByRole('button', { name: 'Más temporadas' }).click()
-  await expect(page.getByTestId('custom-seasons')).toHaveText('25')
-  await expect(page.getByRole('button', { name: 'Más temporadas' })).toBeDisabled()
-  await shot('03b-modo-personalizada', BOTH)
-
-  await page.getByTestId('mode-completa').click()
-  await expect(page.getByTestId('mode-completa')).toHaveAttribute('aria-checked', 'true')
   await page.getByRole('button', { name: 'Continuar' }).click()
 })
 
@@ -612,6 +603,7 @@ test('contrato, mejora de contrato, compras y gastos', async () => {
 
   await page.getByTestId('contract-tab-shop').click()
   const moneyBefore = await page.getByTestId('money').textContent()
+  const shopBefore = await page.getByTestId('shop-item').locator('strong').allTextContents()
   const card = page
     .getByTestId('shop-item')
     .filter({ has: page.getByRole('button', { name: 'Comprar' }) })
@@ -621,6 +613,10 @@ test('contrato, mejora de contrato, compras y gastos', async () => {
   await page.getByTestId(buyId).click()
   await expect(page.getByTestId(buyId)).toHaveText(/Comprado|Contratado/)
   expect(await page.getByTestId('money').textContent()).not.toBe(moneyBefore)
+  // Comprar no cambia el resto de la tienda: mismos artículos, en el mismo orden.
+  expect(await page.getByTestId('shop-item').locator('strong').allTextContents()).toEqual(
+    shopBefore
+  )
   await shot('23-mejoras', BOTH)
 
   await page.getByTestId('contract-tab-expenses').click()
@@ -669,8 +665,9 @@ test('mercado de fichajes antes de la temporada 2', async () => {
     await expect(page.getByTestId('market-offer').filter({ hasText: rejected })).toHaveCount(0)
   }
   // Cada club dice en qué división juega.
+  // (Si tu club bajó en la temporada 1, ya sale en segunda.)
   await expect(page.getByTestId('market-stay').getByTestId('offer-division')).toHaveText(
-    'Primera División de España'
+    /^(Primera|Segunda) División de España$/
   )
   for (const offer of await page.getByTestId('market-offer').all()) {
     await expect(offer.getByTestId('offer-division')).toHaveText(/^(Primera|Segunda) División de /)
@@ -711,6 +708,10 @@ test('mercado de fichajes antes de la temporada 2', async () => {
 test('buscador de equipos: país, división y club; objetivo para el final de temporada', async () => {
   await page.getByTestId('open-club-search').click()
   await expect(page.getByRole('heading', { name: 'Buscar equipo' })).toBeVisible()
+  // Las ligas de las nacionalidades bloqueadas no se pueden mirar.
+  for (const id of ['ARG', 'BRA', 'JPN', 'USA']) {
+    await expect(page.getByTestId(`search-country-${id}`)).toBeDisabled()
+  }
   await page.getByTestId('search-country-ENG').click()
   await page.getByTestId('search-division-2').click()
   await page.getByTestId('search-club').first().click()
@@ -760,6 +761,27 @@ test('Records muestra todas las carreras guardadas', async () => {
   await expect(rows).toHaveCount(1)
   await expect(rows.first()).toContainText('DIEGO RIVERA')
   await shot('16-records')
+
+  // Pulsar una carrera abre todos sus detalles.
+  await rows.first().click()
+  await expect(page.getByTestId('detail-name')).toHaveText('DIEGO RIVERA')
+  await expect(page.getByTestId('detail-meta')).toContainText(myClub)
+  await expect(page.getByTestId('detail-path')).toContainText('2026/27')
+  await shot('16b-records-trayectoria', BOTH)
+  await page.getByTestId('detail-tab-trophies').click()
+  await expect(page.getByTestId('detail-tab-trophies')).toHaveAttribute('aria-selected', 'true')
+  await shot('16c-records-titulos')
+  await page.getByTestId('detail-tab-attributes').click()
+  await expect(page.getByTestId('detail-attributes')).toContainText('Definición')
+  await shot('16d-records-atributos', BOTH)
+  await page.getByTestId('detail-tab-relationships').click()
+  await expect(page.getByTestId('detail-relationships')).toContainText('El míster')
+  await shot('16e-records-relaciones')
+  await page.getByTestId('detail-tab-money').click()
+  await expect(page.getByTestId('detail-money')).toContainText('Ingresos por temporada')
+  await shot('16f-records-dinero', BOTH)
+  await page.getByRole('button', { name: 'Volver a Records' }).click()
+  await expect(page.getByRole('heading', { name: 'Records' })).toBeVisible()
   await page.getByRole('button', { name: 'Volver al menú' }).click()
 })
 

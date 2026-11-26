@@ -41,6 +41,7 @@ export type Screen =
   | 'trophyRoom'
   | 'transferMarket'
   | 'records'
+  | 'careerDetail'
   | 'settings'
   | 'relationships'
   | 'modeSelection'
@@ -106,11 +107,16 @@ interface GameState {
   lastMoment: { resolution: MomentResolution; effects: MatchMomentEffects } | null
   /** Temporada recién terminada (pantalla de resumen). */
   lastRecord: SeasonRecord | null
+  /** Carrera que se está mirando desde Records (no es la que se juega). */
+  recordCareer: Career | null
 
   // Menú
   startNewGame: () => void
   openLoadGame: () => void
   openRecords: () => void
+  /** Records → todos los detalles de una carrera guardada. */
+  openRecordDetail: (career: Career) => void
+  backToRecords: () => void
   openSettings: () => void
   openExtras: () => void
   openOriginCatalog: () => void
@@ -209,6 +215,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   lastChoice: null,
   lastMoment: null,
   lastRecord: null,
+  recordCareer: null,
   marketMessage: null,
 
   startNewGame: () =>
@@ -216,7 +223,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   openLoadGame: () => set({ screen: 'loadGame' }),
 
-  openRecords: () => set({ screen: 'records' }),
+  openRecords: () => set({ screen: 'records', recordCareer: null }),
+  openRecordDetail: (career) => set({ screen: 'careerDetail', recordCareer: career }),
+  backToRecords: () => set({ screen: 'records', recordCareer: null }),
 
   openSettings: () => set({ screen: 'settings' }),
 

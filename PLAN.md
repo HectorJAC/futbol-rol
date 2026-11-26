@@ -120,7 +120,7 @@ Sin licencias **no se pueden usar** nombres reales de clubes, jugadores, ligas, 
 **Decisión del 2026-11-23 (v0.8):** los clubes usan nombres parecidos a los reales con una o dos letras cambiadas ("FC Barkelone", "Real Madrik") y las ligas nombres genéricos ("Primera División de España"). Jugadores, trofeos y escudos siguen siendo propios. Antes de publicar en Steam conviene revisar este criterio con alguien de temas legales.
 
 ### Roadmap tentativo
-Estado a 2026-11-24: v0.1–v0.15 hechas (ver el registro de trabajo en README.md).
+Estado a 2026-11-25: v0.1–v0.16 hechas (ver el registro de trabajo en README.md).
 
 - ✅ **v0.1** — Menú principal + creación de personaje (este plan).
 - ✅ **v0.2** — Orígenes y atributos iniciales, elección del primer club, guardado/carga local (JSON en la carpeta de usuario).
@@ -137,4 +137,6 @@ Estado a 2026-11-24: v0.1–v0.15 hechas (ver el registro de trabajo en README.m
 - ✅ **v0.13** — Pierna buena (derecha o izquierda) al crear el jugador, nombre siempre en mayúsculas, modo Completa de 15 temporadas y Rápida y Normal cerradas por ahora.
 - ✅ **v0.14** — Hub rediseñado (bandera, sueldo, tarjetas a medida y titularidad), pedir una mejora de contrato, "Compras", barras del míster y la afición, cinco escenarios para conocer pareja, opciones bloqueadas sin dinero, penalti del veterano solo para el lanzador, colores de cada copa europea en la tabla, relación con los compañeros al pasar el cursor, división en el mercado y resumen con scroll.
 - ✅ **v0.15** — Nombre definitivo: **Your Football Path** (título, ventana, ejecutable y acceso directo; las partidas y los ajustes pasan a la carpeta nueva).
+- ✅ **v0.16** — Ficha completa de cada carrera desde Records. Primera versión acotada: solo nacionalidades europeas, solo delantero centro (cinco posiciones más, bloqueadas) y solo el modo Completa. "Pelea por el descenso" como partido importante. Tienda que no cambia al comprar. Decisiones que encajan con tu situación (titular, capitán y edad).
+- **Primera versión (v1.0)** — Solo Europa (España, Francia, Inglaterra, Alemania e Italia), delantero centro y modo Completa. Más adelante: desbloquear Argentina, Brasil, Japón y Estados Unidos, el resto de posiciones y los modos Rápida, Normal y Personalizada.
 - **v1.0** — Steamworks (logros, Cloud), traducción al inglés, empaquetado y página de Steam.

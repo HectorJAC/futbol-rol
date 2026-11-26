@@ -141,6 +141,13 @@ export interface GameEvent {
   lockUnaffordable?: boolean
   /** Solo si eres el lanzador designado de esa jugada a balón parado. */
   setPieceTaker?: SetPieceId
+  /**
+   * Solo si no eres titular habitual (ni capitán): p. ej. "titular por sorpresa".
+   * Ver `isRegularStarter`.
+   */
+  notRegularStarter?: boolean
+  /** Solo si tienes esa edad o menos, salvo que acabes de llegar al club. */
+  maxAgeUnlessNew?: number
   /** Evento de historia larga (ver `StoryInfo`). */
   story?: StoryInfo
   /**
@@ -299,6 +306,8 @@ const BASE_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'penalti',
+    // "El capitán ya tiene el balón": no si el capitán eres tú.
+    captain: false,
     title: 'Penalti en el 90',
     text: 'Empate a uno, último minuto. Penalti a favor. El capitán ya tiene el balón en las manos, pero te mira.',
     options: [
@@ -414,6 +423,8 @@ const BASE_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'clasico',
+    // "Titular por sorpresa": no tiene sentido si ya juegas siempre.
+    notRegularStarter: true,
     title: 'El gran partido',
     text: 'Llega el partido más esperado del año. Titular por sorpresa. El entrenador te pide que fijes a los centrales.',
     options: [
@@ -582,6 +593,7 @@ const BASE_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'consecuencia-capitan',
+    captain: false,
     title: 'El capitán cumple su palabra',
     text: 'Penalti a favor en un partido igualado. El capitán coge el balón, te busca con la mirada y te lo entrega: "Te lo prometí".',
     requiresFlags: { captainRespect: true },

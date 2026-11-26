@@ -3,6 +3,7 @@ import { MATCH_MOMENTS } from '../data/matchMoments'
 import type {
   MatchMoment,
   MatchMomentEffects,
+  MatchMomentOption,
   MatchPhase,
   ScoreSituation
 } from '../data/matchTypes'
@@ -107,7 +108,7 @@ export function momentCount(career: Career, fixture: ClubFixture): number {
   let count = 3
   if (reason === 'final') count = 5
   else if (reason === 'semifinal' || reason === 'clasico' || reason === 'derbi') count = 4
-  else if (reason === 'segundo') {
+  else if (reason === 'segundo' || reason === 'descenso') {
     const rounds = leagueRounds(seasonContext(career).setup)
     if (fixture.round >= Math.floor((rounds * 2) / 3)) count = 4
   }
@@ -342,6 +343,37 @@ export interface ResolvedMoment {
   effects: MatchMomentEffects
 }
 
+/** Opciones de una jugada: si eres el capitán, las que tienen otra versión para ti. */
+export function momentOptions(
+  moment: MatchMoment,
+  career: Pick<Career, 'captaincy'>
+): MatchMomentOption[] {
+  if (!career.captaincy) return moment.options
+  return moment.options.map((option) => {
+    const variant = option.asCaptain
+    if (!variant) return option
+    return {
+      ...option,
+      label: variant.label,
+      ...(option.check
+        ? {
+            check: {
+              ...option.check,
+              success: {
+                ...option.check.success,
+                text: variant.success ?? option.check.success.text
+              },
+              failure: {
+                ...option.check.failure,
+                text: variant.failure ?? option.check.failure.text
+              }
+            }
+          }
+        : {})
+    }
+  })
+}
+
 /** Resuelve la jugada actual. Igual que en los eventos, la tirada no cambia al recargar. */
 export function resolveMoment(career: Career, optionIndex: number): ResolvedMoment {
   const progress = career.seasonProgress
@@ -350,7 +382,7 @@ export function resolveMoment(career: Career, optionIndex: number): ResolvedMome
   const index = live.resolutions.length
   const moment = currentMoment(live)
   if (!moment) throw new Error('El partido ya terminó')
-  const option = moment.options[optionIndex]
+  const option = momentOptions(moment, career)[optionIndex]
   if (!option) throw new Error(`Opción ${optionIndex} no existe en ${moment.id}`)
 
   let effects: MatchMomentEffects

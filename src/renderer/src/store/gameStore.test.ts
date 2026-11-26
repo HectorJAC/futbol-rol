@@ -44,17 +44,17 @@ function toOrigins(name = 'Test'): void {
 }
 
 /**
- * Firma con el origen "potrero" de Argentina. La Rápida y la Normal ya no se eligen al
+ * Firma con el origen "plaza del pueblo" de España. La Rápida y la Normal ya no se eligen al
  * crear partida, pero las guardadas siguen jugándose: aquí se fuerza el modo en el borrador.
  */
-async function signWithArgentinianStreetOrigin(
+async function signWithSpanishStreetOrigin(
   name: string,
   modeId: GameModeId = 'completa'
 ): Promise<void> {
   s().startNewGame()
   store.setState((st) => ({ draft: { ...st.draft, mode: defaultMode(modeId) } }))
   toOrigins(name)
-  s().selectOrigin('arg-potrero')
+  s().selectOrigin('esp-plaza-del-pueblo')
   s().confirmOrigin()
   spendAllPoints()
   s().confirmAttributes()
@@ -100,7 +100,7 @@ describe('flujo de nueva partida', () => {
       sex: 'M',
       foot: 'derecha',
       position: 'DC',
-      nationalityId: 'ARG'
+      nationalityId: 'ESP'
     })
     expect(s().draft.originId).toBeNull()
     // Por ahora solo la Completa (15 temporadas) y la Personalizada.
@@ -123,17 +123,8 @@ describe('flujo de nueva partida', () => {
     expect(s().screen).toBe('modeSelection')
     // El nombre va siempre en mayúsculas.
     expect(s().draft.character.name).toBe('LIONEL TEST')
-    expect(s().draft.character.nationalityId).toBe('ESP')
-  })
-
-  it('paso 2: se puede elegir un modo personalizado', () => {
-    s().startNewGame()
-    s().setDraftName('Test')
-    s().confirmCharacter()
-    s().setMode({ id: 'personalizada', seasons: 25, decisionInterval: 3 })
-    s().confirmMode()
-    expect(s().screen).toBe('originSelection')
-    expect(s().draft.mode.seasons).toBe(25)
+    // España → Francia → Inglaterra (las nacionalidades bloqueadas se saltan).
+    expect(s().draft.character.nationalityId).toBe('ENG')
   })
 
   it('paso 1: el nombre se escribe en mayúsculas (con tildes y eñes) y se elige la pierna buena', () => {
@@ -148,21 +139,22 @@ describe('flujo de nueva partida', () => {
     expect(s().draft.character.foot).toBe('izquierda')
   })
 
-  it('paso 2: la Rápida y la Normal no se pueden elegir por ahora', () => {
+  it('paso 2: por ahora solo se juega la Completa (Rápida, Normal y Personalizada cerradas)', () => {
     s().startNewGame()
     s().setDraftName('Test')
     s().confirmCharacter()
     s().setMode(defaultMode('rapida'))
     s().setMode(defaultMode('normal'))
-    expect(s().draft.mode.id).toBe('completa')
-    s().setMode(defaultMode('personalizada'))
-    expect(s().draft.mode.id).toBe('personalizada')
+    s().setMode({ id: 'personalizada', seasons: 25, decisionInterval: 3 })
+    expect(s().draft.mode).toEqual(defaultMode('completa'))
+    s().confirmMode()
+    expect(s().screen).toBe('originSelection')
   })
 
   it('cambiar de país descarta un origen nacional pero conserva el especial', () => {
     s().startNewGame()
     toOrigins()
-    s().selectOrigin('arg-potrero')
+    s().selectOrigin('esp-plaza-del-pueblo')
     s().changeNationality(1)
     expect(s().draft.originId).toBeNull()
     const extra = s().draft.extraOriginId
@@ -175,7 +167,7 @@ describe('flujo de nueva partida', () => {
     s().startNewGame()
     toOrigins()
     expect(s().confirmOrigin()).toBe(false)
-    s().selectOrigin('arg-potrero')
+    s().selectOrigin('esp-plaza-del-pueblo')
     expect(s().confirmOrigin()).toBe(true)
     expect(s().screen).toBe('attributes')
   })
@@ -183,13 +175,13 @@ describe('flujo de nueva partida', () => {
   it('exige gastar todos los puntos y cambiar de origen los reinicia', () => {
     s().startNewGame()
     toOrigins()
-    s().selectOrigin('arg-potrero')
+    s().selectOrigin('esp-plaza-del-pueblo')
     s().confirmOrigin()
     expect(s().confirmAttributes()).toBe(false)
     s().allocatePoint('finishing', 1)
     expect(s().draft.allocation.finishing).toBe(1)
 
-    s().selectOrigin('arg-pension')
+    s().selectOrigin('esp-cantera')
     expect(s().draft.allocation.finishing).toBe(0)
 
     spendAllPoints()
@@ -200,11 +192,11 @@ describe('flujo de nueva partida', () => {
   it('previousStep vuelve atrás sin perder datos', () => {
     s().startNewGame()
     toOrigins()
-    s().selectOrigin('arg-liga-regional')
+    s().selectOrigin('esp-camarero-goleador')
     s().confirmOrigin()
     s().previousStep()
     expect(s().screen).toBe('originSelection')
-    expect(s().draft.originId).toBe('arg-liga-regional')
+    expect(s().draft.originId).toBe('esp-camarero-goleador')
     s().previousStep()
     expect(s().screen).toBe('modeSelection')
     s().previousStep()
@@ -215,8 +207,8 @@ describe('flujo de nueva partida', () => {
   it('firmar crea la carrera y abre el hub', async () => {
     s().startNewGame()
     s().setFoot('izquierda')
-    toOrigins('Test Final') // Argentina
-    s().selectOrigin('arg-hijo-del-tanque')
+    toOrigins('Test Final') // España
+    s().selectOrigin('esp-hijo-del-capitan')
     s().confirmOrigin()
     spendAllPoints()
     s().confirmAttributes()
@@ -271,7 +263,7 @@ describe('temporada', () => {
   beforeEach(() => s().backToMenu())
 
   it('modo normal: temporada con decisiones, temporada simulada y mercado', async () => {
-    await signWithArgentinianStreetOrigin('Test Temporada', 'normal')
+    await signWithSpanishStreetOrigin('Test Temporada', 'normal')
 
     s().playSeason()
     expect(s().screen).toBe('seasonEvent')
@@ -326,7 +318,7 @@ describe('temporada', () => {
   })
 
   it('con dinero se compran mejoras y quedan en la lista de gastos', async () => {
-    await signWithArgentinianStreetOrigin('Test Tienda')
+    await signWithSpanishStreetOrigin('Test Tienda')
 
     // Sin dinero no se puede comprar.
     const career = s().career

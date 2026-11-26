@@ -14,6 +14,7 @@ import {
   getMoment,
   isLiveMatchOver,
   liveMatchResult,
+  momentOptions,
   momentText,
   needsLineup,
   scoreBefore
@@ -251,7 +252,7 @@ export function Match(): React.JSX.Element {
                 </p>
                 {!lastMoment ? (
                   <div className="event-options">
-                    {momentShown.options.map((option, i) => {
+                    {momentOptions(momentShown, career).map((option, i) => {
                       const chance = option.check
                         ? Math.round(checkChance(career, option.check) * 100)
                         : null

@@ -35,6 +35,8 @@ export function Contract(): React.JSX.Element {
   const requestRaise = useGameStore((s) => s.requestRaise)
   const [tab, setTab] = useState<Tab>('contract')
   const [busy, setBusy] = useState(false)
+  // Solo se bloquea el botón de lo que se está comprando: el resto de la tienda no se mueve.
+  const [buying, setBuying] = useState<string | null>(null)
 
   if (!career) return <></>
   const contract = career.contract
@@ -46,9 +48,10 @@ export function Contract(): React.JSX.Element {
   const money = (amount: number): string => formatMoney(amount, currency)
 
   const buy = async (itemId: string): Promise<void> => {
-    setBusy(true)
+    if (buying) return
+    setBuying(itemId)
     await buyUpgrade(itemId)
-    setBusy(false)
+    setBuying(null)
   }
 
   const askRaise = async (level: RaiseLevel): Promise<void> => {
@@ -298,7 +301,7 @@ export function Contract(): React.JSX.Element {
                               type="button"
                               className="btn btn--primary btn--compact"
                               onClick={() => buy(item.id)}
-                              disabled={!check.ok || busy}
+                              disabled={!check.ok || buying === item.id}
                               title={check.ok ? undefined : check.reason}
                               data-testid={`buy-${item.id}`}
                             >

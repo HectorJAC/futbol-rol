@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  AVAILABLE_NATIONALITIES,
   cycleNationality,
   DEFAULT_NATIONALITY_ID,
   getNationality,
+  isNationalityAvailable,
   NATIONALITIES
 } from './nationalities'
 
@@ -25,27 +27,39 @@ describe('nacionalidades', () => {
     expect(new Set(NATIONALITIES.map((n) => n.id)).size).toBe(NATIONALITIES.length)
   })
 
-  it('Argentina es la nacionalidad por defecto', () => {
-    expect(getNationality(DEFAULT_NATIONALITY_ID).name).toBe('Argentina')
+  it('España es la nacionalidad por defecto', () => {
+    expect(getNationality(DEFAULT_NATIONALITY_ID).name).toBe('España')
+  })
+
+  it('por ahora solo se eligen las europeas: Argentina, Brasil, Japón y EE. UU. bloqueadas', () => {
+    expect(AVAILABLE_NATIONALITIES.map((n) => n.id)).toEqual(['ESP', 'FRA', 'ENG', 'GER', 'ITA'])
+    for (const id of ['ARG', 'BRA', 'JPN', 'USA'] as const) {
+      expect(isNationalityAvailable(id)).toBe(false)
+    }
   })
 
   it('cada nacionalidad tiene bandera', () => {
     for (const n of NATIONALITIES) expect(n.flag).toBeTruthy()
   })
 
-  it('la flecha derecha avanza y da la vuelta al final', () => {
-    expect(cycleNationality('ARG', 1)).toBe('BRA')
-    expect(cycleNationality('USA', 1)).toBe('ARG')
+  it('la flecha derecha avanza (saltando las bloqueadas) y da la vuelta al final', () => {
+    expect(cycleNationality('ESP', 1)).toBe('FRA')
+    expect(cycleNationality('ITA', 1)).toBe('ESP')
   })
 
   it('la flecha izquierda retrocede y da la vuelta al principio', () => {
-    expect(cycleNationality('BRA', -1)).toBe('ARG')
-    expect(cycleNationality('ARG', -1)).toBe('USA')
+    expect(cycleNationality('FRA', -1)).toBe('ESP')
+    expect(cycleNationality('ESP', -1)).toBe('ITA')
   })
 
-  it('9 pulsaciones a la derecha vuelven al país inicial', () => {
+  it('desde una bloqueada se pasa a una elegible', () => {
+    expect(isNationalityAvailable(cycleNationality('ARG', 1))).toBe(true)
+    expect(isNationalityAvailable(cycleNationality('USA', -1))).toBe(true)
+  })
+
+  it('5 pulsaciones a la derecha vuelven al país inicial', () => {
     let id = DEFAULT_NATIONALITY_ID
-    for (let i = 0; i < NATIONALITIES.length; i++) id = cycleNationality(id, 1)
+    for (let i = 0; i < AVAILABLE_NATIONALITIES.length; i++) id = cycleNationality(id, 1)
     expect(id).toBe(DEFAULT_NATIONALITY_ID)
   })
 })

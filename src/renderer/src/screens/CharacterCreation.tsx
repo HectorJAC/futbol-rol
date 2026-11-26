@@ -118,17 +118,24 @@ export function CharacterCreation(): React.JSX.Element {
 
           <div className="field">
             <span className="field__label">{t.creation.positionLabel}</span>
-            <div className="option-row" role="radiogroup" aria-label={t.creation.positionLabel}>
+            <div className="position-grid" role="radiogroup" aria-label={t.creation.positionLabel}>
               {POSITIONS.map((position) => (
                 <button
                   key={position.id}
                   type="button"
                   role="radio"
                   aria-checked={character.position === position.id}
-                  className={`option option--position${character.position === position.id ? ' option--selected' : ''}`}
+                  aria-label={position.name}
+                  className={`position-chip${character.position === position.id ? ' position-chip--selected' : ''}`}
+                  disabled={!position.available}
+                  title={position.available ? position.name : `${position.name} · ${t.comingSoon}`}
+                  data-testid={`position-${position.id}`}
                 >
-                  <span className="option__short">{position.short}</span>
-                  <span className="option__text">{position.name}</span>
+                  <span className="position-chip__short">
+                    {!position.available && <LockIcon size={10} />}
+                    {position.short}
+                  </span>
+                  <span className="position-chip__name">{position.name}</span>
                 </button>
               ))}
             </div>

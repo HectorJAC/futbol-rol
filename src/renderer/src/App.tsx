@@ -1,4 +1,5 @@
 import { AttributeAllocation } from './screens/AttributeAllocation'
+import { CareerDetail } from './screens/CareerDetail'
 import { CareerHub } from './screens/CareerHub'
 import { CharacterCreation } from './screens/CharacterCreation'
 import { ClubSearch } from './screens/ClubSearch'
@@ -39,6 +40,7 @@ const SCREENS: Record<Screen, () => React.JSX.Element> = {
   trophyRoom: TrophyRoom,
   transferMarket: TransferMarket,
   records: Records,
+  careerDetail: CareerDetail,
   settings: Settings,
   relationships: Relationships,
   modeSelection: ModeSelection,

@@ -30,7 +30,23 @@ export const NATIONALITIES: readonly Nationality[] = [
   { id: 'USA', name: 'Estados Unidos', flag: flagUs }
 ]
 
-export const DEFAULT_NATIONALITY_ID: NationalityId = 'ARG'
+/**
+ * Para la primera versión solo se juega con las nacionalidades europeas. Las
+ * demás (y sus ligas, clubes y orígenes) están bloqueadas: se ven, pero no se
+ * pueden elegir. Las partidas antiguas con esas nacionalidades se siguen jugando.
+ */
+export const LOCKED_NATIONALITIES: readonly NationalityId[] = ['ARG', 'BRA', 'JPN', 'USA']
+
+export function isNationalityAvailable(id: NationalityId): boolean {
+  return !LOCKED_NATIONALITIES.includes(id)
+}
+
+/** Las que se pueden elegir, en el orden de las flechas. */
+export const AVAILABLE_NATIONALITIES: readonly Nationality[] = NATIONALITIES.filter((n) =>
+  isNationalityAvailable(n.id)
+)
+
+export const DEFAULT_NATIONALITY_ID: NationalityId = 'ESP'
 
 export function getNationality(id: NationalityId): Nationality {
   const nationality = NATIONALITIES.find((n) => n.id === id)
@@ -38,10 +54,15 @@ export function getNationality(id: NationalityId): Nationality {
   return nationality
 }
 
-/** Devuelve la nacionalidad anterior (-1) o siguiente (+1), dando la vuelta en los extremos. */
+/**
+ * Devuelve la nacionalidad elegible anterior (-1) o siguiente (+1), dando la
+ * vuelta en los extremos. Las bloqueadas se saltan.
+ */
 export function cycleNationality(currentId: NationalityId, step: 1 | -1): NationalityId {
-  const index = NATIONALITIES.findIndex((n) => n.id === currentId)
-  const total = NATIONALITIES.length
+  const list = AVAILABLE_NATIONALITIES
+  const index = list.findIndex((n) => n.id === currentId)
+  if (index < 0) return list[step === 1 ? 0 : list.length - 1].id
+  const total = list.length
   const next = (((index + step) % total) + total) % total
-  return NATIONALITIES[next].id
+  return list[next].id
 }

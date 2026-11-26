@@ -4,13 +4,17 @@
 
 - Plataforma: **solo escritorio, distribuido por Steam**. Windows primero. No habrá versión web.
 - Plan completo e ideas de diseño: [PLAN.md](PLAN.md).
-- **Versión actual: v0.15**:
-  - El juego ya tiene nombre: **Your Football Path**.
+- **Versión actual: v0.16**:
+  - Ficha completa de cada carrera desde Records.
+  - Primera versión acotada: solo nacionalidades europeas, solo delantero centro (las otras cinco posiciones se ven bloqueadas) y solo el modo Completa.
+  - "Pelea por el descenso" como partido importante cuando tu club está abajo.
+- **Lo que ya tiene el juego**:
+  - El nombre: **Your Football Path**.
   - Hub rediseñado: bandera junto al nombre, sueldo junto al club, tarjetas a su medida y titularidad en la situación.
   - Pedir una mejora de contrato (una vez por temporada) y la tienda pasa a llamarse "Compras".
   - Relación con cada compañero al pasar el cursor por su nombre en las decisiones.
   - Pierna buena (derecha o izquierda) en el primer paso de la creación y nombre siempre en mayúsculas.
-  - Modo Completa de 15 temporadas; la Rápida y la Normal están cerradas por ahora.
+  - Modo Completa de 15 temporadas.
   - Resumen antes de firmar el primer contrato y tres ofertas de club al azar en cada partida.
   - Moral que empieza en 50 y sube o baja con los partidos, el míster y el vestuario.
   - De 3 a 5 jugadas en los partidos importantes según su relevancia, y contra quién juegas antes de empezar.
@@ -30,7 +34,7 @@
   - Menú (con Extras) y puntero propio (flecha y manita sobre los botones).
   - Creación del jugador en 6 pasos (jugador, modo de juego, origen, atributos, primer club y resumen).
   - 4 orígenes por país y 10 orígenes especiales.
-  - Modos Completa y Personalizada, con fin de carrera (la Rápida y la Normal, cerradas por ahora).
+  - Modo Completa, con fin de carrera (la Rápida, la Normal y la Personalizada, cerradas por ahora).
   - Temporadas con calendario, liga de 16 equipos, copa nacional y copa internacional.
   - Decisiones, tiradas de habilidad y partidos importantes jugada a jugada.
   - Contrato, dinero y tienda de mejoras.
@@ -747,6 +751,55 @@ No se instaló nada. Al regenerar el `.exe`, electron-builder volvió a descarga
 - `typecheck` y `lint` sin errores.
 - El `.exe` regenerado (`your-football-path.exe`) abre la v0.15. Al arrancar con los datos reales, copió la partida guardada y los ajustes a `%APPDATA%\Your Football Path`, y la partida aparece en "Cargar partida".
 
+### v0.16 — Ficha de cada carrera en Records y primera versión acotada (2026-11-25)
+
+**Descargas:** al regenerar el `.exe`, electron-builder volvió a descargar Electron (no lo tenía en caché). No se instaló nada nuevo.
+
+**Hecho**
+1. **Ficha completa de una carrera desde Records.** Al pulsar una fila se abre una pantalla nueva con cinco pestañas:
+   - **Trayectoria:** cada temporada con su club, la división, la posición en la liga, el ascenso o descenso, la capitanía, la edad, partidos, goles, asistencias, nota, selección, hasta dónde llegó en la copa y en la copa internacional, y cuántos títulos ganó.
+   - **Títulos:** la vitrina con cada título ganado y en qué temporadas.
+   - **Atributos:** la media, la ficha (posición, pierna, edad, origen, valor de mercado y familia) y los 15 atributos.
+   - **Relaciones:** el entorno (míster, familia y afición), el vestuario y los excompañeros, cada uno con su barra.
+   - **Dinero y contratos:** el contrato actual (o el último), el dinero, el total ganado y gastado, los ingresos de cada temporada y todas las compras.
+
+   Arriba se ven los totales: temporadas, partidos, goles, asistencias, partidos con la selección y títulos.
+2. **Solo nacionalidades europeas.**
+   - Argentina, Brasil, Japón y Estados Unidos se ven en gris y con "Próximamente" debajo de la bandera, pero las flechas solo pasan por España, Francia, Inglaterra, Alemania e Italia. La nacionalidad por defecto es España.
+   - Sus ligas están bloqueadas en el buscador de equipos y sus orígenes en Extras.
+   - Sus clubes ya no hacen ofertas en el mercado.
+   - Siguen existiendo como rivales (selecciones en los torneos y clubes en sus copas), y las partidas antiguas con esas nacionalidades se siguen jugando, también con ofertas de su país.
+3. **Cinco posiciones nuevas, bloqueadas:** portero, defensa central, lateral, mediocentro defensivo y mediapunta. Se ven en el paso 1 junto al delantero centro, en gris y con candado.
+4. **Modo Personalizado cerrado.** Por ahora solo se juega la Completa.
+5. **"Pelea por el descenso".**
+   - Desde la 4ª jornada, si tu club está en primera y en los 6 últimos puestos (los 3 de descenso y los 3 de encima), son partidos importantes los de contra rivales cercanos: los que también están en esa zona o a 3 puestos o menos de ti.
+   - En esa situación, los partidos contra los grandes dejan de ser importantes. El clásico, el derbi y las rondas finales de las copas lo siguen siendo.
+   - Como el duelo en la parte alta, tiene 4 jugadas en el último tercio de la liga y 3 antes.
+6. **Comprar no cambia la tienda.** Antes, cada compra volvía a sortear los artículos de la temporada y la tienda entera cambiaba. Ahora la selección es fija toda la temporada: solo cambia el botón de lo que compras ("Comprado") y el dinero.
+7. **"El gran partido"** ("titular por sorpresa") solo sale si no eres titular habitual. No sale si eres el capitán, si el míster te da minutos de titular o si has sido titular en 3 de tus últimos 5 partidos.
+8. **"El árbitro no ve nada" siendo capitán:** la opción pasa a ser "Calmar a tus compañeros y hablar solo tú", y el resultado se cuenta a juego.
+   - De paso, dos eventos en los que "el capitán" te cede un penalti ("Penalti en el 90" y "El capitán cumple su palabra") ya no salen si el capitán eres tú.
+   - En la jugada de penalti, "Cedérselo al capitán" pasa a ser "Cedérselo a un compañero" si lo eres.
+9. **"En el centro del rondo"** solo sale si tienes 25 años o menos, o si acabas de llegar al club.
+
+**Verificado**
+- **226 tests unitarios** en verde (12 nuevos en `v016.test.ts`, y los de nacionalidades y del flujo de partida, puestos al día):
+  - posiciones y modos disponibles;
+  - mercado y buscador sin países bloqueados (y abiertos en partidas antiguas);
+  - pelea por el descenso en una temporada entera del club más flojo de España;
+  - tienda igual tras comprar;
+  - "El gran partido", el rondo, los penaltis del capitán y la jugada del árbitro;
+  - abrir y cerrar la ficha desde Records.
+- **22 tests e2e** en la app real. Ahora comprueban:
+  - las nacionalidades bloqueadas y el recorrido por las 5 europeas;
+  - las posiciones bloqueadas;
+  - los modos cerrados;
+  - los países bloqueados en el buscador y en Extras;
+  - que la tienda no cambia al comprar;
+  - las cinco pestañas de la ficha de una carrera desde Records.
+- `typecheck` y `lint` sin errores.
+- El `.exe` regenerado abre la v0.16, y la partida que ya tenías sigue apareciendo en "Cargar partida".
+
 ### Pendiente / siguientes pasos
 - Sexo femenino y más posiciones.
 - Más eventos y más clubes. Relaciones que cambien con eventos propios: agente, compañeros y pareja.
@@ -771,7 +824,7 @@ src/renderer/src/
   store/gameStore.ts           Estado del juego (Zustand): pantallas, borrador de partida y carrera
   screens/                     MainMenu, CharacterCreation, ModeSelection, OriginSelection, AttributeAllocation,
                                ClubSelection, CreationSummary, CareerHub, LoadGame, SeasonEvent, Match,
-                               SeasonSummary, TrophyRoom,
+                               SeasonSummary, TrophyRoom, CareerDetail,
                                TransferMarket, Records, Settings, Relationships, Competitions, Contract,
                                Extras, OriginCatalog, TrainingPoints, ClubSearch
   components/                  MenuButton, NationalitySelector, Stepper, ClubCrest, Stars,
@@ -795,6 +848,6 @@ src/renderer/src/
   i18n/es.ts                   Textos
   assets/cursors/              Puntero "Flecha césped" (normal, sobre botones y desactivado)
   styles/                      theme.css (tema y v0.1), career.css (v0.2), season.css (v0.3–v0.6), v07.css,
-                               v010.css, v012.css, v013.css, v014.css
+                               v010.css, v012.css, v013.css, v014.css, v016.css
 e2e/app.spec.ts                Tests de la app real con Playwright
 ```

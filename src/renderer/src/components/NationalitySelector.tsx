@@ -1,20 +1,30 @@
 import { useEffect } from 'react'
-import { getNationality, NATIONALITIES, type NationalityId } from '../data/nationalities'
+import {
+  AVAILABLE_NATIONALITIES,
+  getNationality,
+  NATIONALITIES,
+  isNationalityAvailable,
+  type NationalityId
+} from '../data/nationalities'
 import { t } from '../i18n/es'
-import { ChevronIcon } from './icons'
+import { ChevronIcon, LockIcon } from './icons'
 
 interface NationalitySelectorProps {
   value: NationalityId
   onChange: (step: 1 | -1) => void
 }
 
-/** Bandera grande con flechas a los lados. ←/→ también cambian de país (salvo si se está escribiendo). */
+/**
+ * Bandera grande con flechas a los lados. ←/→ también cambian de país (salvo si
+ * se está escribiendo). Las nacionalidades bloqueadas se ven debajo, en gris.
+ */
 export function NationalitySelector({
   value,
   onChange
 }: NationalitySelectorProps): React.JSX.Element {
   const nationality = getNationality(value)
-  const position = NATIONALITIES.findIndex((n) => n.id === value) + 1
+  const position = AVAILABLE_NATIONALITIES.findIndex((n) => n.id === value) + 1
+  const locked = NATIONALITIES.filter((n) => !isNationalityAvailable(n.id))
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -50,8 +60,18 @@ export function NationalitySelector({
           {nationality.name}
         </figcaption>
         <span className="nationality__counter">
-          {position} / {NATIONALITIES.length}
+          {position} / {AVAILABLE_NATIONALITIES.length}
         </span>
+        {locked.length > 0 && (
+          <span className="nationality__locked" data-testid="locked-nationalities">
+            {locked.map((n) => (
+              <img key={n.id} src={n.flag} alt={n.name} title={`${n.name} · ${t.comingSoon}`} />
+            ))}
+            <span className="nationality__locked-label">
+              <LockIcon size={11} /> {t.comingSoon}
+            </span>
+          </span>
+        )}
       </figure>
 
       <button

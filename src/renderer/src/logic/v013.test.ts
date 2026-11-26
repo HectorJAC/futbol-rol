@@ -34,11 +34,8 @@ describe('v0.13: modos de juego', () => {
     expect(getGameModeInfo('completa').description).toMatch(/^15 temporadas/)
   })
 
-  it('por ahora solo se eligen la Completa y la Personalizada', () => {
-    expect(GAME_MODES.filter((m) => m.available).map((m) => m.id)).toEqual([
-      'completa',
-      'personalizada'
-    ])
+  it('por ahora solo se elige la Completa (la Personalizada se cerró en la v0.16)', () => {
+    expect(GAME_MODES.filter((m) => m.available).map((m) => m.id)).toEqual(['completa'])
     expect(isModeAvailable('rapida')).toBe(false)
     expect(isModeAvailable('normal')).toBe(false)
     expect(DEFAULT_MODE_ID).toBe('completa')

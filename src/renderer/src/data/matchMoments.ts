@@ -441,6 +441,7 @@ export const MATCH_MOMENTS: readonly MatchMoment[] = [
       },
       {
         label: 'Cedérselo al capitán y darle confianza',
+        asCaptain: { label: 'Cedérselo a un compañero y darle confianza' },
         check: {
           attribute: 'leadership',
           difficulty: 12,
@@ -832,6 +833,13 @@ export const MATCH_MOMENTS: readonly MatchMoment[] = [
       },
       {
         label: 'Calmar a tus compañeros y que hable solo el capitán',
+        asCaptain: {
+          label: 'Calmar a tus compañeros y hablar solo tú',
+          success:
+            'Nada de protestas: con el brazalete, solo hablas tú. El árbitro empieza a pitar lo que hay.',
+          failure:
+            'Pides calma, pero cinco jugadores rodean al árbitro. Amarilla para dos y el partido se embarra.'
+        },
         check: {
           attribute: 'leadership',
           difficulty: 10,

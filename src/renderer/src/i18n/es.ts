@@ -12,7 +12,7 @@ export const es = {
     prefix: 'Your',
     main: 'Football Path'
   },
-  version: 'v0.15',
+  version: 'v0.16',
   comingSoon: 'Próximamente',
   back: 'Atrás',
   continue: 'Continuar',
@@ -324,6 +324,7 @@ export const es = {
     reasons: {
       grande: 'Contra un grande',
       segundo: 'Duelo en la parte alta',
+      descenso: 'Pelea por el descenso',
       clasico: 'Clásico',
       derbi: 'Derbi'
     } as Partial<Record<ImportanceReason, string>>
@@ -444,7 +445,38 @@ export const es = {
     empty: 'Todavía no hay carreras guardadas.',
     player: 'Jugador',
     seasons: 'Temp.',
-    bestSeason: 'Mejor temporada'
+    bestSeason: 'Mejor temporada',
+    openHint: 'Pulsa una carrera para ver todos sus detalles.'
+  },
+  careerDetail: {
+    eyebrow: 'Records',
+    retired: 'Retirado',
+    inProgress: 'En curso',
+    seasonOf: 'Temporada {n} de {total}',
+    tabs: {
+      path: 'Trayectoria',
+      trophies: 'Títulos',
+      attributes: 'Atributos',
+      relationships: 'Relaciones',
+      money: 'Dinero y contratos'
+    },
+    seasons: 'Temporadas',
+    titles: 'Títulos',
+    cup: 'Copa',
+    continental: 'Internacional',
+    noSeasons: 'Esta carrera todavía no ha terminado ninguna temporada.',
+    noTrophies: 'Ningún título todavía.',
+    profile: 'Ficha',
+    currentContract: 'Contrato actual',
+    lastContract: 'Último contrato',
+    earnings: 'Ingresos por temporada',
+    totalEarned: 'Total ganado',
+    purchases: 'Compras',
+    noPurchases: 'No compró nada.',
+    teammates: 'Vestuario',
+    exTeammates: 'Excompañeros',
+    people: 'Su entorno',
+    back: 'Volver a Records'
   },
   national: {
     title: 'Selección',

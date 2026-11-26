@@ -239,6 +239,15 @@ export function isEventEligible(event: GameEvent, career: Career): boolean {
   if (event.story && !event.story.repeatable && career.flags[seenFlag(event.id)]) return false
   if (event.captain !== undefined && event.captain !== !!career.captaincy) return false
   if (event.setPieceTaker && !setPieceRoles(career)[event.setPieceTaker]) return false
+  if (event.notRegularStarter && isRegularStarter(career)) return false
+  if (
+    event.maxAgeUnlessNew !== undefined &&
+    career.age > event.maxAgeUnlessNew &&
+    career.history.length > 0 &&
+    !isNewClubSeason(career)
+  ) {
+    return false
+  }
   if (event.captaincyOffer && !canBeCaptain(career)) return false
   if (event.teammate) {
     const mate = teammateByRole(career, event.teammate.role)
@@ -716,6 +725,18 @@ export function squadStatus(career: Career): { status: SquadStatus; share: numbe
   return { status, share }
 }
 
+/**
+ * ¿Juegas de titular con regularidad? Si eres el capitán, si el míster te da
+ * minutos de titular, o si fuiste titular en 3 de tus últimos 5 partidos.
+ */
+export function isRegularStarter(career: Career): boolean {
+  if (career.captaincy) return true
+  const { status } = squadStatus(career)
+  if (status === 'titular' || status === 'indiscutible') return true
+  const recent = (career.seasonProgress?.clubMatches ?? []).slice(-5)
+  return recent.filter((m) => m.squad === 'titular').length >= 3
+}
+
 /** Títulos colectivos (el resto son premios individuales). */
 const TEAM_TROPHIES: TrophyId[] = [
   'liga',
@@ -915,7 +936,12 @@ export function seasonContext(career: Career): SeasonContext {
 }
 
 export type ImportanceReason =
-  'grande' | 'segundo' | 'clasico' | 'derbi' | 'cuartos' | 'semifinal' | 'final'
+  'grande' | 'segundo' | 'descenso' | 'clasico' | 'derbi' | 'cuartos' | 'semifinal' | 'final'
+
+/** Puestos de abajo de primera división que cuentan como pelea por no bajar (3 de descenso + 3). */
+export const RELEGATION_FIGHT_ZONE = 6
+/** Diferencia de puestos con el rival para que sea un duelo directo por la permanencia. */
+const RELEGATION_RIVAL_GAP = 3
 
 /** Rondas de las eliminatorias que cuentan como partido importante (desde cuartos). */
 const CUP_IMPORTANT_FROM = CUP_ROUND_NAMES.length - 3
@@ -926,9 +952,12 @@ const KNOCKOUT_REASONS: Record<string, ImportanceReason> = {
 }
 
 /**
- * ¿Por qué es importante un partido? En liga: contra los 3 clubes más grandes
- * del país, contra el otro equipo de los dos primeros puestos, el clásico y el
- * derbi de la ciudad. En las copas: cuartos, semifinales y final.
+ * ¿Por qué es importante un partido? En liga: el clásico y el derbi de la
+ * ciudad; contra los 3 clubes más grandes del país y contra el otro equipo de
+ * los dos primeros puestos. Si tu club está en descenso o cerca (en primera),
+ * lo importante es la pelea por la permanencia: los partidos contra rivales
+ * cercanos en la tabla, y ya no los de contra un grande. En las copas: cuartos,
+ * semifinales y final.
  */
 export function importanceOf(career: Career, fixture: ClubFixture): ImportanceReason | null {
   if (fixture.competition === 'copa') {
@@ -941,12 +970,24 @@ export function importanceOf(career: Career, fixture: ClubFixture): ImportanceRe
   }
   const rivalry = isRivalry(career.clubId, fixture.opponentId)
   if (rivalry) return rivalry
+  const ctx = { ...seasonContext(career), playedSlots: fixture.slot }
+  const table = leagueTable(ctx)
+  const started = (table[0]?.played ?? 0) >= 4
+  // Pelea por no bajar (a partir de la 4ª jornada y solo en primera: de segunda no se baja).
+  if (started && ctx.setup.division === 1) {
+    const position = (id: string): number => table.findIndex((r) => r.clubId === id)
+    const mine = position(career.clubId)
+    const fightFrom = table.length - RELEGATION_FIGHT_ZONE
+    if (mine >= fightFrom) {
+      const theirs = position(fixture.opponentId)
+      const close = theirs >= fightFrom || Math.abs(theirs - mine) <= RELEGATION_RIVAL_GAP
+      return theirs >= 0 && close ? 'descenso' : null
+    }
+  }
   const club = getClub(career.clubId)
   if (biggestClubs(club.countryId).includes(fixture.opponentId)) return 'grande'
   // El rival por arriba en la tabla (a partir de la 4ª jornada).
-  const ctx = { ...seasonContext(career), playedSlots: fixture.slot }
-  const table = leagueTable(ctx)
-  if ((table[0]?.played ?? 0) >= 4) {
+  if (started) {
     const top = table.slice(0, 2).map((r) => r.clubId)
     if (top.includes(fixture.opponentId) && top.includes(career.clubId)) return 'segundo'
     if (table[1]?.clubId === fixture.opponentId) return 'segundo'

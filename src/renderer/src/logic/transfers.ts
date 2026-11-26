@@ -2,7 +2,7 @@ import { overallRating } from '../data/attributes'
 import { ALL_CLUBS, getClub, type Club, type ClubTier } from '../data/clubs'
 import { COUNTRY_CURRENCY, CURRENCIES, formatMoney } from '../data/currencies'
 import { isDecisionSeason } from '../data/gameModes'
-import type { NationalityId } from '../data/nationalities'
+import { isNationalityAvailable, type NationalityId } from '../data/nationalities'
 import type { Career } from '../types/career'
 import {
   buildContract,
@@ -105,7 +105,23 @@ export function signingChecks(career: Career, clubId: string, atMarket = false):
 
 /** ¿Se puede marcar este club como objetivo? (no tu club actual ni en la última temporada) */
 export function canTarget(career: Career, clubId: string): boolean {
-  return clubId !== career.clubId && !isCareerOver({ ...career, season: career.season + 1 })
+  return (
+    clubId !== career.clubId &&
+    isCountryOpen(career, getClub(clubId).countryId) &&
+    !isCareerOver({ ...career, season: career.season + 1 })
+  )
+}
+
+/**
+ * ¿Puedes fichar por clubes de ese país? Los de las nacionalidades bloqueadas,
+ * no; salvo en partidas antiguas que ya juegan allí o son de allí.
+ */
+export function isCountryOpen(career: Career, countryId: NationalityId): boolean {
+  return (
+    isNationalityAvailable(countryId) ||
+    countryId === getClub(career.clubId).countryId ||
+    countryId === career.character.nationalityId
+  )
 }
 
 /** Marca (o quita, con `null`) el club que quieres fichar al final de la temporada. */
@@ -237,6 +253,7 @@ export function generateTransferMarket(career: Career): TransferMarket {
   const candidates = ALL_CLUBS.filter(
     (c) =>
       c.id !== career.clubId &&
+      isCountryOpen(career, c.countryId) &&
       tierOpen[c.tier] &&
       (inFirst.has(c.id) || c.countryId === country || c.countryId === home) &&
       marketWeight(career, c, rating) > 0

@@ -23,6 +23,8 @@ export interface MatchMomentOutcome {
 
 export interface MatchMomentOption {
   label: string
+  /** Si eres el capitán: otra forma de decirlo (y de contarlo). Ver `momentOptions`. */
+  asCaptain?: { label: string; success?: string; failure?: string }
   check?: {
     attribute: AttributeId
     difficulty: number

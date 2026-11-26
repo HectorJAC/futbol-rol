@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { OriginDetail } from '../components/OriginDetail'
-import { NATIONALITIES, type NationalityId } from '../data/nationalities'
+import { LockIcon } from '../components/icons'
+import {
+  AVAILABLE_NATIONALITIES,
+  isNationalityAvailable,
+  NATIONALITIES,
+  type NationalityId
+} from '../data/nationalities'
 import { EXTRA_ORIGINS } from '../data/originCatalog'
 import { getOrigin, originsForNationality } from '../data/origins'
 import { t } from '../i18n/es'
@@ -11,7 +17,7 @@ type Tab = NationalityId | 'extra'
 /** Extras → Orígenes: todos los orígenes por nacionalidad y los 10 especiales. */
 export function OriginCatalog(): React.JSX.Element {
   const openExtras = useGameStore((s) => s.openExtras)
-  const [tab, setTab] = useState<Tab>(NATIONALITIES[0].id)
+  const [tab, setTab] = useState<Tab>(AVAILABLE_NATIONALITIES[0].id)
   const origins = tab === 'extra' ? EXTRA_ORIGINS : originsForNationality(tab)
   const [selectedId, setSelectedId] = useState<string>(origins[0].id)
 
@@ -32,21 +38,27 @@ export function OriginCatalog(): React.JSX.Element {
       </header>
 
       <div className="tabs catalog__tabs" role="tablist">
-        {NATIONALITIES.map((n) => (
-          <button
-            key={n.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === n.id}
-            className={`tab tab--flag${tab === n.id ? ' tab--active' : ''}`}
-            onClick={() => changeTab(n.id)}
-            title={n.name}
-            data-testid={`catalog-tab-${n.id}`}
-          >
-            <img src={n.flag} alt="" />
-            <span>{n.name}</span>
-          </button>
-        ))}
+        {NATIONALITIES.map((n) => {
+          // Orígenes de las nacionalidades bloqueadas: por ahora no se pueden consultar.
+          const open = isNationalityAvailable(n.id)
+          return (
+            <button
+              key={n.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === n.id}
+              className={`tab tab--flag${tab === n.id ? ' tab--active' : ''}${open ? '' : ' tab--locked'}`}
+              onClick={() => changeTab(n.id)}
+              disabled={!open}
+              title={open ? n.name : `${n.name} · ${t.comingSoon}`}
+              data-testid={`catalog-tab-${n.id}`}
+            >
+              <img src={n.flag} alt="" />
+              <span>{n.name}</span>
+              {!open && <LockIcon size={11} />}
+            </button>
+          )
+        })}
         <button
           type="button"
           role="tab"

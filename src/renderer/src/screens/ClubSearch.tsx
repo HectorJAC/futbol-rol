@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { ClubCrest } from '../components/ClubCrest'
 import { Stars } from '../components/Stars'
 import { divisionName, getClub, type Division } from '../data/clubs'
+import { LockIcon } from '../components/icons'
 import { NATIONALITIES, type NationalityId } from '../data/nationalities'
 import { t } from '../i18n/es'
-import { canTarget, signingChecks } from '../logic/transfers'
+import { canTarget, isCountryOpen, signingChecks } from '../logic/transfers'
 import { useGameStore } from '../store/gameStore'
 
 /**
@@ -51,19 +52,26 @@ export function ClubSearch(): React.JSX.Element {
         <section className="panel search-countries" aria-label={t.search.country}>
           <h2 className="panel-title">1 · {t.search.country}</h2>
           <div className="search-countries__list">
-            {NATIONALITIES.map((n) => (
-              <button
-                key={n.id}
-                type="button"
-                className={`search-chip${country === n.id ? ' search-chip--on' : ''}`}
-                onClick={() => pickCountry(n.id)}
-                aria-pressed={country === n.id}
-                data-testid={`search-country-${n.id}`}
-              >
-                <img src={n.flag} alt="" />
-                {n.name}
-              </button>
-            ))}
+            {NATIONALITIES.map((n) => {
+              // Ligas de las nacionalidades bloqueadas: se ven, pero no se pueden mirar.
+              const open = isCountryOpen(career, n.id)
+              return (
+                <button
+                  key={n.id}
+                  type="button"
+                  className={`search-chip${country === n.id ? ' search-chip--on' : ''}${open ? '' : ' search-chip--locked'}`}
+                  onClick={() => pickCountry(n.id)}
+                  aria-pressed={country === n.id}
+                  disabled={!open}
+                  title={open ? undefined : t.comingSoon}
+                  data-testid={`search-country-${n.id}`}
+                >
+                  <img src={n.flag} alt="" />
+                  {n.name}
+                  {!open && <LockIcon size={11} />}
+                </button>
+              )
+            })}
           </div>
         </section>
 

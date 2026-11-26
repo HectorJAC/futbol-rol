@@ -4,6 +4,7 @@ import { t } from '../i18n/es'
 import { careerRecordRow, rankCareers, type CareerRecordRow } from '../logic/records'
 import { careerFromSaveFile } from '../logic/saveGame'
 import { useGameStore } from '../store/gameStore'
+import type { Career } from '../types/career'
 
 function flagFor(id: string): string | undefined {
   return NATIONALITIES.some((n) => n.id === id)
@@ -11,10 +12,15 @@ function flagFor(id: string): string | undefined {
     : undefined
 }
 
-/** Records: comparativa de todas las carreras guardadas, ordenadas por títulos y goles. */
+/**
+ * Records: comparativa de todas las carreras guardadas, ordenadas por títulos y
+ * goles. Pulsar una abre todos sus detalles.
+ */
 export function Records(): React.JSX.Element {
   const backToMenu = useGameStore((s) => s.backToMenu)
+  const openRecordDetail = useGameStore((s) => s.openRecordDetail)
   const [rows, setRows] = useState<CareerRecordRow[] | null>(null)
+  const [careers, setCareers] = useState<Map<string, Career>>(new Map())
 
   useEffect(() => {
     let active = true
@@ -23,9 +29,11 @@ export function Records(): React.JSX.Element {
       const careers = await Promise.all(summaries.map((s) => window.api.saves.read(s.id)))
       const parsed = careers.flatMap((file) => {
         const career = file ? careerFromSaveFile(file) : null
-        return career ? [careerRecordRow(career)] : []
+        return career ? [career] : []
       })
-      if (active) setRows(rankCareers(parsed))
+      if (!active) return
+      setCareers(new Map(parsed.map((c) => [c.id, c])))
+      setRows(rankCareers(parsed.map(careerRecordRow)))
     })()
     return () => {
       active = false
@@ -37,7 +45,9 @@ export function Records(): React.JSX.Element {
       <header className="screen-header">
         <span className="eyebrow">{t.records.eyebrow}</span>
         <h1 className="screen-title">{t.records.title}</h1>
-        <p className="screen-subtitle">{t.records.subtitle}</p>
+        <p className="screen-subtitle">
+          {t.records.subtitle} {rows && rows.length > 0 && t.records.openHint}
+        </p>
       </header>
 
       <section className="panel trophy-room__body">
@@ -61,8 +71,25 @@ export function Records(): React.JSX.Element {
             <tbody>
               {rows.map((row, i) => {
                 const flag = flagFor(row.nationalityId)
+                const career = careers.get(row.id)
+                const open = (): void => {
+                  if (career) openRecordDetail(career)
+                }
                 return (
-                  <tr key={row.id} data-testid="record-row">
+                  <tr
+                    key={row.id}
+                    className="records__row"
+                    onClick={open}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        open()
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    data-testid="record-row"
+                  >
                     <td className="num">{i + 1}</td>
                     <td>
                       <span className="timeline__club">

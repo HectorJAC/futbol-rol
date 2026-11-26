@@ -16,7 +16,7 @@ export interface GameModeInfo {
   description: string
   /** Valores fijos (la personalizada los elige el jugador). */
   defaults: Omit<GameMode, 'id'>
-  /** Por ahora la Rápida y la Normal no se pueden elegir al crear partida. */
+  /** Por ahora solo se puede elegir la Completa al crear partida. */
   available: boolean
 }
 
@@ -55,7 +55,7 @@ export const GAME_MODES: readonly GameModeInfo[] = [
     name: 'Personalizada',
     description: `Eliges cuántas temporadas (hasta ${MAX_CUSTOM_SEASONS}) y cada cuánto tomas decisiones.`,
     defaults: { seasons: 20, decisionInterval: 1 },
-    available: true
+    available: false
   }
 ]
 

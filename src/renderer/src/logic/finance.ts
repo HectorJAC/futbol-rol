@@ -112,37 +112,34 @@ export const SHOP_ATTRIBUTE_ITEMS = 11
  * compraste la temporada pasada se sustituye por otras cosas, lo que ya tienes
  * para siempre no vuelve y las compras de lujo aparecen más adelante. La
  * mayoría de lo que se ofrece mejora atributos.
+ *
+ * Dentro de la temporada es siempre la misma: no depende de lo que compres en
+ * ella (lo comprado sigue en su sitio, marcado como comprado) ni de tus atributos.
  */
 export function shopOffer(career: Career): ShopItem[] {
-  const boughtNow = career.purchases.filter((p) => p.season === career.season).map((p) => p.itemId)
-  const boughtLast = career.purchases
-    .filter((p) => p.season === career.season - 1)
-    .map((p) => p.itemId)
-  const ownedForever = career.purchases
-    .filter((p) => p.season < career.season && getShopItem(p.itemId).limit === 'once')
+  const before = career.purchases.filter((p) => p.season < career.season)
+  const boughtLast = before.filter((p) => p.season === career.season - 1).map((p) => p.itemId)
+  const ownedForever = before
+    .filter((p) => getShopItem(p.itemId).limit === 'once')
     .map((p) => p.itemId)
   const pool = SHOP_ITEMS.filter(
     (item) =>
       (item.minSeason ?? 1) <= career.season &&
       !ownedForever.includes(item.id) &&
-      !boughtLast.includes(item.id) &&
-      !boughtNow.includes(item.id)
+      !boughtLast.includes(item.id)
   )
   const rng = createRng(seedFor(career.id, 'shop', career.season))
-  // (No depende de los atributos actuales: comprar no cambia el resto de la tienda.)
   const improves = (item: ShopItem): boolean => Object.keys(item.attributes ?? {}).length > 0
-  const free = Math.max(0, SHOP_SIZE - boughtNow.length)
-  const attributeSlots = Math.max(
-    0,
-    SHOP_ATTRIBUTE_ITEMS - boughtNow.filter((id) => getShopItem(id).attributes).length
-  )
-  const training = shuffle(rng, pool.filter(improves)).slice(0, Math.min(free, attributeSlots))
+  const training = shuffle(rng, pool.filter(improves)).slice(0, SHOP_ATTRIBUTE_ITEMS)
   const others = shuffle(
     rng,
     pool.filter((item) => !training.includes(item))
-  ).slice(0, free - training.length)
-  const picked = [...training, ...others]
-  const items = [...boughtNow.map(getShopItem), ...picked]
+  ).slice(0, SHOP_SIZE - training.length)
+  const items = [...training, ...others]
+  // Partidas de antes de la v0.16: lo comprado con la tienda antigua sigue a la vista.
+  for (const p of career.purchases.filter((x) => x.season === career.season)) {
+    if (!items.some((i) => i.id === p.itemId)) items.push(getShopItem(p.itemId))
+  }
   return items.sort((a, b) => a.category.localeCompare(b.category) || a.cost - b.cost)
 }
 
