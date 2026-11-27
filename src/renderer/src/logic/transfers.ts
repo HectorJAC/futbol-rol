@@ -17,6 +17,7 @@ import { playerRating } from './rating'
 import { initialFansOffset, logRelationChanges, startEntries } from './relationLog'
 import { hasProvenRecord, initialStanding, isCareerOver } from './season'
 import { teammatesAfterTransfer } from './teammates'
+import { fill, liveRecord, t } from '../i18n'
 
 export interface TransferOffer {
   club: Club
@@ -77,28 +78,27 @@ export function signingChecks(career: Career, clubId: string, atMarket = false):
   const clause = career.contract.releaseClause
   const budget = CLAUSE_BUDGET[club.tier]
   const checks: SigningCheck[] = [
-    { label: 'Tu media', ok: rating >= needRating, detail: `${rating} / ${needRating}` },
+    { label: tr().rating, ok: rating >= needRating, detail: `${rating} / ${needRating}` },
     {
-      label: 'Fama',
+      label: tr().fame,
       ok: career.reputation >= needFame,
       detail: `${career.reputation} / ${needFame}`
     },
     yearsLeft === 0
-      ? { label: 'Contrato', ok: true, detail: 'Termina tu contrato: sales libre' }
+      ? { label: tr().contract, ok: true, detail: tr().free }
       : {
-          label: 'Cláusula',
+          label: tr().clause,
           ok: clause <= budget,
-          detail:
-            clause <= budget
-              ? `Pueden pagar tu cláusula (${formatMoney(clause, currency)})`
-              : `Tu cláusula (${formatMoney(clause, currency)}) es demasiado para ellos`
+          detail: fill(clause <= budget ? tr().clauseOk : tr().clauseKo, {
+            money: formatMoney(clause, currency)
+          })
         }
   ]
   if (rejectedClubIds(career).includes(clubId)) {
     checks.push({
-      label: 'Historia',
+      label: tr().history,
       ok: false,
-      detail: 'No olvidan que rechazaste su oferta de primer contrato'
+      detail: tr().rejectedFirst
     })
   }
   return checks
@@ -139,11 +139,10 @@ export function isTargetDue(career: Career): boolean {
 
 const TIER_LEVEL: Record<ClubTier, number> = { grande: 58, medio: 48, modesto: 40 }
 const TIER_RANK: Record<ClubTier, number> = { grande: 0, medio: 1, modesto: 2 }
-const PITCH: Record<ClubTier, string> = {
-  grande: 'Un gigante quiere sumarte a su proyecto. Competencia feroz y focos de todo el mundo.',
-  medio: 'Un club con ambición que te ve como pieza importante de su crecimiento.',
-  modesto: 'Te ofrecen ser la estrella del equipo y jugarlo todo.'
-}
+const PITCH: Record<ClubTier, string> = liveRecord(() => t.game.transfers.pitch)
+
+/** Textos del mercado en el idioma actual. */
+const tr = (): typeof t.game.transfers => t.game.transfers
 
 /**
  * ¿Hay mercado pendiente antes de empezar la temporada? Desde la 2ª temporada,
@@ -264,7 +263,7 @@ export function generateTransferMarket(career: Career): TransferMarket {
     .filter((c) => rejected.includes(c.id))
     .map((club) => ({
       club,
-      reason: 'No olvidan que rechazaste su oferta de primer contrato.'
+      reason: tr().rejectedFirst
     }))
 
   const count = clamp(1 + Math.floor(rep / 30) + (rating >= 7.3 ? 1 : 0), 1, 3)
@@ -307,9 +306,9 @@ export function generateTransferMarket(career: Career): TransferMarket {
       pitch: PITCH[club.tier],
       note:
         club.id === targetId
-          ? 'El club que buscaste'
+          ? tr().noteTarget
           : club.countryId !== career.character.nationalityId
-            ? 'Aventura en el extranjero'
+            ? tr().noteAbroad
             : undefined
     }
   })
@@ -339,13 +338,11 @@ export function applyTransferDecision(career: Career, clubId: string | null): Tr
       flags: { ...flags, lastMarketDecision: 'stay' }
     }
     return {
-      message: renews
-        ? 'Renuevas con tu club. El club valora tu compromiso.'
-        : 'Te quedas. El club valora tu compromiso.',
+      message: renews ? tr().renew : tr().stay,
       career: logRelationChanges(career, stayed, {
         kind: 'mercado',
-        title: 'Mercado de fichajes',
-        detail: renews ? 'Renuevas con tu club' : 'Te quedas en el club'
+        title: tr().logMarket,
+        detail: renews ? tr().logRenew : tr().logStay
       })
     }
   }
@@ -359,7 +356,10 @@ export function applyTransferDecision(career: Career, clubId: string | null): Tr
   const newCurrency = COUNTRY_CURRENCY[club.countryId]
   const exchange =
     oldCurrency !== newCurrency
-      ? ` Tu dinero se cambia a ${CURRENCIES[newCurrency].name}: ${formatMoney(career.money, newCurrency)}.`
+      ? fill(tr().currency, {
+          currency: CURRENCIES[newCurrency].name,
+          money: formatMoney(career.money, newCurrency)
+        })
       : ''
   // En el club nuevo el míster y la afición empiezan de cero (v0.17): se olvidan
   // las cuentas pendientes del club anterior (el choque con el míster, la queja
@@ -397,11 +397,11 @@ export function applyTransferDecision(career: Career, clubId: string | null): Tr
   return {
     career: {
       ...moved,
-      relationLog: [...(career.relationLog ?? []), ...startEntries(moved, `Llegas a ${club.name}`)]
+      relationLog: [
+        ...(career.relationLog ?? []),
+        ...startEntries(moved, fill(tr().arrive, { club: club.name }))
+      ]
     },
-    message:
-      (brokePromise
-        ? `Fichas por ${club.name}. Tu antigua afición no olvida que dijiste "aquí soy feliz".`
-        : `Fichas por ${club.name}. Nueva ciudad, nuevo vestuario, nuevo reto.`) + exchange
+    message: fill(brokePromise ? tr().moveBroken : tr().move, { club: club.name }) + exchange
   }
 }

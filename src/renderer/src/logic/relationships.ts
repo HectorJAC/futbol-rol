@@ -4,6 +4,7 @@ import type { Career, Teammate } from '../types/career'
 import { partnerName, partnerRelation, partnerStage, STAGE_LABELS } from './partner'
 import { coachValue, fansValue } from './relationLog'
 import { relationLevel, ROLE_LABELS } from './teammates'
+import { liveRecord, t } from '../i18n'
 
 export { familyStatus } from './partner'
 export { coachValue, fansValue } from './relationLog'
@@ -31,24 +32,25 @@ export function describeRelationships(career: Career): Relationship[] {
 
   // Entrenador
   let coach: Pick<Relationship, 'level' | 'text'>
+  const ct = t.game.coachText
   if (f.coachConflict) {
-    coach = { level: 'enemigo', text: 'Te saltaste su autoridad y no lo ha olvidado.' }
+    coach = { level: 'enemigo', text: ct.conflict }
   } else if (f.publicComplaint) {
-    coach = { level: 'tenso', text: 'Sigue dolido por tu queja pública en la rueda de prensa.' }
+    coach = { level: 'tenso', text: ct.complaint }
   } else if (career.trust >= 70) {
-    coach = { level: 'aliado', text: 'Confía ciegamente en ti. Eres pieza clave de su once.' }
+    coach = { level: 'aliado', text: ct.aliado }
   } else if (career.trust >= 50) {
-    coach = { level: 'bien', text: 'Cuenta contigo, pero tienes que demostrarlo cada semana.' }
+    coach = { level: 'bien', text: ct.bien }
   } else if (career.trust >= 30) {
-    coach = { level: 'neutral', text: 'Todavía no se fía del todo de ti.' }
+    coach = { level: 'neutral', text: ct.neutral }
   } else {
-    coach = { level: 'tenso', text: 'Apenas cuenta contigo.' }
+    coach = { level: 'tenso', text: ct.tenso }
   }
   // La barra es la confianza del míster; un choque o una queja pública la limitan.
   result.push({
     id: 'coach',
-    name: 'El míster',
-    role: 'Entrenador',
+    name: t.game.people.coach,
+    role: t.game.people.coachRole,
     ...coach,
     value: coachValue(career)
   })
@@ -57,14 +59,16 @@ export function describeRelationships(career: Career): Relationship[] {
   if (getOrigin(career.originId).archetype === 'herencia') {
     const father: Pick<Relationship, 'level' | 'text'> =
       f.fatherRelation === 'buena'
-        ? { level: 'aliado', text: 'Desde aquella conversación, no se pierde un partido.' }
+        ? { level: 'aliado', text: t.game.fatherText.buena }
         : f.fatherRelation === 'tensa'
-          ? { level: 'tenso', text: 'La respuesta en redes sigue pesando en cada comida familiar.' }
-          : {
-              level: 'neutral',
-              text: 'Te observa desde la distancia, esperando ver de qué estás hecho.'
-            }
-    result.push({ id: 'father', name: 'Tu padre', role: 'Leyenda del club', ...father })
+          ? { level: 'tenso', text: t.game.fatherText.tensa }
+          : { level: 'neutral', text: t.game.fatherText.neutral }
+    result.push({
+      id: 'father',
+      name: t.game.people.father,
+      role: t.game.people.fatherRole,
+      ...father
+    })
   }
 
   // Pareja: relación de 0 a 100 (v0.17).
@@ -73,19 +77,20 @@ export function describeRelationships(career: Career): Relationship[] {
   if (name && stage) {
     const value = partnerRelation(f)
     const children = Number(f.children ?? 0)
-    const kids = children > 0 ? ` Tenéis ${children} ${children === 1 ? 'hijo' : 'hijos'}.` : ''
+    const pt = t.game.partnerText
+    const kids = children > 0 ? pt.kids(children) : ''
     const text =
       f.cheated === true
-        ? 'No sabe lo que pasó aquella noche… por ahora.'
+        ? pt.cheated
         : stage === 'conociendo'
-          ? 'Os estáis conociendo. A 50 de relación seréis novios.'
+          ? pt.meeting
           : stage === 'pareja'
-            ? `${f.engaged ? 'Estáis prometidos.' : f.livingTogether ? 'Compartís casa y rutina.' : 'Sois novios.'} A 100 de relación os casáis.`
-            : `Tu compañera de vida.${kids}`
+            ? `${f.engaged ? pt.engaged : f.livingTogether ? pt.living : pt.couple} ${pt.toMarry}`
+            : `${pt.married}${kids}`
     result.push({
       id: 'partner',
       name,
-      role: `Pareja · ${STAGE_LABELS[stage]}`,
+      role: `${t.game.people.partnerRole} · ${STAGE_LABELS[stage]}`,
       level: f.cheated === true ? 'tenso' : relationLevel(value),
       text,
       value
@@ -94,33 +99,30 @@ export function describeRelationships(career: Career): Relationship[] {
 
   // Afición de tu club actual (v0.17: vuelve a empezar al fichar por otro club).
   const fans = fansValue(career)
+  const ft = t.game.fansText
   const fansInfo: Pick<Relationship, 'level' | 'text'> = f.foreignInterest
-    ? { level: 'tenso', text: 'Sospechan que tienes la cabeza en otro club.' }
+    ? { level: 'tenso', text: ft.foreign }
     : fans >= 70
-      ? { level: 'aliado', text: 'Te adoran. Tu nombre se corea en cada partido.' }
+      ? { level: 'aliado', text: ft.aliado }
       : fans >= 50
-        ? { level: 'bien', text: 'Te aplauden y empiezan a ver tu camiseta en la grada.' }
+        ? { level: 'bien', text: ft.bien }
         : fans >= 35
-          ? { level: 'neutral', text: 'Aún no saben bien quién eres.' }
-          : { level: 'tenso', text: 'La grada te ha dado la espalda.' }
-  result.push({ id: 'fans', name: 'La afición', role: 'Grada', ...fansInfo, value: fans })
+          ? { level: 'neutral', text: ft.neutral }
+          : { level: 'tenso', text: ft.tenso }
+  result.push({
+    id: 'fans',
+    name: t.game.people.fans,
+    role: t.game.people.fansRole,
+    ...fansInfo,
+    value: fans
+  })
 
   return result
 }
 
-const TEAMMATE_TEXT: Record<RelationshipLevel, string> = {
-  aliado: 'Uña y carne: te defiende dentro y fuera del vestuario.',
-  bien: 'Os lleváis bien y se nota en el campo.',
-  neutral: 'Relación correcta, sin más.',
-  tenso: 'Hay roces entre vosotros.',
-  enemigo: 'No os soportáis. El vestuario lo nota.'
-}
+const TEAMMATE_TEXT: Record<RelationshipLevel, string> = liveRecord(() => t.game.teammateText)
 
-const RIVAL_TEXT: Partial<Record<RelationshipLevel, string>> = {
-  aliado: 'Os jugáis el mismo puesto y aun así sois amigos.',
-  tenso: 'Pelea por tu puesto y no te regala nada.',
-  enemigo: 'Pelea por tu puesto y no te pasa ni una.'
-}
+const RIVAL_TEXT: Partial<Record<RelationshipLevel, string>> = liveRecord(() => t.game.rivalText)
 
 /**
  * Ficha de un compañero o excompañero: su papel, la relación (0–100) y un
@@ -133,7 +135,9 @@ export function describeTeammate(
 ): Relationship & { relation: number } {
   const level = relationLevel(mate.relation)
   const role =
-    mate.role === 'capitan' && career.captaincy && !ex ? 'Excapitán' : ROLE_LABELS[mate.role]
+    mate.role === 'capitan' && career.captaincy && !ex
+      ? t.game.roles.exCaptain
+      : ROLE_LABELS[mate.role]
   return {
     id: mate.id,
     name: mate.name,

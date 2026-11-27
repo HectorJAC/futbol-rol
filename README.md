@@ -4,7 +4,11 @@
 
 - Plataforma: **solo escritorio, distribuido por Steam**. Windows primero. No habrá versión web.
 - Plan completo e ideas de diseño: [PLAN.md](PLAN.md).
-- **Versión actual: v0.17**:
+- **Versión actual: v0.18 (Early-Access)**:
+  - **Inglés:** el juego entero se puede jugar en inglés. Se cambia en Ajustes, en cualquier momento, y no es una traducción: todos los textos están escritos de nuevo en inglés.
+  - Pantalla de Créditos y "Early-Access v0.x" visible en todas las pantallas.
+  - Como mucho 5 puntos de atributo por temporada y una tienda que sube de precio cada temporada.
+- **v0.17**:
   - Historial de cada relación: qué decisiones subieron o bajaron la relación con el míster, la afición y tu pareja.
   - El míster y la afición empiezan de cero al fichar por otro club.
   - Pareja con relación de 0 a 100 (novios a 50, boda a 100, ruptura a 0) y exparejas.
@@ -157,7 +161,7 @@ Todo se instaló dentro del proyecto (`node_modules/`). No se instaló nada glob
   - Botones Volver (descarta lo escrito) y Comenzar carrera (solo se activa con un nombre válido).
 - **Ficha provisional** del jugador después de crearlo, con el botón "Volver al menú".
 - **Estilo "Moderno oscuro"**: fondo de estadio de noche con focos, césped en perspectiva y círculo central. Acentos en verde césped y dorado. Títulos en Oswald y textos en Inter. Probado a 1280x720 y 1920x1080.
-- Todos los textos están en `src/renderer/src/i18n/es.ts`, para poder traducir al inglés más adelante.
+- Los textos están en `src/renderer/src/i18n/`: `es.ts` y `en.ts` para la interfaz y `en/` para el contenido en inglés (escrito aparte, no traducido). Se cambia de idioma en Ajustes.
 
 **Verificado**
 - 17 tests unitarios: nacionalidades, validación del nombre y flujo del store.
@@ -861,12 +865,60 @@ No se instaló nada. Al regenerar el `.exe`, electron-builder volvió a descarga
 - `typecheck` y `lint` sin errores.
 - El `.exe` se regeneró (`dist\win-unpacked\your-football-path.exe`). No lo abrí a mano: los e2e prueban la misma compilación.
 
+### v0.18 — Inglés original, créditos, Early-Access y ajustes de dificultad (2026-11-26)
+
+**Descargas:** al regenerar el `.exe`, electron-builder volvió a descargar Electron (no lo tenía en caché). No se instaló nada nuevo.
+
+**Hecho**
+1. **Modos cerrados, solo con el título.** La Rápida, la Normal y la Personalizada ya no enseñan descripción ni datos, solo el nombre y "Próximamente". Las descripciones siguen en los datos para cuando se abran.
+2. **El nombre de la competición en los partidos importantes.**
+   - En lugar de "Internacional" sale la copa que juegas (p. ej. "Copa de Europa").
+   - En copa, en lugar de "Copa", la copa de tu país (p. ej. "Copa de España").
+3. **Como mucho 5 puntos de atributo por temporada** en la Completa (antes 13). En las escalas de 30 y 20 serían 3 y 2.
+4. **La tienda sube de precio cada temporada:** un 10 % del precio base por temporada. Lo que cuesta 20.000 en la primera temporada cuesta 22.000 en la segunda y 40.000 en la undécima.
+5. **"Rueda de prensa"** (¿estás contento con tus minutos?) ya no sale si eres titular, titular indiscutible o capitán.
+6. **Créditos.** Botón nuevo en el menú principal. Lleva a una pantalla con "Creado por Hector JAC" y "Contacto: hjac10@hotmail.com". Con 7 botones, el menú se compacta en ventanas bajas para que quepa en 1280×720.
+7. **"Early-Access v0.18"** abajo en el centro de todas las pantallas, discreto y sin tapar botones. Sustituye a la versión que había en el menú.
+8. **Inglés.**
+   - **Cómo se activa:** en Ajustes → Idioma (Español / English). El cambio es inmediato: la pantalla se vuelve a pintar y la elección se guarda en `settings.json`.
+   - **Texto original, no traducido:** el inglés no copia frases del español, está escrito como lo escribiría un guionista inglés. Usa inglés británico y vocabulario de fútbol (gaffer, dressing room, pitch, nil…). Las situaciones y sus consecuencias son las mismas, porque la mecánica vive en los datos y no cambia con el idioma.
+   - **Interfaz:** `i18n/en.ts` tiene sus propios textos con las mismas claves que `i18n/es.ts`. El compilador y un test comprueban que no falte ni sobre ninguna.
+   - **Textos que arma la lógica:** relaciones, mercado, contrato, tienda, pareja, lesiones, capitanía y etiquetas de efectos pasan a una sección `game` de los diccionarios, en los dos idiomas.
+   - **Contenido:** `i18n/en/` tiene paquetes con el texto inglés de los 98 eventos de temporada, las 39 jugadas de partido, los 46 orígenes, los 68 artículos de la tienda, los 15 enfoques de "Horas extra" y los 16 títulos. Cada paquete se liga a sus datos al cargar el juego (`i18n/bind.ts`): `evento.title`, `origen.name`… devuelven el texto del idioma activo, sin copiar ni tocar efectos, tiradas ni condiciones.
+   - **Nombres base:** atributos, países, posiciones, modos, ligas, copas, torneos, monedas y rondas tienen su nombre en inglés.
+   - **Formatos:** los nombres de clubes y jugadores no cambian. El dinero sale como "€1,250,000" o "£850", los puestos como 1st, 2nd o 3rd, y las fechas en formato británico.
+   - **Lo que no depende del idioma:** el minuto de cada jugada se sigue leyendo del texto original, así que la mecánica es idéntica en los dos idiomas. Lo que ya quedó escrito en una partida (resultados de decisiones pasadas, el historial de relaciones) se queda en el idioma en que se jugó.
+   - **Escritura:** cinco redactores trabajaron en paralelo, uno por bloque de contenido, con las mismas reglas: mismos marcadores (`{veterano}`, `{pareja}`, `{rival}`…), la misma forma de cada evento y una longitud parecida para que quepa en pantalla. Cada uno comprobó su bloque con un script.
+
+**Detalles a revisar en los textos en español.** Los redactores encontraron sitios donde el texto español no cuadra con sus efectos. En inglés se escribió sin contradecir la mecánica; en español siguen igual:
+- Lesiones que el texto menciona pero que no tienen efecto de lesión: "Un mes fuera" (`perder-velocidad`), "El aductor se rompe" (`convocatoria-seleccion`) y "un tirón" (`consecuencia-fundacion`).
+- `hat-trick`: prometes otro hat-trick y el premio es un doblete.
+- `comp-tregua-rival`: habla de cambiar quién tira los penaltis, pero no cambia nada.
+- `fiesta`: te llama "novato" a cualquier edad.
+- `pareja-crisis`: habla de divorcio aunque los puntos que baja no siempre acaban la relación.
+- `entrenador-penaltis` (tienda): habla de penaltis pero sube la compostura.
+- Los nombres de relleno ("un compañero", "tu pareja"…) ahora salen en el idioma activo.
+
+**Verificado**
+- **257 tests unitarios** en verde (11 nuevos en `v018.test.ts`, y los de puntos por temporada y ajustes, puestos al día):
+  - la interfaz inglesa tiene exactamente las claves de la española;
+  - cada evento y cada jugada tienen texto inglés con la misma forma, distinto del español y con los mismos marcadores;
+  - orígenes, tienda, títulos, "Horas extra" y datos base cambian de idioma;
+  - cambiar de idioma no cambia efectos, tiradas, condiciones ni minutos;
+  - cambio en vivo (interfaz, lógica y datos);
+  - dinero, puestos y rondas en formato inglés;
+  - máximo de 5 puntos, precios por temporada, "Rueda de prensa" y Créditos.
+- **23 tests e2e** en la app real, con uno nuevo que cambia a inglés en Ajustes y juega en inglés: menú, creación completa, hub, primera decisión, resultado y tienda. También comprueban Créditos, la etiqueta Early-Access, los modos cerrados sin descripción y el máximo de 5 puntos.
+- `typecheck` y `lint` sin errores.
+- El `.exe` regenerado abre la v0.18 con tus partidas guardadas en "Cargar partida". Revisé las capturas en inglés: menú, creación, hub, decisión y tienda.
+
 ### Pendiente / siguientes pasos
 - Sexo femenino y más posiciones.
 - Más eventos y más clubes. Relaciones que cambien con eventos propios: agente y compañeros.
 - Las lesiones de los partidos simulados no quitan decisiones ni atributos (solo las de las decisiones).
 - Ventana de invierno, cesiones y retirada.
-- Integración con Steamworks (logros y Cloud), traducción al inglés e instalador (`npm run build:win`).
+- Integración con Steamworks (logros y Cloud) e instalador (`npm run build:win`).
+- Revisar los detalles de los textos en español que no cuadran con sus efectos (lista en la v0.18).
 - `npm audit` sigue avisando de 6 vulnerabilidades moderadas en dependencias de desarrollo de la plantilla (sin cambios).
 - El código está en la rama `feature/v0.10` de GitHub (HectorJAC/futbol-rol), pendiente de pull request hacia `main`.
 
@@ -908,9 +960,9 @@ src/renderer/src/
                                teammates (compañeros, excompañeros y capitanía), notPlayed,
                                contractTalks (pedir una mejora de contrato)
   types/                       character.ts, career.ts
-  i18n/es.ts                   Textos
+  i18n/                        index.ts (idioma activo y `t`), es.ts y en.ts (interfaz), en/ (contenido en inglés), bind.ts
   assets/cursors/              Puntero "Flecha césped" (normal, sobre botones y desactivado)
   styles/                      theme.css (tema y v0.1), career.css (v0.2), season.css (v0.3–v0.6), v07.css,
-                               v010.css, v012.css, v013.css, v014.css, v016.css, v017.css
+                               v010.css, v012.css, v013.css, v014.css, v016.css, v017.css, v018.css
 e2e/app.spec.ts                Tests de la app real con Playwright
 ```

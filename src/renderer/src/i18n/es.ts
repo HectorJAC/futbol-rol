@@ -4,15 +4,15 @@ import type { ImportanceReason, SquadStatus } from '../logic/season'
 import type { Foot } from '../types/character'
 
 /**
- * Todos los textos del juego en un solo sitio.
- * Para traducir (p. ej. al inglés para Steam) bastará con crear otro archivo con la misma forma.
+ * Textos de la interfaz en español. Cada idioma tiene su propio archivo con las
+ * mismas claves (ver `index.ts`); el inglés está escrito aparte, no traducido.
  */
 export const es = {
   gameTitle: {
     prefix: 'Your',
     main: 'Football Path'
   },
-  version: 'v0.17',
+  version: 'v0.18',
   comingSoon: 'Próximamente',
   back: 'Atrás',
   continue: 'Continuar',
@@ -23,10 +23,13 @@ export const es = {
     settings: 'Ajustes',
     records: 'Records',
     extras: 'Extras',
+    credits: 'Créditos',
     quit: 'Salir del juego',
-    hint: '↑ ↓ navegar · Enter seleccionar'
+    hint: '↑ ↓ navegar · Enter seleccionar',
+    navLabel: 'Menú principal'
   },
   steps: {
+    label: 'Pasos de la nueva partida',
     characterCreation: 'Jugador',
     modeSelection: 'Modo',
     originSelection: 'Origen',
@@ -106,6 +109,12 @@ export const es = {
       singular: 'Especial'
     }
   },
+  attributeGroups: {
+    Técnico: 'Técnico',
+    Físico: 'Físico',
+    Mental: 'Mental',
+    'Balón parado': 'Balón parado'
+  },
   attributes: {
     title: 'Reparte tus atributos',
     subtitle:
@@ -130,7 +139,16 @@ export const es = {
     perWeek: '/sem',
     tiers: { grande: 'Grande', medio: 'Ambicioso', modesto: 'Modesto' },
     sign: 'Firmar contrato',
-    choose: 'Elige un club para continuar.'
+    choose: 'Elige un club para continuar.',
+    pitch: {
+      grande:
+        'Un gigante con vitrinas llenas. Empezarás en el filial y tendrás que ganarte cada minuto.',
+      medioFirst: 'Un club de primera que busca jóvenes con hambre. Rotarás con el primer equipo.',
+      medioSecond: 'Un club ambicioso de segunda que quiere subir. Rotarás con el primer equipo.',
+      modestoFirst: 'Un club humilde de primera que te quiere como titular desde el primer día.',
+      modestoSecond:
+        'Un club de segunda que te quiere como titular desde el primer día. Escaparate perfecto.'
+    }
   },
   creationSummary: {
     title: 'Resumen',
@@ -188,6 +206,7 @@ export const es = {
     contract: 'Contrato y dinero',
     money: 'Dinero',
     mode: 'Modo',
+    modeLabel: 'Modo {mode}',
     seasonOf: 'de',
     simulate: 'Simular temporada',
     simulateHint: 'Esta temporada no tiene decisiones: se juega de golpe.',
@@ -414,7 +433,7 @@ export const es = {
     animations: 'Animaciones',
     animationsHint: 'Desactívalas si prefieres una interfaz sin movimiento.',
     language: 'Idioma',
-    languageHint: 'El inglés llegará antes del lanzamiento en Steam.',
+    languageHint: 'Cámbialo cuando quieras. Lo que ya quedó escrito en una partida no cambia.',
     audio: 'Audio',
     audioHint: 'Música y efectos llegarán en una versión futura.',
     autosaved: 'Los cambios se guardan automáticamente.'
@@ -502,6 +521,7 @@ export const es = {
   season: {
     partnerRelation: 'Relación',
     partnerNew: '(empezáis en 25)',
+    partnerWith: 'con {name}',
     ifSuccess: 'si sale bien',
     ifFailure: 'si sale mal',
     progress: 'Progreso de la temporada',
@@ -573,6 +593,208 @@ export const es = {
     notWon: 'Aún no conseguido',
     back: 'Volver'
   },
+  credits: {
+    createdBy: 'Creado por',
+    contact: 'Contacto',
+    back: 'Volver al menú'
+  },
+  /** Textos que arma la lógica del juego (relaciones, mercado, contrato, tienda…). */
+  game: {
+    fill: {
+      teammate: 'un compañero',
+      exTeammate: 'un excompañero',
+      oldClub: 'tu antiguo club',
+      partner: 'tu pareja',
+      exPartner: 'tu expareja',
+      opponent: 'el rival'
+    },
+    people: {
+      coach: 'El míster',
+      coachRole: 'Entrenador',
+      father: 'Tu padre',
+      fatherRole: 'Leyenda del club',
+      partnerRole: 'Pareja',
+      fans: 'La afición',
+      fansRole: 'Grada'
+    },
+    coachText: {
+      conflict: 'Te saltaste su autoridad y no lo ha olvidado.',
+      complaint: 'Sigue dolido por tu queja pública en la rueda de prensa.',
+      aliado: 'Confía ciegamente en ti. Eres pieza clave de su once.',
+      bien: 'Cuenta contigo, pero tienes que demostrarlo cada semana.',
+      neutral: 'Todavía no se fía del todo de ti.',
+      tenso: 'Apenas cuenta contigo.'
+    },
+    fatherText: {
+      buena: 'Desde aquella conversación, no se pierde un partido.',
+      tensa: 'La respuesta en redes sigue pesando en cada comida familiar.',
+      neutral: 'Te observa desde la distancia, esperando ver de qué estás hecho.'
+    },
+    partnerText: {
+      cheated: 'No sabe lo que pasó aquella noche… por ahora.',
+      meeting: 'Os estáis conociendo. A 50 de relación seréis novios.',
+      engaged: 'Estáis prometidos.',
+      living: 'Compartís casa y rutina.',
+      couple: 'Sois novios.',
+      toMarry: 'A 100 de relación os casáis.',
+      married: 'Tu compañera de vida.',
+      kids: (n: number): string => ` Tenéis ${n} ${n === 1 ? 'hijo' : 'hijos'}.`
+    },
+    fansText: {
+      foreign: 'Sospechan que tienes la cabeza en otro club.',
+      aliado: 'Te adoran. Tu nombre se corea en cada partido.',
+      bien: 'Te aplauden y empiezan a ver tu camiseta en la grada.',
+      neutral: 'Aún no saben bien quién eres.',
+      tenso: 'La grada te ha dado la espalda.'
+    },
+    teammateText: {
+      aliado: 'Uña y carne: te defiende dentro y fuera del vestuario.',
+      bien: 'Os lleváis bien y se nota en el campo.',
+      neutral: 'Relación correcta, sin más.',
+      tenso: 'Hay roces entre vosotros.',
+      enemigo: 'No os soportáis. El vestuario lo nota.'
+    },
+    rivalText: {
+      aliado: 'Os jugáis el mismo puesto y aun así sois amigos.',
+      tenso: 'Pelea por tu puesto y no te regala nada.',
+      enemigo: 'Pelea por tu puesto y no te pasa ni una.'
+    },
+    roles: {
+      capitan: 'Capitán',
+      rival: 'Rival de puesto',
+      veterano: 'Veterano del vestuario',
+      amigo: 'Tu amigo en el vestuario',
+      joven: 'Joven de la cantera',
+      exCaptain: 'Excapitán'
+    },
+    exTeammateAt: 'Excompañero en el {club}',
+    stages: { conociendo: 'Os estáis conociendo', pareja: 'Novios', casados: 'Casados' },
+    family: {
+      single: 'Soltero',
+      meeting: 'Conociendo a {name}',
+      dating: 'Novio de {name}',
+      married: 'Casado con {name}',
+      engaged: 'prometidos',
+      living: 'vivís juntos',
+      children: (n: number): string => `${n} ${n === 1 ? 'hijo' : 'hijos'}`
+    },
+    partnerNotes: {
+      breakup: 'Lo dejáis: {name} sale de tu vida.',
+      couple: 'La relación llega a {n}: {name} y tú ya sois novios.',
+      married: 'La relación llega a {n}: {name} y tú os casáis.'
+    },
+    injury: {
+      zones: {
+        tobillo: 'Tobillo',
+        muscular: 'Lesión muscular',
+        rodilla: 'Rodilla',
+        espalda: 'Espalda'
+      },
+      severity: { leve: 'leve', moderada: 'moderada', grave: 'grave' },
+      generic: 'Lesión',
+      out: (n: number, severity: string): string =>
+        `Baja de ${n} ${n === 1 ? 'partido' : 'partidos'} (${severity})`,
+      matchesOut: (n: number): string => `Lesión: ${n} partidos de baja`
+    },
+    captaincy: {
+      seasons: 'Temporadas en el club',
+      natural: 'Líder nato (liderazgo {n})',
+      seasonsDetail: '{seasons} / {min} (o liderazgo {lead})',
+      leadership: 'Liderazgo',
+      trust: 'Confianza del míster',
+      dressingRoom: 'Relación con el vestuario'
+    },
+    shop: {
+      notInShop: 'No está en la tienda esta temporada',
+      notAvailable: 'No disponible',
+      alreadyBought: 'Ya lo compraste',
+      bought: 'Comprado',
+      alreadyHired: 'Ya lo contrataste esta temporada',
+      hired: 'Contratado',
+      noMoney: 'No tienes dinero suficiente',
+      noMoneyShort: 'Sin dinero',
+      maxed: 'Ya tienes esos atributos al máximo',
+      maxedShort: 'Al máximo',
+      noGain: 'Sin mejora (atributo al máximo)',
+      morale: 'moral',
+      fame: 'fama',
+      categories: {
+        Entrenamiento: 'Entrenamiento',
+        'Equipo personal': 'Equipo personal',
+        Equipamiento: 'Equipamiento',
+        Formación: 'Formación',
+        Familia: 'Familia'
+      }
+    },
+    contractRoles: { Titular: 'Titular', Rotación: 'Rotación', Promesa: 'Promesa' },
+    offerMinutes: { Pocos: 'Pocos', Algunos: 'Algunos', Muchos: 'Muchos' },
+    raise: {
+      careerOver: 'Tu carrera ha terminado.',
+      asked: 'Ya lo pediste esta temporada. Vuelve a intentarlo la próxima.',
+      justSigned:
+        'Acabas de firmar tu contrato: espera a la próxima temporada para pedir una mejora.',
+      logTitle: 'Pediste una mejora de contrato',
+      rejected: '{name}: rechazada',
+      names: {
+        moderada: 'Subida moderada',
+        mercado: 'Lo que vales en el mercado',
+        ambiciosa: 'Subida ambiciosa'
+      }
+    },
+    transfers: {
+      rating: 'Tu media',
+      fame: 'Fama',
+      contract: 'Contrato',
+      free: 'Termina tu contrato: sales libre',
+      clause: 'Cláusula',
+      history: 'Historia',
+      clauseOk: 'Pueden pagar tu cláusula ({money})',
+      clauseKo: 'Tu cláusula ({money}) es demasiado para ellos',
+      rejectedFirst: 'No olvidan que rechazaste su oferta de primer contrato.',
+      pitch: {
+        grande:
+          'Un gigante quiere sumarte a su proyecto. Competencia feroz y focos de todo el mundo.',
+        medio: 'Un club con ambición que te ve como pieza importante de su crecimiento.',
+        modesto: 'Te ofrecen ser la estrella del equipo y jugarlo todo.'
+      },
+      noteTarget: 'El club que buscaste',
+      noteAbroad: 'Aventura en el extranjero',
+      renew: 'Renuevas con tu club. El club valora tu compromiso.',
+      stay: 'Te quedas. El club valora tu compromiso.',
+      logMarket: 'Mercado de fichajes',
+      logRenew: 'Renuevas con tu club',
+      logStay: 'Te quedas en el club',
+      currency: ' Tu dinero se cambia a {currency}: {money}.',
+      arrive: 'Llegas a {club}',
+      moveBroken: 'Fichas por {club}. Tu antigua afición no olvida que dijiste "aquí soy feliz".',
+      move: 'Fichas por {club}. Nueva ciudad, nuevo vestuario, nuevo reto.'
+    },
+    seasonLog: {
+      title: 'Balance de la temporada {year}',
+      detail: (goals: number, trophies: number): string => `${goals} goles y ${trophies} títulos`
+    },
+    relationSeason: 'Temporada {n}',
+    chips: {
+      dressingRoom: 'Vestuario',
+      captain: 'Capitán',
+      rival: 'Rival de puesto',
+      veteran: 'Veterano',
+      friend: 'Amigo',
+      youngster: 'Joven',
+      relation: 'Relación',
+      exTeammate: 'excompañero',
+      becomeCaptain: 'Capitán del equipo',
+      fans: 'Afición',
+      goals: (n: number): string => `gol${n > 1 ? 'es' : ''}`,
+      assists: (n: number): string => `asistencia${n > 1 ? 's' : ''}`,
+      teamGoal: 'Gol de tu equipo',
+      opponentGoal: 'Gol del rival'
+    },
+    stars: '{value} de {max}',
+    titles: (n: number): string => (n === 1 ? 'título' : 'títulos'),
+    matchday: 'Jornada {n}',
+    groupDay: 'Grupos · J{n}'
+  },
   load: {
     eyebrow: 'Partidas guardadas',
     title: 'Cargar partida',
@@ -587,5 +809,3 @@ export const es = {
     back: 'Volver al menú'
   }
 } as const
-
-export const t = es

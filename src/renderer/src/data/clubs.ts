@@ -2,6 +2,7 @@ import { LEAGUES, type ClubSeed } from './leagues'
 import { NATIONALITIES, type NationalityId } from './nationalities'
 import { getOrigin, type OriginId } from './origins'
 import { createRng } from '../logic/random'
+import { t } from '../i18n'
 
 export type ClubTier = 'grande' | 'medio' | 'modesto'
 export type Division = 1 | 2
@@ -128,17 +129,10 @@ const SLOT_TERMS: Record<ClubTier, Pick<ClubOffer, 'minutes' | 'weeklyWage'>> = 
 
 /** Texto de la oferta según su papel y la división del club. */
 function pitchFor(slot: ClubTier, division: Division): string {
-  if (slot === 'grande') {
-    return 'Un gigante con vitrinas llenas. Empezarás en el filial y tendrás que ganarte cada minuto.'
-  }
-  if (slot === 'medio') {
-    return division === 1
-      ? 'Un club de primera que busca jóvenes con hambre. Rotarás con el primer equipo.'
-      : 'Un club ambicioso de segunda que quiere subir. Rotarás con el primer equipo.'
-  }
-  return division === 1
-    ? 'Un club humilde de primera que te quiere como titular desde el primer día.'
-    : 'Un club de segunda que te quiere como titular desde el primer día. Escaparate perfecto.'
+  const pitch = t.club.pitch
+  if (slot === 'grande') return pitch.grande
+  if (slot === 'medio') return division === 1 ? pitch.medioFirst : pitch.medioSecond
+  return division === 1 ? pitch.modestoFirst : pitch.modestoSecond
 }
 
 const SLOTS: ClubTier[] = ['grande', 'medio', 'modesto']

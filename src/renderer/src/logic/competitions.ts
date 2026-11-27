@@ -35,6 +35,7 @@ import {
   weightedIndex,
   type Rng
 } from './random'
+import { currentLocale, fill, roundName, t } from '../i18n'
 
 /**
  * Competiciones de cada temporada: tu división (liga a doble vuelta), la copa
@@ -152,9 +153,9 @@ export function slotOf(setup: SeasonSetup, competition: CompetitionId, round: nu
 }
 
 export function roundLabel(slot: SlotInfo, setup?: Pick<SeasonSetup, 'continentalCup'>): string {
-  if (slot.competition === 'liga') return `Jornada ${slot.round + 1}`
-  if (slot.competition === 'copa') return CUP_ROUND_NAMES[slot.round]
-  return (setup ? continentalNames(setup) : CONTINENTAL_ROUND_NAMES)[slot.round] ?? ''
+  if (slot.competition === 'liga') return fill(t.game.matchday, { n: slot.round + 1 })
+  if (slot.competition === 'copa') return roundName(CUP_ROUND_NAMES[slot.round])
+  return roundName((setup ? continentalNames(setup) : CONTINENTAL_ROUND_NAMES)[slot.round] ?? '')
 }
 
 /**
@@ -177,7 +178,7 @@ export function slotDate(setup: SeasonSetup, season: number, slot: number): Date
 }
 
 export function formatSlotDate(setup: SeasonSetup, season: number, slot: number): string {
-  return slotDate(setup, season, slot).toLocaleDateString('es-ES', {
+  return slotDate(setup, season, slot).toLocaleDateString(currentLocale(), {
     weekday: 'short',
     day: 'numeric',
     month: 'short',

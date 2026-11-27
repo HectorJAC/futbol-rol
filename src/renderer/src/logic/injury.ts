@@ -3,6 +3,7 @@ import type { InjuryEffect, InjuryZone } from '../data/events'
 import type { Career, InjuryRecord } from '../types/career'
 import { careerScale } from './playerAttributes'
 import { createRng, randomInt, seedFor, shuffle } from './random'
+import { liveRecord, t } from '../i18n'
 
 /**
  * Lesiones de las decisiones (v0.17). Te pierdes los partidos de la baja (y
@@ -18,12 +19,7 @@ export const INJURY_ATTRIBUTES: Record<InjuryZone, readonly AttributeId[]> = {
   espalda: ['strength', 'heading', 'physique']
 }
 
-export const ZONE_NAMES: Record<InjuryZone, string> = {
-  tobillo: 'Tobillo',
-  muscular: 'Lesión muscular',
-  rodilla: 'Rodilla',
-  espalda: 'Espalda'
-}
+export const ZONE_NAMES: Record<InjuryZone, string> = liveRecord(() => t.game.injury.zones)
 
 export type InjurySeverity = InjuryRecord['severity']
 
@@ -116,5 +112,6 @@ export function applyInjury(
 
 /** "Baja de 6 partidos (moderada)". */
 export function injuryText(record: InjuryRecord): string {
-  return `Baja de ${record.matches} ${record.matches === 1 ? 'partido' : 'partidos'} (${record.severity})`
+  const severity = t.game.injury.severity[record.severity] ?? record.severity
+  return t.game.injury.out(record.matches, severity)
 }

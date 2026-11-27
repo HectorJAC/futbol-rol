@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { LockIcon } from '../components/icons'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { applyMotionSetting } from '../logic/motion'
 import { useGameStore } from '../store/gameStore'
 import {
@@ -41,6 +41,7 @@ function Toggle({
 
 export function Settings(): React.JSX.Element {
   const backToMenu = useGameStore((s) => s.backToMenu)
+  const setGameLanguage = useGameStore((s) => s.setGameLanguage)
   const [settings, setSettings] = useState<GameSettings | null>(null)
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function Settings(): React.JSX.Element {
     const next = await window.api.settings.set(patch)
     setSettings(next)
     applyMotionSetting(next.animations)
+    if (patch.language) setGameLanguage(next.language)
   }
 
   return (
@@ -128,6 +130,7 @@ export function Settings(): React.JSX.Element {
                     disabled={!available}
                     title={available ? undefined : t.comingSoon}
                     onClick={() => update({ language: lang })}
+                    data-testid={`language-${lang}`}
                   >
                     {!available && <LockIcon size={12} />} {LANGUAGE_NAMES[lang]}
                   </button>

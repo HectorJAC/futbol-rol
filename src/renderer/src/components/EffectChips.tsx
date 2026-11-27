@@ -2,19 +2,30 @@ import { ATTRIBUTES, scaleDelta } from '../data/attributes'
 import type { EventEffects } from '../data/events'
 import type { MatchMomentEffects } from '../data/matchTypes'
 import { formatMoney, type CurrencyId } from '../data/currencies'
+import { t } from '../i18n'
 import { injuryText, ZONE_NAMES } from '../logic/injury'
 import type { InjuryRecord } from '../types/career'
 
-const LABELS = { trust: 'Confianza del míster', morale: 'Moral', reputation: 'Fama' } as const
+/** Etiquetas en el idioma actual (se leen al pintar). */
+const labels = (): Record<'trust' | 'morale' | 'reputation', string> => ({
+  trust: t.hub.trust,
+  morale: t.hub.morale,
+  reputation: t.hub.reputation
+})
 
-const RELATION_LABELS = {
-  todos: 'Vestuario',
-  capitan: 'Capitán',
-  rival: 'Rival de puesto',
-  veterano: 'Veterano',
-  amigo: 'Amigo',
-  joven: 'Joven'
-} as const
+const RELATION_ROLES = ['todos', 'capitan', 'rival', 'veterano', 'amigo', 'joven'] as const
+
+const relationLabel = (role: (typeof RELATION_ROLES)[number]): string => {
+  const c = t.game.chips
+  return {
+    todos: c.dressingRoom,
+    capitan: c.captain,
+    rival: c.rival,
+    veterano: c.veteran,
+    amigo: c.friend,
+    joven: c.youngster
+  }[role]
+}
 
 const sign = (n: number): string => (n > 0 ? `+${n}` : `${n}`)
 
@@ -45,7 +56,7 @@ export function EffectChips({
   const chips: Array<{ text: string; up: boolean }> = []
   if (injury) {
     chips.push({
-      text: `${ZONE_NAMES[injury.zone as keyof typeof ZONE_NAMES] ?? 'Lesión'}: ${injuryText(injury)}`,
+      text: `${ZONE_NAMES[injury.zone as keyof typeof ZONE_NAMES] ?? t.game.injury.generic}: ${injuryText(injury)}`,
       up: false
     })
     for (const { id, name } of ATTRIBUTES) {
@@ -53,46 +64,51 @@ export function EffectChips({
       if (lost) chips.push({ text: `${lost} ${name}`, up: false })
     }
   } else if (effects.injury) {
-    chips.push({ text: `Lesión: ${effects.injury.matches} partidos de baja`, up: false })
+    chips.push({ text: t.game.injury.matchesOut(effects.injury.matches), up: false })
   }
   for (const { id, name } of ATTRIBUTES) {
     const delta = scaleDelta(effects.attributes?.[id] ?? 0, scale)
     if (delta) chips.push({ text: `${sign(delta)} ${name}`, up: delta > 0 })
   }
-  for (const [role, label] of Object.entries(RELATION_LABELS)) {
-    const delta = effects.teammates?.[role as keyof typeof RELATION_LABELS]
-    if (delta) chips.push({ text: `${sign(delta)} Relación: ${label}`, up: delta > 0 })
+  const relation = t.game.chips.relation
+  for (const role of RELATION_ROLES) {
+    const delta = effects.teammates?.[role]
+    if (delta) {
+      chips.push({ text: `${sign(delta)} ${relation}: ${relationLabel(role)}`, up: delta > 0 })
+    }
   }
   if (effects.exTeammate) {
     chips.push({
-      text: `${sign(effects.exTeammate)} Relación: ${exName ?? 'excompañero'}`,
+      text: `${sign(effects.exTeammate)} ${relation}: ${exName ?? t.game.chips.exTeammate}`,
       up: effects.exTeammate > 0
     })
   }
-  if (effects.becomeCaptain) chips.push({ text: 'Capitán del equipo', up: true })
+  if (effects.becomeCaptain) chips.push({ text: t.game.chips.becomeCaptain, up: true })
   if (effects.partner && partnerName) {
     chips.push({
-      text: `${sign(effects.partner)} Relación: ${partnerName}`,
+      text: `${sign(effects.partner)} ${relation}: ${partnerName}`,
       up: effects.partner > 0
     })
   }
-  if (effects.fans) chips.push({ text: `${sign(effects.fans)} Afición`, up: effects.fans > 0 })
+  if (effects.fans) {
+    chips.push({ text: `${sign(effects.fans)} ${t.game.chips.fans}`, up: effects.fans > 0 })
+  }
   for (const key of ['trust', 'morale', 'reputation'] as const) {
     const delta = effects[key]
-    if (delta) chips.push({ text: `${sign(delta)} ${LABELS[key]}`, up: delta > 0 })
+    if (delta) chips.push({ text: `${sign(delta)} ${labels()[key]}`, up: delta > 0 })
   }
   const goals =
     'goals' in effects ? effects.goals : 'playerGoals' in effects ? effects.playerGoals : 0
-  if (goals) chips.push({ text: `${sign(goals)} gol${goals > 1 ? 'es' : ''}`, up: true })
+  if (goals) chips.push({ text: `${sign(goals)} ${t.game.chips.goals(goals)}`, up: true })
   if ('playerAssists' in effects && effects.playerAssists) {
     const n = effects.playerAssists
-    chips.push({ text: `${sign(n)} asistencia${n > 1 ? 's' : ''}`, up: true })
+    chips.push({ text: `${sign(n)} ${t.game.chips.assists(n)}`, up: true })
   }
   if ('teamGoals' in effects && effects.teamGoals) {
-    chips.push({ text: `Gol de tu equipo`, up: true })
+    chips.push({ text: t.game.chips.teamGoal, up: true })
   }
   if ('opponentGoals' in effects && effects.opponentGoals) {
-    chips.push({ text: `Gol del rival`, up: false })
+    chips.push({ text: t.game.chips.opponentGoal, up: false })
   }
   if (effects.money) {
     chips.push({

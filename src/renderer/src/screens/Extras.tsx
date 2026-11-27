@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { MenuButton } from '../components/MenuButton'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { useGameStore } from '../store/gameStore'
 
 /** Menú de Extras: contenido del juego para consultar (por ahora, los orígenes). */

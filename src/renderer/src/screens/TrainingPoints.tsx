@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AttributeBar } from '../components/AttributeBar'
 import { ATTRIBUTE_GROUPS, ATTRIBUTES, type Attributes } from '../data/attributes'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { careerScale } from '../logic/playerAttributes'
 import { useGameStore } from '../store/gameStore'
 
@@ -35,7 +35,7 @@ export function TrainingPoints(): React.JSX.Element {
         <section className="panel attr-panel">
           {ATTRIBUTE_GROUPS.map((group) => (
             <div key={group} className="attr-group">
-              <h2 className="attr-group__title">{group}</h2>
+              <h2 className="attr-group__title">{t.attributeGroups[group]}</h2>
               {ATTRIBUTES.filter((a) => a.group === group).map((attr) => (
                 <div key={attr.id} className="attr-row" title={attr.description}>
                   <span className="attr-row__name">{attr.name}</span>

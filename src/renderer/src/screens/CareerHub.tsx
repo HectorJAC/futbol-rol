@@ -8,7 +8,7 @@ import { getNationality } from '../data/nationalities'
 import { getOrigin } from '../data/origins'
 import { getPosition } from '../data/positions'
 import { formatMoney } from '../data/shop'
-import { t } from '../i18n/es'
+import { fill, ordinal, t } from '../i18n'
 import { divisionOf } from '../logic/competitions'
 import {
   careerScale,
@@ -87,7 +87,7 @@ export function CareerHub(): React.JSX.Element {
         <div>
           <span className="eyebrow" data-testid="hub-season">
             {t.hub.eyebrow} {seasonShown} {t.hub.seasonOf} {career.mode.seasons} ·{' '}
-            {seasonYearLabel(seasonShown)} · {t.hub.mode} {modeName}
+            {seasonYearLabel(seasonShown)} · {fill(t.hub.modeLabel, { mode: modeName })}
           </span>
           <div className="hub__name-row">
             <h1 className="screen-title hub__title" data-testid="hub-player-name">
@@ -370,9 +370,9 @@ export function CareerHub(): React.JSX.Element {
                 <p>
                   {lastSeason.goals} {t.summary.goals.toLowerCase()} · {lastSeason.assists}{' '}
                   {t.summary.assists.toLowerCase()} · {lastSeason.matches}{' '}
-                  {t.summary.matches.toLowerCase()} · {lastSeason.leaguePosition}º{' '}
+                  {t.summary.matches.toLowerCase()} · {ordinal(lastSeason.leaguePosition)}{' '}
                   {t.trophies.inLeague} · {lastSeason.trophies.length}{' '}
-                  {lastSeason.trophies.length === 1 ? 'título' : 'títulos'}
+                  {t.game.titles(lastSeason.trophies.length)}
                 </p>
               </>
             ) : (

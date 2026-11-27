@@ -2,6 +2,8 @@ import type { Attributes } from './attributes'
 import type { ClubTier } from './clubs'
 import type { NationalityId } from './nationalities'
 import { EXTRA_ORIGINS, NATIONAL_ORIGINS } from './originCatalog'
+import { bindFields } from '../i18n/bind'
+import { ORIGINS_EN } from '../i18n/en/origins'
 
 export type OriginId = string
 
@@ -62,4 +64,18 @@ export function nationalOriginByArchetype(
 /** Un origen extra al azar para la pantalla de selección. */
 export function randomExtraOrigin(random: () => number = Math.random): Origin {
   return EXTRA_ORIGINS[Math.floor(random() * EXTRA_ORIGINS.length)]
+}
+
+// Textos en inglés de cada origen.
+for (const origin of ORIGINS) {
+  const en = ORIGINS_EN[origin.id]
+  if (!en) continue
+  bindFields(origin, {
+    name: en.name,
+    tagline: en.tagline,
+    story: en.story,
+    advantage: en.advantage,
+    drawback: en.drawback
+  })
+  if (origin.clubBond) bindFields(origin.clubBond, { tag: en.clubBondTag })
 }

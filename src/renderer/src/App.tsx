@@ -1,5 +1,7 @@
 import { AttributeAllocation } from './screens/AttributeAllocation'
+import { BuildBadge } from './components/BuildBadge'
 import { CareerDetail } from './screens/CareerDetail'
+import { Credits } from './screens/Credits'
 import { CareerHub } from './screens/CareerHub'
 import { CharacterCreation } from './screens/CharacterCreation'
 import { ClubSearch } from './screens/ClubSearch'
@@ -42,6 +44,7 @@ const SCREENS: Record<Screen, () => React.JSX.Element> = {
   transferMarket: TransferMarket,
   records: Records,
   careerDetail: CareerDetail,
+  credits: Credits,
   settings: Settings,
   relationships: Relationships,
   relationHistory: RelationHistory,
@@ -58,20 +61,31 @@ const SCREENS: Record<Screen, () => React.JSX.Element> = {
 /** Muestra la pantalla actual según el estado del juego. */
 function App(): React.JSX.Element {
   const screen = useGameStore((s) => s.screen)
+  const language = useGameStore((s) => s.language)
+  const setGameLanguage = useGameStore((s) => s.setGameLanguage)
   const Current = SCREENS[screen]
 
-  // Aplica el ajuste de animaciones guardado al arrancar.
+  // Aplica los ajustes guardados al arrancar (animaciones e idioma).
   useEffect(() => {
     window.api.settings
       .get()
-      .then((s) => applyMotionSetting(s.animations))
+      .then((s) => {
+        applyMotionSetting(s.animations)
+        setGameLanguage(s.language)
+      })
       .catch(() => {})
-  }, [])
+  }, [setGameLanguage])
+
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
 
   return (
     <div className="app">
       <div className="app__backdrop" aria-hidden="true" />
-      <Current key={screen} />
+      {/* Al cambiar de idioma la pantalla se vuelve a montar con los textos nuevos. */}
+      <Current key={`${screen}:${language}`} />
+      <BuildBadge />
     </div>
   )
 }

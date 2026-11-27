@@ -77,6 +77,7 @@ import {
   ROSTER_ROLES,
   teammateByRole
 } from './teammates'
+import { fill, t } from '../i18n'
 
 export { FIRST_YEAR, seasonYearLabel } from './competitions'
 
@@ -385,33 +386,36 @@ export function fillEventText(text: string, career: Career, featuredId?: string)
   for (const role of ROSTER_ROLES) {
     const placeholder = ROLE_PLACEHOLDERS[role]
     if (result.includes(placeholder)) {
-      result = result.replaceAll(placeholder, teammateByRole(career, role)?.name ?? 'un compañero')
+      result = result.replaceAll(
+        placeholder,
+        teammateByRole(career, role)?.name ?? t.game.fill.teammate
+      )
     }
   }
   if (result.includes('{excompanero}') || result.includes('{exclub}')) {
     const ex = career.exTeammates.find((t) => t.id === featuredId)
     result = result
-      .replaceAll('{excompanero}', ex?.name ?? 'un excompañero')
-      .replaceAll('{exclub}', ex ? getClub(ex.clubId).name : 'tu antiguo club')
+      .replaceAll('{excompanero}', ex?.name ?? t.game.fill.exTeammate)
+      .replaceAll('{exclub}', ex ? getClub(ex.clubId).name : t.game.fill.oldClub)
   }
   return fillBasicText(result, career)
 }
 
 function fillBasicText(text: string, career: Career): string {
   const partner =
-    typeof career.flags.partnerName === 'string' ? career.flags.partnerName : 'tu pareja'
+    typeof career.flags.partnerName === 'string' ? career.flags.partnerName : t.game.fill.partner
   const last = lastClubMatch(career)
   const score = last
     ? `${Math.max(last.goalsFor, last.goalsAgainst)}-${Math.min(last.goalsFor, last.goalsAgainst)}`
     : ''
   const currency = careerCurrency(career)
-  const ex = (career.exPartners ?? []).at(-1)?.name ?? 'tu expareja'
+  const ex = (career.exPartners ?? []).at(-1)?.name ?? t.game.fill.exPartner
   return text
     .replaceAll('{pareja}', partner)
     .replaceAll('{expareja}', ex)
     .replaceAll('{hijos}', String(Number(career.flags.children ?? 0)))
     .replaceAll('{marcador}', score)
-    .replaceAll('{rival}', last ? getClub(last.opponentId).name : 'el rival')
+    .replaceAll('{rival}', last ? getClub(last.opponentId).name : t.game.fill.opponent)
     .replaceAll('{goles}', String(last?.playerGoals ?? 0))
     .replace(/\{dinero:(\d+)\}/g, (_, n: string) => formatMoney(Number(n), currency))
 }
@@ -1441,8 +1445,8 @@ export function finishSeason(career: Career): { career: Career; record: SeasonRe
     { ...nextCareer, season: career.season, seasonProgress: career.seasonProgress },
     {
       kind: 'temporada',
-      title: `Balance de la temporada ${record.yearLabel}`,
-      detail: `${record.goals} goles y ${record.trophies.length} títulos`
+      title: fill(t.game.seasonLog.title, { year: record.yearLabel }),
+      detail: t.game.seasonLog.detail(record.goals, record.trophies.length)
     }
   )
   return {

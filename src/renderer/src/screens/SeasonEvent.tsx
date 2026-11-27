@@ -6,7 +6,7 @@ import { NextMatch } from '../components/NextMatch'
 import { RecentResults } from '../components/RecentResults'
 import { ATTRIBUTES } from '../data/attributes'
 import { getEvent } from '../data/events'
-import { t } from '../i18n/es'
+import { fill as fillValues, t } from '../i18n'
 import { leagueRounds, slotsFor } from '../logic/competitions'
 import { careerScale, scaledDeltas } from '../logic/playerAttributes'
 import { partnerName, partnerStage } from '../logic/partner'
@@ -73,7 +73,7 @@ export function SeasonEvent(): React.JSX.Element {
       (o) => o?.effects.flags?.partner === 'conociendo'
     )
     if (!hasPartner && !starts) return []
-    const who = partner ? `con ${partner}` : t.season.partnerNew
+    const who = partner ? fillValues(t.season.partnerWith, { name: partner }) : t.season.partnerNew
     if (option.outcome) {
       const d = option.outcome.effects.partner ?? 0
       return d
@@ -273,7 +273,7 @@ export function SeasonEvent(): React.JSX.Element {
                 partnerName={
                   partner ??
                   career.exPartners.at(-1)?.name ??
-                  (lastChoice.effects.partner ? 'tu pareja' : undefined)
+                  (lastChoice.effects.partner ? t.game.fill.partner : undefined)
                 }
                 injury={lastChoice.resolution.injury}
               />

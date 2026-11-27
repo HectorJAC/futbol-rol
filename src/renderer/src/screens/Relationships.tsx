@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { describeRelationships, describeTeammate, type Relationship } from '../logic/relationships'
 import { captaincyChecks } from '../logic/teammates'
 import { useGameStore } from '../store/gameStore'

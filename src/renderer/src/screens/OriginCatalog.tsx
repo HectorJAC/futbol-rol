@@ -9,7 +9,7 @@ import {
 } from '../data/nationalities'
 import { EXTRA_ORIGINS } from '../data/originCatalog'
 import { getOrigin, originsForNationality } from '../data/origins'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { useGameStore } from '../store/gameStore'
 
 type Tab = NationalityId | 'extra'

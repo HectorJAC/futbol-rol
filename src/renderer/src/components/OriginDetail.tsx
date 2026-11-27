@@ -1,6 +1,6 @@
 import { ATTRIBUTES, scaleDelta } from '../data/attributes'
 import type { Origin } from '../data/origins'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 
 /** Ficha de un origen: historia, ventaja, desventaja, efectos y edad de debut. */
 export function OriginDetail({

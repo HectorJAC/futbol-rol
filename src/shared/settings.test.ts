@@ -18,8 +18,9 @@ describe('ajustes', () => {
     ).toEqual({ fullscreen: true, windowSize: '1600x900', animations: true, language: 'es' })
   })
 
-  it('el inglés aún no se puede elegir', () => {
-    expect(sanitizeSettings({ language: 'en' }).language).toBe('es')
+  it('el inglés ya se puede elegir (v0.18); un idioma desconocido vuelve al español', () => {
+    expect(sanitizeSettings({ language: 'en' }).language).toBe('en')
+    expect(sanitizeSettings({ language: 'fr' }).language).toBe('es')
   })
 
   it('convierte el tamaño de ventana a números', () => {

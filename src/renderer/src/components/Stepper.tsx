@@ -1,11 +1,11 @@
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { CREATION_STEPS, type Screen } from '../store/gameStore'
 
 /** Indicador de pasos de "Nueva partida": Jugador · Origen · Atributos · Club. */
 export function Stepper({ current }: { current: Screen }): React.JSX.Element {
   const currentIndex = CREATION_STEPS.indexOf(current as (typeof CREATION_STEPS)[number])
   return (
-    <ol className="stepper" aria-label="Pasos de la nueva partida">
+    <ol className="stepper" aria-label={t.steps.label}>
       {CREATION_STEPS.map((step, index) => {
         const state = index < currentIndex ? 'done' : index === currentIndex ? 'current' : 'todo'
         return (

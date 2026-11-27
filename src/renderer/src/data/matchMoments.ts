@@ -1,5 +1,8 @@
 import { EXTRA_MATCH_MOMENTS } from './matchMomentsExtra'
 import type { MatchMoment } from './matchTypes'
+import { bindMoment } from '../i18n/bind'
+import { MATCH_MOMENTS_EN } from '../i18n/en/matchMoments'
+import { EXTRA_MOMENTS_EN } from '../i18n/en/matchMomentsMore'
 
 /**
  * Jugadas clave de los partidos importantes (derbis, finales de copa y finales
@@ -1299,3 +1302,7 @@ export const MATCH_MOMENTS: readonly MatchMoment[] = [
   },
   ...EXTRA_MATCH_MOMENTS
 ]
+
+// Textos en inglés de cada jugada (la mecánica y el minuto no cambian con el idioma).
+const MOMENTS_EN = { ...MATCH_MOMENTS_EN, ...EXTRA_MOMENTS_EN }
+for (const moment of MATCH_MOMENTS) bindMoment(moment, MOMENTS_EN[moment.id])

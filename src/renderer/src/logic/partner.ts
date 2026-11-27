@@ -1,6 +1,7 @@
 import { PARTNER_NAMES } from '../data/partnerNames'
 import type { Career, ExPartner, Flags } from '../types/career'
 import { clamp, createRng, seedFor } from './random'
+import { fill, liveRecord, t } from '../i18n'
 
 /**
  * Pareja con relación de 0 a 100 (v0.17).
@@ -27,11 +28,7 @@ export const COUPLE_AT = 50
 /** A partir de aquí os casáis. */
 export const MARRIED_AT = 100
 
-export const STAGE_LABELS: Record<PartnerStage, string> = {
-  conociendo: 'Os estáis conociendo',
-  pareja: 'Novios',
-  casados: 'Casados'
-}
+export const STAGE_LABELS: Record<PartnerStage, string> = liveRecord(() => t.game.stages)
 
 /** Etapa actual de la relación (`null` = sin pareja). */
 export function partnerStage(flags: Flags): PartnerStage | null {
@@ -129,7 +126,7 @@ export function applyPartnerEffects(
     for (const key of RELATION_FLAGS) delete next[key]
     next.partnerStageSince = career.season
     next.lastBreakupSeason = career.season
-    return { flags: next, exPartners, note: `Lo dejáis: ${name} sale de tu vida.` }
+    return { flags: next, exPartners, note: fill(t.game.partnerNotes.breakup, { name }) }
   }
 
   next.partnerRelation = Math.max(1, relation)
@@ -137,12 +134,12 @@ export function applyPartnerEffects(
   if (stage === 'conociendo' && relation >= COUPLE_AT) {
     next.partner = 'pareja'
     next.partnerStageSince = career.season
-    note = `La relación llega a ${COUPLE_AT}: ${name} y tú ya sois novios.`
+    note = fill(t.game.partnerNotes.couple, { n: COUPLE_AT, name })
   }
   if (next.partner === 'pareja' && relation >= MARRIED_AT) {
     next.partner = 'casados'
     next.partnerStageSince = career.season
-    note = `La relación llega a ${MARRIED_AT}: ${name} y tú os casáis.`
+    note = fill(t.game.partnerNotes.married, { n: MARRIED_AT, name })
   }
   return { flags: next, exPartners, note }
 }
@@ -153,14 +150,15 @@ export function familyStatus(career: Pick<Career, 'flags'>): string {
   const name = partnerName(f) ?? ''
   const children = Number(f.children ?? 0)
   const stage = partnerStage(f)
-  const extra = f.engaged ? ' · prometidos' : f.livingTogether ? ' · vivís juntos' : ''
+  const fam = t.game.family
+  const extra = f.engaged ? ` · ${fam.engaged}` : f.livingTogether ? ` · ${fam.living}` : ''
   const base =
     stage === 'conociendo'
-      ? `Conociendo a ${name}`
+      ? fill(fam.meeting, { name })
       : stage === 'pareja'
-        ? `Novio de ${name}${extra}`
+        ? `${fill(fam.dating, { name })}${extra}`
         : stage === 'casados'
-          ? `Casado con ${name}`
-          : 'Soltero'
-  return children > 0 ? `${base} · ${children} ${children === 1 ? 'hijo' : 'hijos'}` : base
+          ? fill(fam.married, { name })
+          : fam.single
+  return children > 0 ? `${base} · ${fam.children(children)}` : base
 }

@@ -1,5 +1,5 @@
 import { getClub } from '../data/clubs'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { seasonYearLabel } from '../logic/competitions'
 import { partnerName, partnerRelation } from '../logic/partner'
 import { coachValue, fansValue, relationHistory } from '../logic/relationLog'

@@ -10,7 +10,7 @@ import {
   MIN_CUSTOM_SEASONS,
   type DecisionInterval
 } from '../data/gameModes'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { useGameStore } from '../store/gameStore'
 
 const INTERVALS: DecisionInterval[] = [1, 2, 3]
@@ -62,23 +62,28 @@ export function ModeSelection(): React.JSX.Element {
                   </span>
                 )}
               </span>
-              <span className="mode-card__desc">{info.description}</span>
-              <dl className="mode-card__facts">
-                <div>
-                  <dt>{t.mode.seasons}</dt>
-                  <dd>{shown.seasons}</dd>
-                </div>
-                <div>
-                  <dt>{t.mode.decisions}</dt>
-                  <dd>{intervalLabel(shown.decisionInterval)}</dd>
-                </div>
-                <div>
-                  <dt>{t.mode.perSeason}</dt>
-                  <dd>{eventsPerDecisionSeason(shown)}</dd>
-                </div>
-              </dl>
-              {hasFullSeasons(shown) && (
-                <span className="mode-card__badge">{t.mode.importantMatches}</span>
+              {/* Los modos cerrados solo enseñan el título (la descripción queda para cuando se abran). */}
+              {!locked && (
+                <>
+                  <span className="mode-card__desc">{info.description}</span>
+                  <dl className="mode-card__facts">
+                    <div>
+                      <dt>{t.mode.seasons}</dt>
+                      <dd>{shown.seasons}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.mode.decisions}</dt>
+                      <dd>{intervalLabel(shown.decisionInterval)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t.mode.perSeason}</dt>
+                      <dd>{eventsPerDecisionSeason(shown)}</dd>
+                    </div>
+                  </dl>
+                  {hasFullSeasons(shown) && (
+                    <span className="mode-card__badge">{t.mode.importantMatches}</span>
+                  )}
+                </>
               )}
             </button>
           )

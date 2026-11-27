@@ -1,6 +1,8 @@
 import type { Attributes } from './attributes'
 import { SHOP_CATALOG } from './shopCatalog'
 import { TRAINING_ITEMS } from './shopTraining'
+import { bindFields } from '../i18n/bind'
+import { SHOP_ITEMS_EN } from '../i18n/en/shop'
 
 export type ShopCategory =
   'Entrenamiento' | 'Familia' | 'Equipo personal' | 'Equipamiento' | 'Formación'
@@ -59,3 +61,6 @@ export function getShopItem(id: string): ShopItem {
 }
 
 export { formatMoney } from './currencies'
+
+// Textos en inglés de cada artículo de la tienda.
+for (const item of SHOP_ITEMS) bindFields(item, { ...SHOP_ITEMS_EN[item.id] })

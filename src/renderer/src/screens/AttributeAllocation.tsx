@@ -10,7 +10,7 @@ import {
 import { attributeScale, freePointsFor } from '../data/gameModes'
 import { getNationality } from '../data/nationalities'
 import { getOrigin } from '../data/origins'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { canAllocate, computeAttributes, remainingPoints } from '../logic/career'
 import { attributeScore } from '../logic/rating'
 import { useGameStore } from '../store/gameStore'
@@ -45,7 +45,7 @@ export function AttributeAllocation(): React.JSX.Element {
         <section className="panel attr-panel">
           {ATTRIBUTE_GROUPS.map((group) => (
             <div key={group} className="attr-group">
-              <h2 className="attr-group__title">{group}</h2>
+              <h2 className="attr-group__title">{t.attributeGroups[group]}</h2>
               {ATTRIBUTES.filter((a) => a.group === group).map((attr) => {
                 const value = attributes[attr.id]
                 const fromOrigin = scaleDelta(origin.modifiers[attr.id] ?? 0, max)

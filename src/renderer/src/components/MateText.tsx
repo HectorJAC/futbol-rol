@@ -1,4 +1,4 @@
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { relationLevel, type MentionedMate } from '../logic/teammates'
 
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

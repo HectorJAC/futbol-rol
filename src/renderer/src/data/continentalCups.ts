@@ -1,5 +1,7 @@
 import type { NationalityId } from './nationalities'
 import type { TrophyId } from './trophies'
+import { bindText } from '../i18n/bind'
+import { CONTINENTAL_EN } from '../i18n/en/data'
 
 /**
  * Copas internacionales de clubes (desde la v0.10).
@@ -120,4 +122,9 @@ const KNOCKOUT_NAMES = ['Cuartos de final', 'Semifinales', 'Final']
 export function continentalRoundNames(format: ContinentalFormat): string[] {
   const groups = Array.from({ length: groupRounds(format) }, (_, i) => `Grupos · J${i + 1}`)
   return [...groups, ...KNOCKOUT_NAMES.slice(-knockoutRounds(format))]
+}
+
+// Nombre de cada copa internacional en inglés.
+for (const [id, format] of Object.entries(CONTINENTAL_FORMATS)) {
+  bindText(format, 'name', CONTINENTAL_EN[id as ContinentalFormatId])
 }

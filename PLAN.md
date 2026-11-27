@@ -120,7 +120,7 @@ Sin licencias **no se pueden usar** nombres reales de clubes, jugadores, ligas, 
 **Decisión del 2026-11-23 (v0.8):** los clubes usan nombres parecidos a los reales con una o dos letras cambiadas ("FC Barkelone", "Real Madrik") y las ligas nombres genéricos ("Primera División de España"). Jugadores, trofeos y escudos siguen siendo propios. Antes de publicar en Steam conviene revisar este criterio con alguien de temas legales.
 
 ### Roadmap tentativo
-Estado a 2026-11-26: v0.1–v0.17 hechas (ver el registro de trabajo en README.md).
+Estado a 2026-11-26: v0.1–v0.18 hechas (ver el registro de trabajo en README.md).
 
 - ✅ **v0.1** — Menú principal + creación de personaje (este plan).
 - ✅ **v0.2** — Orígenes y atributos iniciales, elección del primer club, guardado/carga local (JSON en la carpeta de usuario).
@@ -140,4 +140,5 @@ Estado a 2026-11-26: v0.1–v0.17 hechas (ver el registro de trabajo en README.m
 - ✅ **v0.16** — Ficha completa de cada carrera desde Records. Primera versión acotada: solo nacionalidades europeas, solo delantero centro (cinco posiciones más, bloqueadas) y solo el modo Completa. "Pelea por el descenso" como partido importante. Tienda que no cambia al comprar. Decisiones que encajan con tu situación (titular, capitán y edad).
 - ✅ **v0.17** — Historial de cada relación (míster, afición y pareja), que el míster y la afición empiecen de cero al fichar, pareja con relación de 0 a 100 (novios a 50, boda a 100, ruptura a 0) y exparejas, lesiones que te quitan partidos, decisiones y atributos, tienda con precios según los puntos, una jugada más contra tu exequipo (el derbi de la traición si es de tu ciudad), capitanía con 40 de liderazgo, "Los sesenta de tu madre" desde los 25 años y "La afición se entera" solo en el mismo club.
 - **Primera versión (v1.0)** — Solo Europa (España, Francia, Inglaterra, Alemania e Italia), delantero centro y modo Completa. Más adelante: desbloquear Argentina, Brasil, Japón y Estados Unidos, el resto de posiciones y los modos Rápida, Normal y Personalizada.
-- **v1.0** — Steamworks (logros, Cloud), traducción al inglés, empaquetado y página de Steam.
+- ✅ **v0.18** — Inglés original (no traducido) para todo el juego, con cambio en vivo desde Ajustes. Créditos, "Early-Access v0.x" en todas las pantallas, máximo de 5 puntos por temporada, tienda más cara cada temporada y modos cerrados solo con el título.
+- **v1.0** — Steamworks (logros, Cloud), empaquetado y página de Steam (la página, en español y en inglés).

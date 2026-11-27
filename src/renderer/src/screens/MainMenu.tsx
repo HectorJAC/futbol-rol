@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { GameTitle } from '../components/GameTitle'
 import { MenuButton } from '../components/MenuButton'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { useGameStore } from '../store/gameStore'
 
 export function MainMenu(): React.JSX.Element {
@@ -10,6 +10,7 @@ export function MainMenu(): React.JSX.Element {
   const openRecords = useGameStore((s) => s.openRecords)
   const openSettings = useGameStore((s) => s.openSettings)
   const openExtras = useGameStore((s) => s.openExtras)
+  const openCredits = useGameStore((s) => s.openCredits)
   const menuRef = useRef<HTMLElement>(null)
   // null = aún comprobando; "Cargar Partida" solo se activa si hay alguna partida guardada.
   const [hasSaves, setHasSaves] = useState<boolean | null>(null)
@@ -48,7 +49,7 @@ export function MainMenu(): React.JSX.Element {
       <nav
         ref={menuRef}
         className="main-menu__buttons"
-        aria-label="Menú principal"
+        aria-label={t.mainMenu.navLabel}
         onKeyDown={handleKeyDown}
       >
         <MenuButton label={t.mainMenu.newGame} onClick={startNewGame} autoFocus />
@@ -66,12 +67,12 @@ export function MainMenu(): React.JSX.Element {
           badge={hasSaves === false ? t.mainMenu.noSaves : undefined}
         />
         <MenuButton label={t.mainMenu.extras} onClick={openExtras} />
+        <MenuButton label={t.mainMenu.credits} onClick={openCredits} />
         <MenuButton label={t.mainMenu.quit} onClick={() => window.api.quit()} />
       </nav>
 
       <footer className="screen-footer">
         <span className="screen-footer__hint">{t.mainMenu.hint}</span>
-        <span className="screen-footer__version">{t.version}</span>
       </footer>
     </div>
   )

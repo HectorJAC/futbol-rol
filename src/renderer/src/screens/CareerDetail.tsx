@@ -10,7 +10,7 @@ import { getOrigin } from '../data/origins'
 import { getPosition } from '../data/positions'
 import { formatMoney, getShopItem } from '../data/shop'
 import { getTrophy, TROPHIES } from '../data/trophies'
-import { t } from '../i18n/es'
+import { ordinal, roundName, t } from '../i18n'
 import { purchaseSummary, totalSpent } from '../logic/finance'
 import { careerScale } from '../logic/playerAttributes'
 import { formatMarketValue, marketValue, playerRating } from '../logic/rating'
@@ -79,7 +79,7 @@ function PathTab({ career }: { career: Career }): React.JSX.Element {
                   )}
                 </span>
                 <span className="timeline__sub">
-                  {r.leaguePosition}º {t.trophies.inLeague}
+                  {ordinal(r.leaguePosition)} {t.trophies.inLeague}
                   {r.division ? ` · ${divisionName(club.countryId, r.division)}` : ''}
                   {r.movement === 'ascenso' && ` · ${t.summary.promoted}`}
                   {r.movement === 'descenso' && ` · ${t.summary.relegated}`}
@@ -93,8 +93,10 @@ function PathTab({ career }: { career: Career }): React.JSX.Element {
               <td className="num">
                 {r.nationalTeam?.calledUp ? `${r.nationalTeam.caps}/${r.nationalTeam.goals}` : '—'}
               </td>
-              <td className="detail__round">{r.cupRound ?? '—'}</td>
-              <td className="detail__round">{r.continentalRound ?? '—'}</td>
+              <td className="detail__round">{r.cupRound ? roundName(r.cupRound) : '—'}</td>
+              <td className="detail__round">
+                {r.continentalRound ? roundName(r.continentalRound) : '—'}
+              </td>
               <td className="num">
                 {r.trophies.length > 0 ? (
                   <span className="records__gold">{r.trophies.length}</span>
@@ -182,7 +184,7 @@ function AttributesTab({ career }: { career: Career }): React.JSX.Element {
       <section className="detail-attrs__groups">
         {ATTRIBUTE_GROUPS.map((group) => (
           <div key={group} className="detail-attrs__group">
-            <h3 className="attr-group__title">{group}</h3>
+            <h3 className="attr-group__title">{t.attributeGroups[group]}</h3>
             {ATTRIBUTES.filter((a) => a.group === group).map((attr) => (
               <div key={attr.id} className="attr-row attr-row--readonly" title={attr.description}>
                 <span className="attr-row__name">{attr.name}</span>
@@ -263,7 +265,7 @@ function MoneyTab({ career }: { career: Career }): React.JSX.Element {
           <div>
             <strong>{club.name}</strong>
             <span>
-              {t.contract.role}: <b>{contract.role}</b>
+              {t.contract.role}: <b>{t.game.contractRoles[contract.role]}</b>
             </span>
           </div>
         </div>

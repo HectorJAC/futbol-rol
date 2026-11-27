@@ -12,6 +12,7 @@ import type {
 } from '../types/career'
 import { careerScale } from './playerAttributes'
 import { clamp, createRng, seedFor, shuffle } from './random'
+import { t } from '../i18n'
 
 /** Sueldo semanal de referencia por tipo de club al empezar. */
 export const TIER_WAGE: Record<ClubTier, number> = { grande: 2500, medio: 1200, modesto: 600 }
@@ -158,27 +159,39 @@ export function shopDeltas(item: Pick<ShopItem, 'attributes'>, max: number): Par
   return result
 }
 
+/** Lo que sube el precio de la tienda por cada temporada que pasa (10 % del precio base). */
+export const SHOP_PRICE_GROWTH = 0.1
+
+/**
+ * Precio de un artículo en una temporada: el de la primera temporada y un 10 %
+ * más del precio base por cada temporada que pasa (redondeado a 500).
+ */
+export function itemCost(item: Pick<ShopItem, 'cost'>, season: number): number {
+  const factor = 1 + SHOP_PRICE_GROWTH * Math.max(0, season - 1)
+  return Math.round((item.cost * factor) / 500) * 500
+}
+
 /** `short` es el texto corto que se muestra en el botón. */
 export type BuyCheck = { ok: true } | { ok: false; reason: string; short: string }
 
 export function canBuy(career: Career, item: ShopItem): BuyCheck {
   const bought = career.purchases.filter((p) => p.itemId === item.id)
   if (!shopOffer(career).some((i) => i.id === item.id)) {
-    return { ok: false, reason: 'No está en la tienda esta temporada', short: 'No disponible' }
+    return { ok: false, reason: t.game.shop.notInShop, short: t.game.shop.notAvailable }
   }
   if (item.limit === 'once' && bought.length > 0) {
-    return { ok: false, reason: 'Ya lo compraste', short: 'Comprado' }
+    return { ok: false, reason: t.game.shop.alreadyBought, short: t.game.shop.bought }
   }
   if (item.limit === 'season' && bought.some((p) => p.season === career.season)) {
-    return { ok: false, reason: 'Ya lo contrataste esta temporada', short: 'Contratado' }
+    return { ok: false, reason: t.game.shop.alreadyHired, short: t.game.shop.hired }
   }
-  if (career.money < item.cost) {
-    return { ok: false, reason: 'No tienes dinero suficiente', short: 'Sin dinero' }
+  if (career.money < itemCost(item, career.season)) {
+    return { ok: false, reason: t.game.shop.noMoney, short: t.game.shop.noMoneyShort }
   }
   const attrs = Object.entries(item.attributes ?? {})
   const max = careerScale(career)
   if (attrs.length > 0 && attrs.every(([id]) => career.attributes[id as keyof Attributes] >= max)) {
-    return { ok: false, reason: 'Ya tienes esos atributos al máximo', short: 'Al máximo' }
+    return { ok: false, reason: t.game.shop.maxed, short: t.game.shop.maxedShort }
   }
   return { ok: true }
 }
@@ -201,7 +214,7 @@ export function buyItem(career: Career, itemId: string): Career {
   const purchase: Purchase = {
     itemId,
     season: career.season,
-    cost: item.cost,
+    cost: itemCost(item, career.season),
     attributes: gained,
     ...(item.morale ? { morale: item.morale } : {}),
     ...(item.reputation ? { reputation: item.reputation } : {})
@@ -209,7 +222,7 @@ export function buyItem(career: Career, itemId: string): Career {
   return {
     ...career,
     attributes,
-    money: career.money - item.cost,
+    money: career.money - itemCost(item, career.season),
     morale: clamp(career.morale + (item.morale ?? 0), 0, 100),
     reputation: clamp(career.reputation + (item.reputation ?? 0), 0, 100),
     purchases: [...career.purchases, purchase]
@@ -223,9 +236,9 @@ export function purchaseSummary(
   const parts = ATTRIBUTES.filter(({ id }) => purchase.attributes[id]).map(
     ({ id, name }) => `+${purchase.attributes[id]} ${name}`
   )
-  if (purchase.morale) parts.push(`+${purchase.morale} moral`)
-  if (purchase.reputation) parts.push(`+${purchase.reputation} fama`)
-  return parts.length > 0 ? parts.join(' · ') : 'Sin mejora (atributo al máximo)'
+  if (purchase.morale) parts.push(`+${purchase.morale} ${t.game.shop.morale}`)
+  if (purchase.reputation) parts.push(`+${purchase.reputation} ${t.game.shop.fame}`)
+  return parts.length > 0 ? parts.join(' · ') : t.game.shop.noGain
 }
 
 export function totalSpent(career: Career): number {

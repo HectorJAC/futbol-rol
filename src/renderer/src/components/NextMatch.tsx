@@ -1,15 +1,17 @@
 import { ClubCrest } from './ClubCrest'
 import { getClub } from '../data/clubs'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { roundLabel } from '../logic/competitions'
 import { importanceOf } from '../logic/season'
 import type { Career, CompetitionId, LiveMatch } from '../types/career'
 
-const COMPETITION_NAME: Record<CompetitionId, string> = {
-  liga: t.competitions.league,
-  copa: t.competitions.cup,
-  continental: t.competitions.continental
-}
+/** Se lee al pintar: así cambia con el idioma. */
+const competitionName = (competition: CompetitionId): string =>
+  ({
+    liga: t.competitions.league,
+    copa: t.competitions.cup,
+    continental: t.competitions.continental
+  })[competition]
 
 /** Contra quién es el próximo partido importante (antes de pulsar "Jugar partido"). */
 export function NextMatch({
@@ -48,7 +50,7 @@ export function NextMatch({
         </span>
       </div>
       <span className="next-match__meta">
-        {COMPETITION_NAME[live.competition]} ·{' '}
+        {competitionName(live.competition)} ·{' '}
         {roundLabel(
           { competition: live.competition, round: live.round },
           career.seasonProgress?.setup

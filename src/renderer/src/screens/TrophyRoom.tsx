@@ -3,7 +3,7 @@ import { ClubCrest } from '../components/ClubCrest'
 import { TrophyIcon } from '../components/TrophyIcon'
 import { getClub } from '../data/clubs'
 import { getTrophy, TROPHIES, type TrophyKind } from '../data/trophies'
-import { t } from '../i18n/es'
+import { ordinal, roundName, t } from '../i18n'
 import { careerTotals, trophyCounts } from '../logic/season'
 import { useGameStore } from '../store/gameStore'
 import type { SeasonRecord } from '../types/career'
@@ -136,7 +136,7 @@ export function TrophyRoom(): React.JSX.Element {
                         {club.name}
                       </span>
                       <span className="timeline__sub">
-                        {record.leaguePosition}º {t.trophies.inLeague}
+                        {ordinal(record.leaguePosition)} {t.trophies.inLeague}
                       </span>
                     </td>
                     <td className="num">{record.age}</td>
@@ -148,7 +148,7 @@ export function TrophyRoom(): React.JSX.Element {
                       className="num"
                       title={
                         record.nationalTeam?.tournament
-                          ? record.nationalTeam.tournament.round
+                          ? roundName(record.nationalTeam.tournament.round)
                           : undefined
                       }
                     >

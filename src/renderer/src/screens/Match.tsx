@@ -2,9 +2,9 @@ import { ClubCrest } from '../components/ClubCrest'
 import { EffectChips } from '../components/EffectChips'
 import { NextMatch } from '../components/NextMatch'
 import { ATTRIBUTES } from '../data/attributes'
-import { getClub } from '../data/clubs'
-import { t } from '../i18n/es'
-import { leagueTable, roundLabel } from '../logic/competitions'
+import { cupName, getClub } from '../data/clubs'
+import { ordinal, t } from '../i18n'
+import { continentalFormat, leagueTable, roundLabel, type ClubFixture } from '../logic/competitions'
 import { useMemo } from 'react'
 import {
   currentMoment,
@@ -29,14 +29,20 @@ import {
   seasonStep
 } from '../logic/season'
 import { useGameStore } from '../store/gameStore'
+import type { Career } from '../types/career'
 
 const attributeName = (id: string): string => ATTRIBUTES.find((a) => a.id === id)?.name ?? id
 
-const COMPETITION_NAME = {
-  liga: t.competitions.league,
-  copa: t.competitions.cup,
-  continental: t.competitions.continental
-} as const
+/**
+ * Nombre de la competición del partido: "Liga", la copa de tu país ("Copa de
+ * España") o la copa internacional que juegas ("Copa de Europa"), no un genérico.
+ */
+function competitionName(competition: ClubFixture['competition'], career: Career): string {
+  const setup = career.seasonProgress?.setup
+  if (competition === 'continental' && setup) return continentalFormat(setup).name
+  if (competition === 'copa' && setup) return cupName(setup.countryId)
+  return competition === 'liga' ? t.competitions.league : t.competitions.cup
+}
 
 /** Partido importante jugada a jugada: el marcador cambia con cada decisión. */
 export function Match(): React.JSX.Element {
@@ -121,7 +127,7 @@ export function Match(): React.JSX.Element {
     const p = positions.get(clubId)
     return p ? (
       <span className="scoreboard__position" data-testid="team-position">
-        {p.position}º · {p.points} {t.competitions.points}
+        {ordinal(p.position)} · {p.points} {t.competitions.points}
       </span>
     ) : null
   }
@@ -170,7 +176,7 @@ export function Match(): React.JSX.Element {
       <div className="match-body">
         <article className="panel event-card match-card">
           <div className="match-card__context" data-testid="match-context">
-            {t.match.eyebrow} · {COMPETITION_NAME[live.competition]} ·{' '}
+            {t.match.eyebrow} · {competitionName(live.competition, career)} ·{' '}
             {roundLabel(
               { competition: live.competition, round: live.round },
               career.seasonProgress?.setup

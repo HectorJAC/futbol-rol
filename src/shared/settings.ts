@@ -21,8 +21,8 @@ export const DEFAULT_SETTINGS: GameSettings = {
   language: 'es'
 }
 
-/** Idiomas ya traducidos. El inglés llegará antes de Steam. */
-export const AVAILABLE_LANGUAGES: readonly Language[] = ['es']
+/** Idiomas disponibles. Cada uno tiene sus propios textos (el inglés no es una traducción). */
+export const AVAILABLE_LANGUAGES: readonly Language[] = ['es', 'en']
 
 /** Acepta cualquier cosa (p. ej. un JSON editado a mano) y devuelve ajustes válidos. */
 export function sanitizeSettings(value: unknown): GameSettings {

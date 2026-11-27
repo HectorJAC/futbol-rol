@@ -1,4 +1,4 @@
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 
 /** Título del juego: "Your Football Path" ("Your" pequeño encima de "Football Path"). */
 export function GameTitle(): React.JSX.Element {

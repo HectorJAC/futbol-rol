@@ -1,4 +1,6 @@
 import type { MatchMoment } from './matchTypes'
+import { bindMoment } from '../i18n/bind'
+import { EXCLUB_MOMENTS_EN } from '../i18n/en/matchMomentsMore'
 
 /**
  * Jugadas extra contra un club en el que jugaste (v0.17). Se suman a las del
@@ -276,3 +278,6 @@ export const EXCLUB_MOMENTS: readonly MatchMoment[] = [
     ]
   }
 ]
+
+// Textos en inglés de cada jugada contra un exequipo.
+for (const moment of EXCLUB_MOMENTS) bindMoment(moment, EXCLUB_MOMENTS_EN[moment.id])

@@ -3,7 +3,7 @@ import { Stepper } from '../components/Stepper'
 import { attributeScale } from '../data/gameModes'
 import { getNationality } from '../data/nationalities'
 import { getOrigin, originsForNationality } from '../data/origins'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { useGameStore } from '../store/gameStore'
 
 /** Paso 3: los 4 orígenes del país elegido y un origen especial al azar. */

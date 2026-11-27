@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getNationality, NATIONALITIES, type NationalityId } from '../data/nationalities'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { careerRecordRow, rankCareers, type CareerRecordRow } from '../logic/records'
 import { careerFromSaveFile } from '../logic/saveGame'
 import { useGameStore } from '../store/gameStore'

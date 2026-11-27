@@ -3,7 +3,7 @@ import { ClubCrest } from '../components/ClubCrest'
 import { notPlayedText, playedRoleText } from '../logic/notPlayed'
 import { getClub } from '../data/clubs'
 import { EUROPEAN_SPOTS, INTERCONTINENTAL_SPOTS, isEuropean } from '../data/continentalCups'
-import { t } from '../i18n/es'
+import { roundName, t } from '../i18n'
 import {
   buildSeasonView,
   CUP_ROUND_NAMES,
@@ -20,20 +20,15 @@ import type { Career, ClubMatch, CompetitionId } from '../types/career'
 
 type Tab = 'calendar' | 'league' | 'cup' | 'continental' | 'scorers' | 'assists'
 
-const TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'calendar', label: t.competitions.calendar },
-  { id: 'league', label: t.competitions.league },
-  { id: 'cup', label: t.competitions.cup },
-  { id: 'continental', label: t.competitions.continental },
-  { id: 'scorers', label: t.competitions.scorers },
-  { id: 'assists', label: t.competitions.assists }
-]
+const TABS: Tab[] = ['calendar', 'league', 'cup', 'continental', 'scorers', 'assists']
 
-const COMPETITION_SHORT: Record<CompetitionId, string> = {
-  liga: t.competitions.league,
-  copa: t.competitions.cup,
-  continental: t.competitions.continental
-}
+/** Se lee al pintar: así cambia con el idioma. */
+const competitionShort = (competition: CompetitionId): string =>
+  ({
+    liga: t.competitions.league,
+    copa: t.competitions.cup,
+    continental: t.competitions.continental
+  })[competition]
 
 /** Contexto para recalcular una temporada: la actual o una ya jugada. */
 function contextFor(career: Career, season: number): SeasonContext | null {
@@ -151,7 +146,7 @@ function Bracket({
     <div className="bracket">
       {rounds.map((ties, r) => (
         <div key={names[r]} className="bracket__round">
-          <h3 className="bracket__title">{names[r]}</h3>
+          <h3 className="bracket__title">{roundName(names[r])}</h3>
           <div className="bracket__ties">
             {ties.map((tie, i) => {
               const involved = tie.home === mine || tie.away === mine
@@ -274,17 +269,17 @@ export function Competitions(): React.JSX.Element {
       </header>
 
       <div className="tabs" role="tablist">
-        {TABS.map((item) => (
+        {TABS.map((id) => (
           <button
-            key={item.id}
+            key={id}
             type="button"
             role="tab"
-            aria-selected={tab === item.id}
-            className={`tab${tab === item.id ? ' tab--active' : ''}`}
-            onClick={() => setTab(item.id)}
-            data-testid={`competitions-tab-${item.id}`}
+            aria-selected={tab === id}
+            className={`tab${tab === id ? ' tab--active' : ''}`}
+            onClick={() => setTab(id)}
+            data-testid={`competitions-tab-${id}`}
           >
-            {item.label}
+            {t.competitions[id]}
           </button>
         ))}
       </div>
@@ -308,7 +303,7 @@ export function Competitions(): React.JSX.Element {
                         <td className="calendar__date">{entry.date}</td>
                         <td>
                           <span className={`comp-badge comp-badge--${entry.competition}`}>
-                            {COMPETITION_SHORT[entry.competition]}
+                            {competitionShort(entry.competition)}
                           </span>
                         </td>
                         <td className="calendar__round">{entry.label}</td>

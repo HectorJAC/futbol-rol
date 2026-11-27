@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getNationality, NATIONALITIES, type NationalityId } from '../data/nationalities'
-import { t } from '../i18n/es'
+import { currentLocale, t } from '../i18n'
 import { careerFromSaveFile } from '../logic/saveGame'
 import { useGameStore } from '../store/gameStore'
 import type { SaveSummary } from '../../../shared/saves'
@@ -9,7 +9,7 @@ function formatDate(iso: string): string {
   const date = new Date(iso)
   return Number.isNaN(date.getTime())
     ? iso
-    : date.toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })
+    : date.toLocaleString(currentLocale(), { dateStyle: 'medium', timeStyle: 'short' })
 }
 
 function flagFor(id: string): string | undefined {

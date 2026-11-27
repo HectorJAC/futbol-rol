@@ -2,6 +2,7 @@ import { getClub } from '../data/clubs'
 import type { Career, RelationChange, RelationTarget } from '../types/career'
 import { partnerName, partnerRelation } from './partner'
 import { clamp } from './random'
+import { fill, t } from '../i18n'
 
 /**
  * Historial de relaciones (v0.17): cada decisión que sube o baja la relación
@@ -123,5 +124,5 @@ export function relationHistory(
 /** "Temporada 3 · Jornada 12" para una entrada del historial. */
 export function relationWhen(entry: RelationChange, yearLabel?: string): string {
   const club = getClub(entry.clubId).name
-  return `${yearLabel ?? `Temporada ${entry.season}`} · ${club}`
+  return `${yearLabel ?? fill(t.game.relationSeason, { n: entry.season })} · ${club}`
 }

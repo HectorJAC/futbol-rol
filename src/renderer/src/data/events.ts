@@ -6,6 +6,11 @@ import { STORY_EVENTS } from './storyEvents'
 import { TEAM_EVENTS } from './teamEvents'
 import type { OriginArchetype } from './origins'
 import type { TeammateRole } from '../types/career'
+import { bindEvent } from '../i18n/bind'
+import { BASE_EVENTS_EN, CONTEXT_EVENTS_EN } from '../i18n/en/eventsBase'
+import { EXTRA_EVENTS_EN } from '../i18n/en/eventsExtra'
+import { STORY_EVENTS_EN } from '../i18n/en/eventsStory'
+import { TEAM_EVENTS_EN } from '../i18n/en/eventsTeam'
 
 /** Lo que cambia al elegir una opción (o al acertar/fallar una tirada). */
 export interface EventEffects {
@@ -290,6 +295,8 @@ const BASE_EVENTS: readonly GameEvent[] = [
   },
   {
     id: 'prensa',
+    // "¿Contento con tus minutos?": no tiene sentido si ya juegas siempre.
+    notRegularStarter: true,
     title: 'Rueda de prensa',
     text: 'Un periodista te pregunta, con mala intención, si estás contento con tus minutos.',
     options: [
@@ -784,3 +791,13 @@ export function getEvent(id: string): GameEvent {
   if (!event) throw new Error(`Evento desconocido: ${id}`)
   return event
 }
+
+// Textos en inglés: cada evento lee los suyos según el idioma (la mecánica no cambia).
+const EVENTS_EN = {
+  ...BASE_EVENTS_EN,
+  ...CONTEXT_EVENTS_EN,
+  ...EXTRA_EVENTS_EN,
+  ...STORY_EVENTS_EN,
+  ...TEAM_EVENTS_EN
+}
+for (const event of EVENTS) bindEvent(event, EVENTS_EN[event.id])

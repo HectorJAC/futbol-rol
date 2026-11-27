@@ -1,5 +1,7 @@
 import type { AttributeId } from './attributes'
 import type { EventEffects } from './events'
+import { bindFields } from '../i18n/bind'
+import { TRAINING_FOCUS_EN } from '../i18n/en/trainingFocus'
 
 /**
  * Sesiones extra con el cuerpo técnico, una por atributo. El evento "Horas
@@ -89,4 +91,9 @@ export const TRAINING_FOCUS: Record<AttributeId, TrainingFocus> = {
     text: 'Eliges esquina, no cambias de idea y la clavas. Una y otra vez.',
     extra: { morale: 2 }
   }
+}
+
+// Textos en inglés de "Horas extra".
+for (const [id, focus] of Object.entries(TRAINING_FOCUS)) {
+  bindFields(focus, { ...TRAINING_FOCUS_EN[id as AttributeId] })
 }

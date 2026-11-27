@@ -1,4 +1,4 @@
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { LockIcon } from './icons'
 
 interface MenuButtonProps {

@@ -1,3 +1,6 @@
+import { bindFields } from '../i18n/bind'
+import { POSITIONS_EN } from '../i18n/en/data'
+
 export interface Position {
   id: PositionId
   short: string
@@ -25,3 +28,6 @@ export function getPosition(id: PositionId): Position {
   if (!position) throw new Error(`Posición desconocida: ${id}`)
   return position
 }
+
+// Nombre de cada posición en inglés.
+for (const p of POSITIONS) bindFields(p, { ...POSITIONS_EN[p.id] })

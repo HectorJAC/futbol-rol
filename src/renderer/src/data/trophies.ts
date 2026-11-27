@@ -1,3 +1,6 @@
+import { bindFields } from '../i18n/bind'
+import { TROPHIES_EN } from '../i18n/en/trophies'
+
 export type TrophyKind = 'colectivo' | 'individual'
 
 export type TrophyId =
@@ -121,3 +124,6 @@ export function getTrophy(id: TrophyId): TrophyInfo {
   if (!trophy) throw new Error(`Trofeo desconocido: ${id}`)
   return trophy
 }
+
+// Nombres y descripciones en inglés de cada título.
+for (const trophy of TROPHIES) bindFields(trophy, { ...TROPHIES_EN[trophy.id] })

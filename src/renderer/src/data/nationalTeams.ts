@@ -1,4 +1,6 @@
 import type { NationalityId } from './nationalities'
+import { bindText } from '../i18n/bind'
+import { TOURNAMENTS_EN } from '../i18n/en/data'
 
 export type TournamentId = 'mundial' | 'copa-naciones'
 
@@ -41,3 +43,8 @@ export const TOURNAMENT_ROUNDS = [
 ] as const
 
 export type TournamentRound = (typeof TOURNAMENT_ROUNDS)[number]
+
+// Nombre de cada torneo de selecciones en inglés.
+for (const id of Object.keys(TOURNAMENT_NAMES) as TournamentId[]) {
+  bindText(TOURNAMENT_NAMES, id, TOURNAMENTS_EN[id])
+}

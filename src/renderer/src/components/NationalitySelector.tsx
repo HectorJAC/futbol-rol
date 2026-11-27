@@ -6,7 +6,7 @@ import {
   isNationalityAvailable,
   type NationalityId
 } from '../data/nationalities'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { ChevronIcon, LockIcon } from './icons'
 
 interface NationalitySelectorProps {

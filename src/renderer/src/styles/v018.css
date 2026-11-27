@@ -1,0 +1,69 @@
+/* ==========================================================================
+   v0.18: créditos, "Early-Access" en todas las pantallas e idioma.
+   ========================================================================== */
+
+/* ---------- Early-Access v0.x: abajo en el centro, en todas las pantallas ---------- */
+
+.build-badge {
+  position: fixed;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  z-index: 50;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---------- Menú principal con 7 botones ---------- */
+
+@media (max-height: 820px) {
+  .main-menu__buttons {
+    gap: 10px;
+    padding-bottom: 0;
+  }
+
+  .main-menu .menu-button {
+    height: 50px;
+  }
+
+  .main-menu .game-title__main {
+    font-size: clamp(48px, 9vh, 96px);
+  }
+}
+
+/* ---------- Créditos ---------- */
+
+.credits__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.credits__name {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 7vh, 64px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.credits__contact {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+.credits__contact span {
+  color: var(--accent);
+  user-select: text;
+}

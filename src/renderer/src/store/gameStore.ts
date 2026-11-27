@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { getLanguage, setLanguage } from '../i18n/language'
+import type { Language } from '../../../shared/settings'
 import { emptyAttributes, type AttributeId, type Attributes } from '../data/attributes'
 import type { EventEffects } from '../data/events'
 import { newOfferSeed } from '../data/clubs'
@@ -48,6 +50,7 @@ export type Screen =
   | 'transferMarket'
   | 'records'
   | 'careerDetail'
+  | 'credits'
   | 'settings'
   | 'relationships'
   | 'relationHistory'
@@ -105,6 +108,10 @@ export function createDefaultDraft(): NewGameDraft {
 
 interface GameState {
   screen: Screen
+  /** Idioma de la interfaz y de los textos del juego (se guarda en los ajustes). */
+  language: Language
+  /** Cambia el idioma al momento (la pantalla se vuelve a pintar). */
+  setGameLanguage: (language: Language) => void
   draft: NewGameDraft
   career: Career | null
   saveStatus: SaveStatus
@@ -128,6 +135,7 @@ interface GameState {
   backToRecords: () => void
   openSettings: () => void
   openExtras: () => void
+  openCredits: () => void
   openOriginCatalog: () => void
   backToMenu: () => void
 
@@ -220,6 +228,11 @@ function getApi(): Window['api'] | null {
 
 export const useGameStore = create<GameState>()((set, get) => ({
   screen: 'mainMenu',
+  language: getLanguage(),
+  setGameLanguage: (language) => {
+    setLanguage(language)
+    set({ language })
+  },
   draft: createDefaultDraft(),
   career: null,
   saveStatus: 'idle',
@@ -242,6 +255,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   openSettings: () => set({ screen: 'settings' }),
 
   openExtras: () => set({ screen: 'extras' }),
+  openCredits: () => set({ screen: 'credits' }),
 
   openOriginCatalog: () => set({ screen: 'originCatalog' }),
 

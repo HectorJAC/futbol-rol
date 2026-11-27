@@ -7,6 +7,8 @@ import flagDe from 'flag-icons/flags/4x3/de.svg'
 import flagIt from 'flag-icons/flags/4x3/it.svg'
 import flagJp from 'flag-icons/flags/4x3/jp.svg'
 import flagUs from 'flag-icons/flags/4x3/us.svg'
+import { bindText } from '../i18n/bind'
+import { NATIONALITIES_EN } from '../i18n/en/data'
 
 export type NationalityId = 'ARG' | 'BRA' | 'ESP' | 'FRA' | 'ENG' | 'GER' | 'ITA' | 'JPN' | 'USA'
 
@@ -66,3 +68,6 @@ export function cycleNationality(currentId: NationalityId, step: 1 | -1): Nation
   const next = (((index + step) % total) + total) % total
   return list[next].id
 }
+
+// Nombre de cada país en inglés.
+for (const n of NATIONALITIES) bindText(n, 'name', NATIONALITIES_EN[n.id])

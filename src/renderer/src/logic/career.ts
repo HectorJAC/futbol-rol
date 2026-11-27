@@ -15,6 +15,7 @@ import { buildContract, roleFromMinutes } from './finance'
 import { initialFansOffset, startEntries } from './relationLog'
 import { initialStanding } from './season'
 import { generateTeammates } from './teammates'
+import { fill, t } from '../i18n'
 
 type ModeScale = Pick<GameMode, 'id' | 'seasons' | 'decisionInterval'>
 
@@ -127,5 +128,8 @@ export function createCareer(input: NewCareerInput, now: Date = new Date()): Car
     exPartners: []
   }
   // Punto de partida de las relaciones con el míster y la afición (v0.17).
-  return { ...career, relationLog: startEntries(career, `Llegas a ${chosen.club.name}`) }
+  return {
+    ...career,
+    relationLog: startEntries(career, fill(t.game.transfers.arrive, { club: chosen.club.name }))
+  }
 }

@@ -1,17 +1,19 @@
 import { useEffect, useRef } from 'react'
 import { ClubCrest } from './ClubCrest'
 import { getClub } from '../data/clubs'
-import { t } from '../i18n/es'
+import { ordinal, t } from '../i18n'
 import { leagueTable, roundLabel, slotsFor } from '../logic/competitions'
 import { matchResult, seasonContext } from '../logic/season'
 import { notPlayedText, playedRoleText } from '../logic/notPlayed'
 import type { Career, CompetitionId } from '../types/career'
 
-const COMPETITION_SHORT: Record<CompetitionId, string> = {
-  liga: t.competitions.league,
-  copa: t.competitions.cup,
-  continental: t.competitions.continental
-}
+/** Se lee al pintar: así cambia con el idioma. */
+const competitionShort = (competition: CompetitionId): string =>
+  ({
+    liga: t.competitions.league,
+    copa: t.competitions.cup,
+    continental: t.competitions.continental
+  })[competition]
 
 const RESULT_CLASS = { victoria: 'win', empate: 'draw', derrota: 'loss' } as const
 
@@ -87,7 +89,7 @@ export function RecentResults({
       </h2>
       {row && row.played > 0 && (
         <p className="recent-panel__standing" data-testid="league-standing">
-          {t.competitions.league}: <b>{position}º</b> · {row.points} {t.competitions.points}
+          {t.competitions.league}: <b>{ordinal(position)}</b> · {row.points} {t.competitions.points}
         </p>
       )}
       {matches.length === 0 ? (
@@ -106,8 +108,7 @@ export function RecentResults({
                 data-testid="recent-match"
               >
                 <span className="recent-match__meta">
-                  {COMPETITION_SHORT[m.competition]} ·{' '}
-                  {info ? roundLabel(info, progress.setup) : ''}
+                  {competitionShort(m.competition)} · {info ? roundLabel(info, progress.setup) : ''}
                   {m.important && (
                     <span className="tag tag--small">{t.competitions.important}</span>
                   )}

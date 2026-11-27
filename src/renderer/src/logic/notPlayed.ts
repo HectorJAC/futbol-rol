@@ -1,4 +1,4 @@
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import type { ClubMatch } from '../types/career'
 
 /** Si jugaste de titular o saliste desde el banquillo (partidos desde la v0.12). */

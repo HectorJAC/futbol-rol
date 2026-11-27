@@ -4,6 +4,7 @@ import { buildContract, contractYearsLeft, marketWage } from './finance'
 import { clamp, createRng, seedFor } from './random'
 import { isCareerOver, minutesShare } from './season'
 import { logRelationChanges } from './relationLog'
+import { fill, liveRecord, t } from '../i18n'
 
 /** Lo que puedes pedir al club: una subida pequeña, lo que vale tu rendimiento o mucho más. */
 export type RaiseLevel = 'moderada' | 'mercado' | 'ambiciosa'
@@ -24,11 +25,7 @@ export interface RaiseOption {
 export const RAISE_ACCEPTED_MORALE = 6
 
 /** Nombre de cada petición en el historial de relaciones. */
-export const RAISE_NAMES: Record<RaiseLevel, string> = {
-  moderada: 'Subida moderada',
-  mercado: 'Lo que vales en el mercado',
-  ambiciosa: 'Subida ambiciosa'
-}
+export const RAISE_NAMES: Record<RaiseLevel, string> = liveRecord(() => t.game.raise.names)
 
 const REJECT: Record<RaiseLevel, { trust: number; morale: number }> = {
   moderada: { trust: -1, morale: -3 },
@@ -80,15 +77,12 @@ export type RaiseCheck = { ok: true } | { ok: false; reason: string }
 
 /** Solo se puede pedir una vez por temporada, y no la misma temporada en que firmaste. */
 export function canRequestRaise(career: Career): RaiseCheck {
-  if (isCareerOver(career)) return { ok: false, reason: 'Tu carrera ha terminado.' }
+  if (isCareerOver(career)) return { ok: false, reason: t.game.raise.careerOver }
   if (career.flags.raiseSeason === career.season) {
-    return { ok: false, reason: 'Ya lo pediste esta temporada. Vuelve a intentarlo la próxima.' }
+    return { ok: false, reason: t.game.raise.asked }
   }
   if (career.contract.signedSeason === career.season) {
-    return {
-      ok: false,
-      reason: 'Acabas de firmar tu contrato: espera a la próxima temporada para pedir una mejora.'
-    }
+    return { ok: false, reason: t.game.raise.justSigned }
   }
   return { ok: true }
 }
@@ -125,8 +119,8 @@ export function requestRaise(
       accepted,
       career: logRelationChanges(career, rejected, {
         kind: 'contrato',
-        title: 'Pediste una mejora de contrato',
-        detail: `${RAISE_NAMES[level]}: rechazada`
+        title: t.game.raise.logTitle,
+        detail: fill(t.game.raise.rejected, { name: RAISE_NAMES[level] })
       })
     }
   }

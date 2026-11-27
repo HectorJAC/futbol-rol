@@ -10,7 +10,7 @@ import { attributeScale, getGameModeInfo } from '../data/gameModes'
 import { getNationality } from '../data/nationalities'
 import { getOrigin } from '../data/origins'
 import { getPosition } from '../data/positions'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { computeAttributes } from '../logic/career'
 import { roleFromMinutes } from '../logic/finance'
 import { attributeScore } from '../logic/rating'
@@ -99,7 +99,7 @@ export function CreationSummary(): React.JSX.Element {
           <div className="creation-summary__attr-list">
             {ATTRIBUTE_GROUPS.map((group) => (
               <div key={group} className="attr-group">
-                <h3 className="attr-group__title">{group}</h3>
+                <h3 className="attr-group__title">{t.attributeGroups[group]}</h3>
                 {ATTRIBUTES.filter((a) => a.group === group).map((attr) => (
                   <div
                     key={attr.id}
@@ -135,11 +135,11 @@ export function CreationSummary(): React.JSX.Element {
               </div>
               <div>
                 <dt>{t.creationSummary.role}</dt>
-                <dd>{roleFromMinutes(offer.minutes)}</dd>
+                <dd>{t.game.contractRoles[roleFromMinutes(offer.minutes)]}</dd>
               </div>
               <div>
                 <dt>{t.club.minutes}</dt>
-                <dd>{offer.minutes}</dd>
+                <dd>{t.game.offerMinutes[offer.minutes]}</dd>
               </div>
               <div>
                 <dt>{t.club.wage}</dt>

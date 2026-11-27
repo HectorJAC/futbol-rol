@@ -6,7 +6,7 @@ import { TOURNAMENT_NAMES } from '../data/nationalTeams'
 import { COUNTRY_CURRENCY } from '../data/currencies'
 import { formatMoney } from '../data/shop'
 import { getTrophy } from '../data/trophies'
-import { t } from '../i18n/es'
+import { roundName, t } from '../i18n'
 import { maxTrainingPointsFor } from '../data/gameModes'
 import { CONTINENTAL_NAME, continentalFormat, roundLabel, slotsFor } from '../logic/competitions'
 import { careerTotals, isCareerOver } from '../logic/season'
@@ -129,7 +129,7 @@ export function SeasonSummary(): React.JSX.Element {
                   <>
                     {' '}
                     · {TOURNAMENT_NAMES[record.nationalTeam.tournament.id]}:{' '}
-                    <b>{record.nationalTeam.tournament.round}</b>
+                    <b>{roundName(record.nationalTeam.tournament.round)}</b>
                   </>
                 )}
               </span>
@@ -178,7 +178,7 @@ export function SeasonSummary(): React.JSX.Element {
                   data-tooltip={cupTooltip ?? undefined}
                   data-testid="cup-round"
                 >
-                  {record.cupRound}
+                  {roundName(record.cupRound)}
                 </b>
               </span>
             </div>
@@ -193,7 +193,9 @@ export function SeasonSummary(): React.JSX.Element {
                   data-tooltip={continentalTooltip ?? undefined}
                   data-testid="continental-round"
                 >
-                  {record.continentalRound ?? t.summary.notQualified}
+                  {record.continentalRound
+                    ? roundName(record.continentalRound)
+                    : t.summary.notQualified}
                 </b>
               </span>
             </div>

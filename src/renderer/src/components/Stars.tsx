@@ -1,7 +1,9 @@
+import { fill, t } from '../i18n'
+
 /** Valoración de 1 a 5 con estrellas SVG. */
 export function Stars({ value, max = 5 }: { value: number; max?: number }): React.JSX.Element {
   return (
-    <span className="stars" role="img" aria-label={`${value} de ${max}`}>
+    <span className="stars" role="img" aria-label={fill(t.game.stars, { value, max })}>
       {Array.from({ length: max }, (_, i) => (
         <svg
           key={i}

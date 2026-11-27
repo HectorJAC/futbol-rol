@@ -4,7 +4,7 @@ import { Stars } from '../components/Stars'
 import { divisionName, getClub, type Division } from '../data/clubs'
 import { LockIcon } from '../components/icons'
 import { NATIONALITIES, type NationalityId } from '../data/nationalities'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { canTarget, isCountryOpen, signingChecks } from '../logic/transfers'
 import { useGameStore } from '../store/gameStore'
 

@@ -1,3 +1,7 @@
+import { bindFields } from '../i18n/bind'
+import { GAME_MODES_EN, INTERVALS_EN } from '../i18n/en/data'
+import { getLanguage } from '../i18n/language'
+
 export type GameModeId = 'rapida' | 'normal' | 'completa' | 'personalizada'
 export type DecisionInterval = 1 | 2 | 3
 
@@ -113,11 +117,14 @@ export function creationCapFor(
   return { 20: 15, 30: 22, 50: 37 }[attributeScale(mode)]
 }
 
-/** Máximo de puntos de atributo que da una temporada: 5, 8 o 13. */
+/**
+ * Máximo de puntos de atributo que da una temporada: 5 en la Completa (escala
+ * de 50), 3 y 2 en las escalas de 30 y 20. Mejorar tiene que costar.
+ */
 export function maxTrainingPointsFor(
   mode: Pick<GameMode, 'id' | 'seasons' | 'decisionInterval'>
 ): number {
-  return { 20: 5, 30: 8, 50: 13 }[attributeScale(mode)]
+  return { 20: 2, 30: 3, 50: 5 }[attributeScale(mode)]
 }
 
 /** ¿Hay decisiones en esta temporada? (la primera siempre las tiene) */
@@ -148,9 +155,13 @@ export function isValidMode(value: unknown): value is GameMode {
 }
 
 export function intervalLabel(interval: DecisionInterval): string {
+  if (getLanguage() === 'en') return INTERVALS_EN[interval]
   return interval === 1
     ? 'Cada temporada'
     : interval === 2
       ? 'Cada dos temporadas'
       : 'Cada tres temporadas'
 }
+
+// Nombre y descripción de cada modo en inglés.
+for (const info of GAME_MODES) bindFields(info, { ...GAME_MODES_EN[info.id] })

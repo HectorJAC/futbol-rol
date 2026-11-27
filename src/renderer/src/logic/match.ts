@@ -1,4 +1,5 @@
 import { getClub } from '../data/clubs'
+import { originalText } from '../i18n/bind'
 import { MATCH_MOMENTS } from '../data/matchMoments'
 import { EXCLUB_MOMENTS } from '../data/matchMomentsExClub'
 import type {
@@ -64,7 +65,8 @@ function situationOf(score: { for: number; against: number }): ScoreSituation {
 
 /** Minuto que cuenta el texto de la jugada ("Minuto 63."). */
 export function momentMinute(moment: MatchMoment): number | null {
-  const match = /minuto\s+(\d+)/i.exec(moment.text)
+  // Siempre del texto original: el minuto es mecánica y no cambia con el idioma.
+  const match = /minuto\s+(\d+)/i.exec(originalText(moment, 'text'))
   return match ? Number(match[1]) : null
 }
 

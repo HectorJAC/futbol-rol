@@ -175,7 +175,10 @@ test('menú principal: título, botones y puntero propio', async () => {
   await expect(menuButton('Ajustes')).toBeEnabled()
   await expect(menuButton(/Records/)).toBeDisabled()
   await expect(menuButton('Extras')).toBeEnabled()
+  await expect(menuButton('Créditos')).toBeEnabled()
   await expect(menuButton('Salir del juego')).toBeEnabled()
+  // "Early-Access v0.x", en todas las pantallas.
+  await expect(page.getByTestId('build-badge')).toHaveText(/^Early-Access v0\.\d+$/)
 
   // Puntero "Flecha césped" en todo el juego (y su variante al pasar por un botón).
   const cursor = (selector: string): Promise<string> =>
@@ -188,6 +191,15 @@ test('menú principal: título, botones y puntero propio', async () => {
   expect(await cursor('.menu-button')).not.toBe(await cursor('body'))
 
   await shot('01-menu', BOTH)
+
+  // Créditos: el creador y su contacto.
+  await menuButton('Créditos').click()
+  await expect(page.getByTestId('credits')).toContainText('Hector JAC')
+  await expect(page.getByTestId('credits')).toContainText('Contacto: hjac10@hotmail.com')
+  await expect(page.getByTestId('build-badge')).toBeVisible()
+  await shot('01e-creditos')
+  await page.getByRole('button', { name: 'Volver al menú' }).click()
+  await expect(menuButton('Nueva Partida')).toBeVisible()
 })
 
 test('Extras: catálogo de orígenes por país y especiales', async () => {
@@ -218,7 +230,8 @@ test('Ajustes: tamaño de ventana, animaciones e idioma', async () => {
   await menuButton('Ajustes').click()
   await expect(page.getByRole('heading', { name: 'Ajustes' })).toBeVisible()
   await expect(page.getByTestId('setting-fullscreen')).toHaveAttribute('aria-checked', 'false')
-  await expect(page.getByRole('radio', { name: /English/ })).toBeDisabled()
+  await expect(page.getByTestId('language-en')).toBeEnabled()
+  await expect(page.getByTestId('language-es')).toHaveAttribute('aria-checked', 'true')
   await shot('01b-ajustes')
 
   const contentSize = (): Promise<number[]> =>
@@ -326,6 +339,9 @@ test('paso 2: modo de juego', async () => {
   for (const id of ['rapida', 'normal', 'personalizada']) {
     await expect(page.getByTestId(`mode-${id}`)).toBeDisabled()
     await expect(page.getByTestId(`mode-${id}`)).toContainText('Próximamente')
+    // Los modos cerrados solo enseñan el título.
+    await expect(page.getByTestId(`mode-${id}`).locator('.mode-card__desc')).toHaveCount(0)
+    await expect(page.getByTestId(`mode-${id}`).locator('.mode-card__facts')).toHaveCount(0)
   }
   await expect(page.getByTestId('mode-custom')).toHaveCount(0)
   await shot('03a-modos', BOTH)
@@ -495,6 +511,8 @@ test('temporada 1 (modo completo): 10 decisiones, partidos importantes y resumen
   await expect(page.getByTestId('national-line')).toContainText('Selección')
   await expect(page.getByTestId('season-earnings')).toBeVisible()
   await expect(page.getByTestId('season-points')).toBeVisible()
+  // Como mucho 5 puntos de atributo por temporada.
+  await expect(page.getByTestId('season-points')).toContainText('/ 5')
   // Con puntos pendientes se puede repartir o seguir sin repartir.
   if (await page.getByTestId('summary-skip-points').isVisible()) {
     await expect(page.getByTestId('summary-continue')).toContainText('Repartir puntos')
@@ -829,11 +847,82 @@ test('teclado en el menú: ↑/↓ saltan los botones deshabilitados', async () 
   await page.keyboard.press('ArrowDown')
   await expect(menuButton('Extras')).toBeFocused()
   await page.keyboard.press('ArrowDown')
+  await expect(menuButton('Créditos')).toBeFocused()
+  await page.keyboard.press('ArrowDown')
   await expect(quit).toBeFocused()
   await page.keyboard.press('ArrowDown')
   await expect(newGame).toBeFocused()
   await page.keyboard.press('ArrowUp')
   await expect(quit).toBeFocused()
+})
+
+test('inglés: se cambia en Ajustes y todo el juego pasa a inglés', async () => {
+  await menuButton('Ajustes').click()
+  await page.getByTestId('language-en').click()
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
+  await expect(page.getByTestId('language-en')).toHaveAttribute('aria-checked', 'true')
+  expect(JSON.parse(readFileSync(join(USER_DATA, 'settings.json'), 'utf8')).language).toBe('en')
+  await shot('30-en-ajustes')
+  await page.getByRole('button', { name: 'Back to menu' }).click()
+
+  const enMenu = (name: string | RegExp): Locator =>
+    page.getByRole('navigation', { name: 'Main menu' }).getByRole('button', { name })
+  await expect(enMenu('New Game')).toBeVisible()
+  await expect(enMenu('Credits')).toBeVisible()
+  await expect(page.getByTestId('build-badge')).toHaveText(/^Early-Access v0\.\d+$/)
+  await shot('30-en-menu')
+
+  // Una partida nueva, de principio a fin de la creación, en inglés.
+  await enMenu('New Game').click()
+  await expect(page.getByRole('heading', { name: 'Create your player' })).toBeVisible()
+  await expect(page.getByTestId('nationality-name')).toHaveText('Spain')
+  await page.getByLabel('Name').fill('Sam Carter')
+  await shot('31-en-creacion')
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page.getByRole('heading', { name: 'Choose a game mode' })).toBeVisible()
+  await expect(page.getByTestId('mode-completa')).toContainText('Full')
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page.getByRole('heading', { name: 'Choose your origin' })).toBeVisible()
+  await page.getByTestId('origin-option').first().click()
+  await shot('32-en-origen')
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page.getByRole('heading', { name: 'Build your attributes' })).toBeVisible()
+  for (let i = 0; i < 10; i++) await page.getByRole('button', { name: 'Raise Finishing' }).click()
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page.getByRole('heading', { name: 'Your first contract' })).toBeVisible()
+  await page.getByRole('radio').nth(1).click()
+  await shot('33-en-clubes')
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page.getByTestId('summary-contract')).toContainText('3 seasons')
+  await page.getByTestId('sign-contract').click()
+
+  await expect(page.getByTestId('hub-player-name')).toHaveText('SAM CARTER')
+  await expect(page.getByTestId('hub-season')).toContainText('Season 1 of 15')
+  await expect(page.getByTestId('hub-division')).toHaveText('Spanish First Division')
+  await shot('34-en-hub', BOTH)
+
+  // La primera decisión, con su texto en inglés.
+  await page.getByTestId('play-season').click()
+  await expect(page.getByTestId('event-count')).toContainText('Decision 1 / 10')
+  await expect(page.getByTestId('event-title')).not.toHaveText('Tu debut')
+  await shot('35-en-decision', BOTH)
+  await firstOption().click()
+  await expect(page.getByTestId('event-result')).toBeVisible()
+  await shot('36-en-resultado')
+  await page.getByRole('button', { name: 'Back to hub' }).click()
+  await page.getByTestId('open-contract').click()
+  await expect(page.getByRole('heading', { name: 'Contract & money' })).toBeVisible()
+  await page.getByTestId('contract-tab-shop').click()
+  await shot('37-en-tienda')
+  await page.getByRole('button', { name: 'Back' }).click()
+
+  // Vuelta al español para el resto de pruebas.
+  await page.getByRole('button', { name: 'Save and quit to menu' }).click()
+  await enMenu('Settings').click()
+  await page.getByTestId('language-es').click()
+  await expect(page.getByRole('heading', { name: 'Ajustes' })).toBeVisible()
+  await page.getByRole('button', { name: 'Volver al menú' }).click()
+  await expect(menuButton('Nueva Partida')).toBeVisible()
 })
 
 test('Salir del juego cierra la aplicación', async () => {

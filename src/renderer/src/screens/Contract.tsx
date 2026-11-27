@@ -3,11 +3,12 @@ import { ClubCrest } from '../components/ClubCrest'
 import { getClub } from '../data/clubs'
 import { formatMoney, getShopItem, type ShopCategory } from '../data/shop'
 import { careerCurrency } from '../logic/season'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { seasonYearLabel } from '../logic/competitions'
 import {
   canBuy,
   contractYearsLeft,
+  itemCost,
   monthlyWage,
   purchaseSummary,
   shopDeltas,
@@ -109,7 +110,7 @@ export function Contract(): React.JSX.Element {
                 <div>
                   <strong>{club.name}</strong>
                   <span>
-                    {t.contract.role}: <b>{contract.role}</b>
+                    {t.contract.role}: <b>{t.game.contractRoles[contract.role]}</b>
                   </span>
                 </div>
               </div>
@@ -271,7 +272,7 @@ export function Contract(): React.JSX.Element {
           CATEGORIES.filter((category) => offer.some((i) => i.category === category)).map(
             (category) => (
               <div key={category} className="shop-category">
-                <h2 className="panel-title">{category}</h2>
+                <h2 className="panel-title">{t.game.shop.categories[category]}</h2>
                 <div className="shop-grid">
                   {offer
                     .filter((i) => i.category === category)
@@ -281,7 +282,9 @@ export function Contract(): React.JSX.Element {
                         <article key={item.id} className="shop-item" data-testid="shop-item">
                           <div className="shop-item__top">
                             <strong>{item.name}</strong>
-                            <span className="shop-item__cost">{money(item.cost)}</span>
+                            <span className="shop-item__cost">
+                              {money(itemCost(item, career.season))}
+                            </span>
                           </div>
                           <span className="shop-item__limit">
                             {item.limit === 'once' ? t.contract.once : t.contract.perSeasonLimit}

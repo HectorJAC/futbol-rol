@@ -119,12 +119,12 @@ describe('valor de mercado', () => {
 })
 
 describe('puntos de fin de temporada', () => {
-  it('como mucho 13 en la Completa (5 en la Rápida) y se reparten sin pasar del máximo', () => {
+  it('como mucho 5 en la Completa (v0.18; 2 y 3 en la Rápida y la Normal) y se reparten sin pasar del máximo', () => {
     const c = career()
     const great = { ...season(1, 35, 38, 8.1), assists: 12 }
-    expect(trainingPoints(c, great)).toBe(13)
-    expect(trainingPoints({ ...c, mode: defaultMode('rapida') }, great)).toBe(5)
-    expect(trainingPoints({ ...c, mode: defaultMode('normal') }, great)).toBe(8)
+    expect(trainingPoints(c, great)).toBe(5)
+    expect(trainingPoints({ ...c, mode: defaultMode('rapida') }, great)).toBe(2)
+    expect(trainingPoints({ ...c, mode: defaultMode('normal') }, great)).toBe(3)
     expect(trainingPoints(c, { ...season(1, 0, 3, 5.5), trophies: [] })).toBe(0)
     const withPoints = { ...c, pendingPoints: 3 }
     const after = applyTrainingPoints(withPoints, { finishing: 2, pace: 1 })

@@ -1,7 +1,7 @@
 {
   "name": "your-football-path",
   "productName": "Your Football Path",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Your Football Path — carrera de futbolista con decisiones de RPG (escritorio, Steam)",
   "main": "./out/main/index.js",
   "author": "HectorJAC",

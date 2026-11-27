@@ -9,6 +9,8 @@ import { ITA_LEAGUES } from './ita'
 import { JPN_LEAGUES } from './jpn'
 import type { CountryLeagues } from './types'
 import { USA_LEAGUES } from './usa'
+import { bindFields } from '../../i18n/bind'
+import { LEAGUES_EN } from '../../i18n/en/data'
 
 /** Primera y segunda división de cada país. */
 export const LEAGUES: Record<NationalityId, CountryLeagues> = {
@@ -24,3 +26,8 @@ export const LEAGUES: Record<NationalityId, CountryLeagues> = {
 }
 
 export type { ClubSeed, CountryLeagues } from './types'
+
+// Nombres de las ligas y de la copa de cada país en inglés.
+for (const [id, leagues] of Object.entries(LEAGUES)) {
+  bindFields(leagues, { ...LEAGUES_EN[id as NationalityId] })
+}

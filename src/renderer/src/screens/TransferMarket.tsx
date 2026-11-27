@@ -5,7 +5,7 @@ import { Stars } from '../components/Stars'
 import { divisionName, getClub, type Club } from '../data/clubs'
 import { getNationality, NATIONALITIES, type NationalityId } from '../data/nationalities'
 import { COUNTRY_CURRENCY, formatMoney } from '../data/currencies'
-import { t } from '../i18n/es'
+import { t } from '../i18n'
 import { divisionOf } from '../logic/competitions'
 import { careerCurrency, seasonYearLabel } from '../logic/season'
 import { renewedContract } from '../logic/finance'
@@ -114,7 +114,7 @@ export function TransferMarket(): React.JSX.Element {
                 </div>
                 <div>
                   <dt>{t.club.minutes}</dt>
-                  <dd>{offer.minutes}</dd>
+                  <dd>{t.game.offerMinutes[offer.minutes]}</dd>
                 </div>
                 <div>
                   <dt>{t.club.wage}</dt>

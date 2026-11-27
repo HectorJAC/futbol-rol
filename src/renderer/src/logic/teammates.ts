@@ -5,6 +5,7 @@ import type { Career, Flags, Teammate, TeammateRole } from '../types/career'
 import { clubRoster } from './competitions'
 import { baseAttributes, careerScale } from './playerAttributes'
 import { clamp, createRng, seedFor } from './random'
+import { fill, liveRecord, t } from '../i18n'
 
 /**
  * Compañeros destacados de tu club (los mismos 5 jugadores que salen en las
@@ -21,13 +22,7 @@ export const ROSTER_ROLES: readonly TeammateRole[] = [
   'joven'
 ]
 
-export const ROLE_LABELS: Record<TeammateRole, string> = {
-  capitan: 'Capitán',
-  rival: 'Rival de puesto',
-  veterano: 'Veterano del vestuario',
-  amigo: 'Tu amigo en el vestuario',
-  joven: 'Joven de la cantera'
-}
+export const ROLE_LABELS: Record<TeammateRole, string> = liveRecord(() => t.game.roles)
 
 /** Placeholder de los textos de los eventos para cada papel. */
 export const ROLE_PLACEHOLDERS: Record<TeammateRole, string> = {
@@ -235,24 +230,28 @@ export function captaincyChecks(career: Career): CaptaincyCheck[] {
   const natural = leadership >= CAPTAIN_FAST_LEADERSHIP
   return [
     {
-      label: 'Temporadas en el club',
+      label: t.game.captaincy.seasons,
       ok: seasons >= CAPTAIN_MIN_SEASONS || natural,
       detail: natural
-        ? `Líder nato (liderazgo ${fastLeadership})`
-        : `${seasons} / ${CAPTAIN_MIN_SEASONS} (o liderazgo ${fastLeadership})`
+        ? fill(t.game.captaincy.natural, { n: fastLeadership })
+        : fill(t.game.captaincy.seasonsDetail, {
+            seasons,
+            min: CAPTAIN_MIN_SEASONS,
+            lead: fastLeadership
+          })
     },
     {
-      label: 'Liderazgo',
+      label: t.game.captaincy.leadership,
       ok: leadership >= CAPTAIN_LEADERSHIP,
       detail: `${career.attributes.leadership} / ${neededLeadership}`
     },
     {
-      label: 'Confianza del míster',
+      label: t.game.captaincy.trust,
       ok: career.trust >= CAPTAIN_TRUST,
       detail: `${career.trust} / ${CAPTAIN_TRUST}`
     },
     {
-      label: 'Relación con el vestuario',
+      label: t.game.captaincy.dressingRoom,
       ok: relation >= CAPTAIN_RELATION,
       detail: `${relation} / ${CAPTAIN_RELATION}`
     }
@@ -303,7 +302,7 @@ export function mentionedTeammates(
   if (ex && all.includes('{excompanero}')) {
     result.push({
       name: ex.name,
-      label: `Excompañero en el ${getClub(ex.clubId).name}`,
+      label: fill(t.game.exTeammateAt, { club: getClub(ex.clubId).name }),
       relation: ex.relation
     })
   }

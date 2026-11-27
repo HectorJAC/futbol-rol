@@ -1,4 +1,7 @@
 import type { NationalityId } from './nationalities'
+import { bindText } from '../i18n/bind'
+import { CURRENCIES_EN } from '../i18n/en/data'
+import { getLanguage } from '../i18n/language'
 
 export type CurrencyId = 'EUR' | 'GBP' | 'USD' | 'ARS' | 'BRL' | 'JPY'
 
@@ -34,7 +37,16 @@ export const COUNTRY_CURRENCY: Record<NationalityId, CurrencyId> = {
   USA: 'USD'
 }
 
-const group = (n: number): string => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+/** Miles con punto en español ("1.250.000") y con coma en inglés ("1,250,000"). */
+const group = (n: number): string =>
+  String(n).replace(/\B(?=(\d{3})+(?!\d))/g, getLanguage() === 'en' ? ',' : '.')
+
+/** En inglés el símbolo va delante y pegado: "€1,250,000", "£1,062,500". */
+function symbols(c: Currency): { prefix: string; suffix: string } {
+  if (getLanguage() !== 'en') return { prefix: c.prefix ?? '', suffix: c.suffix ?? '' }
+  const symbol = (c.prefix ?? c.suffix ?? '').trim()
+  return { prefix: symbol, suffix: '' }
+}
 
 /**
  * Formatea una cantidad (el juego la guarda en euros) en la moneda indicada:
@@ -44,7 +56,8 @@ export function formatMoney(amountEur: number, currency: CurrencyId = 'EUR'): st
   const c = CURRENCIES[currency]
   const value = Math.round(amountEur * c.perEuro)
   const text = group(Math.abs(value))
-  return `${value < 0 ? '−' : ''}${c.prefix ?? ''}${text}${c.suffix ?? ''}`
+  const { prefix, suffix } = symbols(c)
+  return `${value < 0 ? '−' : ''}${prefix}${text}${suffix}`
 }
 
 /** "25,3 M€", "£ 21,5 M", "AR$ 27.830 M". */
@@ -53,8 +66,13 @@ export function formatBigMoney(amountEur: number, currency: CurrencyId = 'EUR'):
   const value = amountEur * c.perEuro
   if (value < 1_000_000) return formatMoney(amountEur, currency)
   const millions = value / 1_000_000
-  const text = millions.toLocaleString('es-ES', {
+  const english = getLanguage() === 'en'
+  const text = millions.toLocaleString(english ? 'en-GB' : 'es-ES', {
     maximumFractionDigits: millions >= 100 ? 0 : 1
   })
+  if (english) return `${symbols(c).prefix}${text}m`
   return currency === 'EUR' ? `${text} M€` : `${c.prefix ?? ''}${text} M`
 }
+
+// Nombre de cada moneda en inglés (p. ej. al cambiar de país).
+for (const c of Object.values(CURRENCIES)) bindText(c, 'name', CURRENCIES_EN[c.id])

@@ -1,3 +1,6 @@
+import { bindFields } from '../i18n/bind'
+import { ATTRIBUTES_EN } from '../i18n/en/data'
+
 export type AttributeId =
   | 'finishing'
   | 'heading'
@@ -264,3 +267,6 @@ export function overallRating(attributes: Attributes): number {
   const weighted = ATTRIBUTES.reduce((sum, { id }) => sum + attributes[id] * DC_WEIGHTS[id], 0)
   return Math.min(99, Math.round(weighted * 5))
 }
+
+// Nombre y descripción de cada atributo en inglés.
+for (const attr of ATTRIBUTES) bindFields(attr, { ...ATTRIBUTES_EN[attr.id] })
