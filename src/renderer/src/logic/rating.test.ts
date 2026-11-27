@@ -142,15 +142,19 @@ describe('historia de la pareja', () => {
     expect(isEventEligible(getEvent('pareja-conocer'), dating)).toBe(false)
   })
 
-  it('empezar una relación le pone nombre y la etapa avanza con el tiempo', () => {
+  it('empezar una relación le pone nombre y la etapa avanza con la relación (v0.17)', () => {
     const c = career({ age: 20, season: 3 })
-    const dating = applyEffects(c, { flags: { partner: 'pareja' } })
+    const dating = applyEffects(c, { partner: 10, flags: { partner: 'conociendo' } })
     expect(typeof dating.flags.partnerName).toBe('string')
     expect(dating.flags.partnerStageSince).toBe(3)
-    expect(familyStatus(dating)).toBe(`Saliendo con ${dating.flags.partnerName}`)
-    // Para irse a vivir juntos hace falta al menos una temporada saliendo.
-    expect(isEventEligible(getEvent('pareja-convivir'), dating)).toBe(false)
-    expect(isEventEligible(getEvent('pareja-convivir'), { ...dating, season: 4 })).toBe(true)
+    expect(dating.flags.partnerRelation).toBe(35)
+    expect(familyStatus(dating)).toBe(`Conociendo a ${dating.flags.partnerName}`)
+    const couple = applyEffects(dating, { partner: 15 })
+    expect(familyStatus(couple)).toBe(`Novio de ${couple.flags.partnerName}`)
+    // Para irse a vivir juntos hace falta una temporada de novios y 55 de relación.
+    const fond = { ...couple, flags: { ...couple.flags, partnerRelation: 60 } }
+    expect(isEventEligible(getEvent('pareja-convivir'), fond)).toBe(false)
+    expect(isEventEligible(getEvent('pareja-convivir'), { ...fond, season: 4 })).toBe(true)
   })
 
   it('casados con hijos: la ficha lo cuenta y los hijos se suman', () => {

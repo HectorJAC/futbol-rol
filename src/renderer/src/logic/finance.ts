@@ -1,7 +1,7 @@
-import { ATTRIBUTES, type Attributes } from '../data/attributes'
+import { ATTRIBUTES, clampAttribute, type Attributes } from '../data/attributes'
 import { getClub, type ClubTier } from '../data/clubs'
 import { isDecisionSeason } from '../data/gameModes'
-import { getShopItem, SHOP_ITEMS, type ShopItem } from '../data/shop'
+import { getShopItem, SHOP_ITEMS, SHOP_SCALE, type ShopItem } from '../data/shop'
 import type {
   Career,
   Contract,
@@ -10,7 +10,7 @@ import type {
   SeasonEarnings,
   SeasonRecord
 } from '../types/career'
-import { addAttributeDeltas, careerScale } from './playerAttributes'
+import { careerScale } from './playerAttributes'
 import { clamp, createRng, seedFor, shuffle } from './random'
 
 /** Sueldo semanal de referencia por tipo de club al empezar. */
@@ -143,6 +143,21 @@ export function shopOffer(career: Career): ShopItem[] {
   return items.sort((a, b) => a.category.localeCompare(b.category) || a.cost - b.cost)
 }
 
+/**
+ * Puntos que sube cada atributo una compra, en la escala de la carrera. En la
+ * tienda se cuentan en la escala de 50 (de 1 a 3 por atributo, v0.17); en las
+ * partidas con otra escala se convierten (nunca menos de 1).
+ */
+export function shopDeltas(item: Pick<ShopItem, 'attributes'>, max: number): Partial<Attributes> {
+  const result: Partial<Attributes> = {}
+  for (const [id, points] of Object.entries(item.attributes ?? {})) {
+    if (!points) continue
+    result[id as keyof Attributes] =
+      max === SHOP_SCALE ? points : Math.max(1, Math.round((points * max) / SHOP_SCALE))
+  }
+  return result
+}
+
 /** `short` es el texto corto que se muestra en el botón. */
 export type BuyCheck = { ok: true } | { ok: false; reason: string; short: string }
 
@@ -174,7 +189,15 @@ export function buyItem(career: Career, itemId: string): Career {
   const check = canBuy(career, item)
   if (!check.ok) throw new Error(check.reason)
 
-  const { attributes, gained } = addAttributeDeltas(career, item.attributes ?? {})
+  const max = careerScale(career)
+  const attributes = { ...career.attributes }
+  const gained: Partial<Attributes> = {}
+  for (const [id, delta] of Object.entries(shopDeltas(item, max))) {
+    const key = id as keyof Attributes
+    const next = clampAttribute(attributes[key] + (delta ?? 0), max)
+    if (next !== attributes[key]) gained[key] = next - attributes[key]
+    attributes[key] = next
+  }
   const purchase: Purchase = {
     itemId,
     season: career.season,

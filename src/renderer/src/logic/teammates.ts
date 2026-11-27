@@ -209,6 +209,11 @@ export function seasonsAtClub(career: Pick<Career, 'history' | 'clubId'>): numbe
 export const CAPTAIN_MIN_SEASONS = 3
 /** Requisitos (liderazgo en la escala de 20, confianza y relación media). */
 const CAPTAIN_LEADERSHIP = 10
+/**
+ * Con este liderazgo (escala de 20; 40 en la de 50) no hace falta esperar las
+ * 3 temporadas en el club (v0.17).
+ */
+export const CAPTAIN_FAST_LEADERSHIP = 16
 const CAPTAIN_TRUST = 55
 const CAPTAIN_RELATION = 55
 
@@ -224,12 +229,17 @@ export function captaincyChecks(career: Career): CaptaincyCheck[] {
   const seasons = seasonsAtClub(career)
   const leadership = baseAttributes(career).leadership
   const neededLeadership = toScale(CAPTAIN_LEADERSHIP, careerScale(career))
+  const fastLeadership = toScale(CAPTAIN_FAST_LEADERSHIP, careerScale(career))
   const relation = averageRelation(career)
+  // Un líder nato (liderazgo alto) puede ser capitán sin esperar las temporadas.
+  const natural = leadership >= CAPTAIN_FAST_LEADERSHIP
   return [
     {
       label: 'Temporadas en el club',
-      ok: seasons >= CAPTAIN_MIN_SEASONS,
-      detail: `${seasons} / ${CAPTAIN_MIN_SEASONS}`
+      ok: seasons >= CAPTAIN_MIN_SEASONS || natural,
+      detail: natural
+        ? `Líder nato (liderazgo ${fastLeadership})`
+        : `${seasons} / ${CAPTAIN_MIN_SEASONS} (o liderazgo ${fastLeadership})`
     },
     {
       label: 'Liderazgo',

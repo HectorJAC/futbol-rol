@@ -54,7 +54,7 @@ describe('v0.13: pierna buena', () => {
     expect(career.character.foot).toBe('izquierda')
     const loaded = careerFromSaveFile(JSON.parse(JSON.stringify(toSaveFile(career))))
     expect(loaded?.character.foot).toBe('izquierda')
-    expect(SAVE_VERSION).toBe(6)
+    expect(SAVE_VERSION).toBe(7)
   })
 
   it('una partida v5 (juego v0.11–v0.12) se carga como diestro', () => {

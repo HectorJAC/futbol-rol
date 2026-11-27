@@ -11,9 +11,9 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     category: 'Entrenamiento',
     description:
       'Un exgoleador internacional te corrige el golpeo y la colocación del cuerpo ante el portero.',
-    cost: 70_000,
+    cost: 90_000,
     limit: 'season',
-    attributes: { finishing: 1 }
+    attributes: { finishing: 3 }
   },
   {
     id: 'entreno-juego-aereo',
@@ -22,7 +22,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     description: 'Un excentral te enseña a medir el salto, ganar la posición y orientar el cuello.',
     cost: 45_000,
     limit: 'season',
-    attributes: { heading: 1 }
+    attributes: { heading: 2 }
   },
   {
     id: 'entreno-regate',
@@ -31,34 +31,34 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     description: 'Conducción, fintas y cambios de ritmo en jaulas de cinco metros por cinco.',
     cost: 50_000,
     limit: 'season',
-    attributes: { dribbling: 1 }
+    attributes: { dribbling: 2 }
   },
   {
     id: 'entreno-pase-corto',
     name: 'Rondos y juego a un toque con un exmediocentro',
     category: 'Entrenamiento',
     description: 'Aprendes a descargar de espaldas y a jugar de primeras sin perder el balón.',
-    cost: 35_000,
+    cost: 40_000,
     limit: 'season',
-    attributes: { shortPassing: 1 }
+    attributes: { shortPassing: 2 }
   },
   {
     id: 'entreno-pase-largo',
     name: 'Taller de golpeo largo',
     category: 'Entrenamiento',
     description: 'Cambios de orientación y balones al espacio hasta que el empeine responda solo.',
-    cost: 30_000,
+    cost: 35_000,
     limit: 'season',
-    attributes: { longPassing: 1 }
+    attributes: { longPassing: 2 }
   },
   {
     id: 'entreno-desmarque',
     name: 'Entrenador de movimientos sin balón',
     category: 'Entrenamiento',
     description: 'Un exdelantero centro te enseña a atacar el hueco entre central y lateral.',
-    cost: 65_000,
+    cost: 85_000,
     limit: 'season',
-    attributes: { offTheBall: 1 }
+    attributes: { offTheBall: 3 }
   },
   {
     id: 'entreno-sprint',
@@ -66,9 +66,9 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     category: 'Entrenamiento',
     description:
       'Técnica de carrera, salidas de tacos y trabajo de zancada con una exatleta olímpica.',
-    cost: 60_000,
+    cost: 80_000,
     limit: 'season',
-    attributes: { pace: 1 }
+    attributes: { pace: 3 }
   },
   {
     id: 'entreno-pliometria',
@@ -78,7 +78,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
       'Saltos, arrastres y balón medicinal para ganar explosividad en el disparo y el salto.',
     cost: 45_000,
     limit: 'season',
-    attributes: { strength: 1 }
+    attributes: { strength: 2 }
   },
   {
     id: 'entreno-fondo',
@@ -87,7 +87,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     description: 'Series, umbrales y pulsómetro para llegar al minuto 90 con piernas.',
     cost: 40_000,
     limit: 'season',
-    attributes: { stamina: 1 }
+    attributes: { stamina: 2 }
   },
   {
     id: 'entreno-prevencion',
@@ -96,7 +96,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     description: 'Core, propiocepción y trabajo excéntrico para que el cuerpo aguante los choques.',
     cost: 50_000,
     limit: 'season',
-    attributes: { physique: 1 }
+    attributes: { physique: 2 }
   },
   {
     id: 'entreno-visualizacion',
@@ -106,7 +106,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
       'Un coach de alto rendimiento te enseña a respirar y a ensayar cada ocasión en tu cabeza.',
     cost: 45_000,
     limit: 'season',
-    attributes: { composure: 1 }
+    attributes: { composure: 2 }
   },
   {
     id: 'entreno-excapitan',
@@ -116,7 +116,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
       'Un excapitán de selección te enseña a hablar en el vestuario y a mandar en el campo.',
     cost: 55_000,
     limit: 'season',
-    attributes: { leadership: 1 }
+    attributes: { leadership: 2 }
   },
   {
     id: 'entreno-corners',
@@ -124,7 +124,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     category: 'Entrenamiento',
     description:
       'Cien córners por sesión hasta clavarlos al primer palo, al punto de penalti o en corto.',
-    cost: 25_000,
+    cost: 20_000,
     limit: 'season',
     attributes: { corners: 1 }
   },
@@ -133,9 +133,9 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     name: 'Especialista en lanzamiento de faltas',
     category: 'Entrenamiento',
     description: 'Barrera de maniquíes, balón parado y un maestro del golpeo con rosca a tu lado.',
-    cost: 60_000,
+    cost: 75_000,
     limit: 'season',
-    attributes: { freeKicks: 1 }
+    attributes: { freeKicks: 3 }
   },
   {
     id: 'entreno-penaltis-presion',
@@ -145,7 +145,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
       'Rutina de lanzamiento, respiración y vídeo de porteros para tirar con sangre fría.',
     cost: 40_000,
     limit: 'season',
-    attributes: { penalties: 1 }
+    attributes: { penalties: 2 }
   },
 
   // Programas de élite
@@ -154,9 +154,9 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     name: 'Stage del goleador con un ex máximo goleador europeo',
     category: 'Entrenamiento',
     description: 'Una semana al mes en su finca: remate y desmarque de la mañana a la noche.',
-    cost: 250_000,
+    cost: 300_000,
     limit: 'season',
-    attributes: { finishing: 1, offTheBall: 1 },
+    attributes: { finishing: 3, offTheBall: 3 },
     minSeason: 4
   },
   {
@@ -167,7 +167,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
       'Contratas a tiempo completo a un mito del golpeo con rosca durante toda la temporada.',
     cost: 280_000,
     limit: 'season',
-    attributes: { freeKicks: 2 },
+    attributes: { freeKicks: 3, corners: 3 },
     minSeason: 4
   },
   {
@@ -177,7 +177,7 @@ export const TRAINING_ITEMS: readonly ShopItem[] = [
     description: 'Biomecánica, laboratorio de fisiología y preparadores olímpicos solo para ti.',
     cost: 350_000,
     limit: 'season',
-    attributes: { pace: 1, stamina: 1 },
+    attributes: { pace: 3, stamina: 3 },
     minSeason: 4
   }
 ]

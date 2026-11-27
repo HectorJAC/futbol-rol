@@ -11,7 +11,7 @@ import { POSITIONS } from '../data/positions'
 import { SHOP_ITEMS } from '../data/shop'
 import { TROPHIES } from '../data/trophies'
 import { isValidSaveId, type SaveFile } from '../../../shared/saves'
-import type { Career, Flags, SeasonSetup, Teammate } from '../types/career'
+import type { Career, ExPartner, Flags, SeasonSetup, Teammate } from '../types/career'
 import { FEET } from '../types/character'
 import { validateName } from './characterName'
 import {
@@ -35,8 +35,11 @@ import { generateTeammates, MAX_EX_TEAMMATES, relationsFromFlags, ROSTER_ROLES }
  *   ascensos y descensos, puntos de atributo pendientes y sueldo mensual.
  * - v5 (juego v0.10): atributos de balón parado y escala por modo (20/30/50),
  *   compañeros y excompañeros, capitanía, club objetivo y tres copas europeas.
+ * - v6 (juego v0.13): pierna buena.
+ * - v7 (juego v0.17): relación con la pareja de 0 a 100 y exparejas, afición de
+ *   cada club e historial de relaciones.
  */
-export const SAVE_VERSION = 6
+export const SAVE_VERSION = 7
 
 export function toSaveFile(career: Career): SaveFile {
   return {
@@ -255,6 +258,54 @@ function migrateV5(c: Record<string, unknown>): Record<string, unknown> | null {
   return { ...c, character: { foot: 'derecha', ...c.character } }
 }
 
+/** Relación con la pareja según la etapa de antes de la v0.17. */
+const OLD_STAGE_RELATION: Record<string, number> = {
+  pareja: 60,
+  convivencia: 70,
+  prometidos: 85,
+  casados: 100
+}
+
+/**
+ * v6 → v7. La pareja pasa a tener relación de 0 a 100: convivir y prometerse
+ * son ahora hitos de los novios, y una ruptura pasa a tus exparejas. La afición
+ * conserva la barra que tenía (sin la promesa rota, que era del club anterior).
+ */
+function migrateV6(c: Record<string, unknown>): Record<string, unknown> | null {
+  if (!isObject(c.flags) || typeof c.reputation !== 'number') return null
+  const flags: Record<string, unknown> = { ...c.flags }
+  const season = typeof c.season === 'number' ? c.season : 1
+  const exPartners: ExPartner[] = []
+  const stage = String(flags.partner ?? '')
+  if (stage === 'convivencia' || stage === 'prometidos') {
+    flags.livingTogether = true
+    if (stage === 'prometidos') flags.engaged = true
+    flags.partner = 'pareja'
+  }
+  if (OLD_STAGE_RELATION[stage]) flags.partnerRelation = OLD_STAGE_RELATION[stage]
+  if (stage === 'ruptura') {
+    const until = typeof flags.partnerStageSince === 'number' ? flags.partnerStageSince : season
+    exPartners.push({
+      name: typeof flags.partnerName === 'string' ? flags.partnerName : 'Tu expareja',
+      since: typeof flags.partnerSince === 'number' ? flags.partnerSince : until,
+      until,
+      stage: 'pareja',
+      reason: 'Lo dejasteis'
+    })
+    for (const key of ['partner', 'partnerName', 'partnerSince', 'cheated', 'noMoreChildren']) {
+      delete flags[key]
+    }
+    flags.lastBreakupSeason = until
+  }
+  const rep = c.reputation
+  const fans = flags.foreignInterest
+    ? Math.min(rep, 35)
+    : flags.loyalToClub || flags.charityBarrio
+      ? Math.max(rep, 75)
+      : rep
+  return { ...c, flags, exPartners, fansOffset: fans - rep, relationLog: [] }
+}
+
 /** Lleva una partida antigua al formato actual. Devuelve `null` si la versión no se conoce. */
 function migrate(version: number, career: unknown): unknown {
   if (!isObject(career)) return null
@@ -298,6 +349,11 @@ function migrate(version: number, career: unknown): unknown {
     c = migrateV5(c)
     if (!c) return null
     version = 6
+  }
+  if (version === 6) {
+    c = migrateV6(c)
+    if (!c) return null
+    version = 7
   }
   return version === SAVE_VERSION ? c : null
 }
@@ -364,6 +420,31 @@ function isValidSetup(value: unknown): value is SeasonSetup {
 
 function isValidQualifiers(value: unknown): boolean {
   return isObject(value) && CONTINENTAL_CUP_IDS.every((cup) => isClubList(value[cup]))
+}
+
+function isValidRelationLog(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (e) =>
+        isObject(e) &&
+        ['coach', 'fans', 'partner'].includes(String(e.target)) &&
+        isCount(e.season) &&
+        isClubId(e.clubId) &&
+        typeof e.delta === 'number' &&
+        isPercent(e.value) &&
+        typeof e.title === 'string'
+    )
+  )
+}
+
+function isValidExPartners(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (p) => isObject(p) && typeof p.name === 'string' && isCount(p.since) && isCount(p.until)
+    )
+  )
 }
 
 function isValidTeammates(value: unknown): value is Teammate[] {
@@ -497,7 +578,11 @@ export function careerFromSaveFile(file: SaveFile): Career | null {
     isNullOr(c.captaincy, (v) => isClubId(v.clubId) && isCount(v.since)) &&
     isNullOr(c.transferTarget, (v) => isClubId(v.clubId) && isCount(v.season)) &&
     isValidSeasonProgress(c.seasonProgress) &&
-    isValidHistory(c.history)
+    isValidHistory(c.history) &&
+    typeof c.fansOffset === 'number' &&
+    Math.abs(c.fansOffset) <= 100 &&
+    isValidRelationLog(c.relationLog) &&
+    isValidExPartners(c.exPartners)
 
   return valid ? (c as unknown as Career) : null
 }

@@ -10,7 +10,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
       'Saber que tu familia vive tranquila te quita un peso de encima. Juegas con la cabeza despejada.',
     cost: 350_000,
     limit: 'once',
-    attributes: { composure: 2 },
+    attributes: { composure: 3 },
     morale: 10
   },
   {
@@ -29,7 +29,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     description: 'Un campo de césped y becas para chavales. Tu nombre en algo más que un dorsal.',
     cost: 250_000,
     limit: 'once',
-    attributes: { leadership: 1 },
+    attributes: { leadership: 3 },
     reputation: 8
   },
   {
@@ -37,9 +37,9 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     name: 'Contratar un fisioterapeuta personal',
     category: 'Equipo personal',
     description: 'Sesiones diarias de descarga y prevención durante toda la temporada.',
-    cost: 60_000,
+    cost: 90_000,
     limit: 'season',
-    attributes: { physique: 1 }
+    attributes: { physique: 3 }
   },
   {
     id: 'nutricionista',
@@ -48,7 +48,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     description: 'Dieta a medida, analíticas mensuales y adiós a la comida rápida.',
     cost: 35_000,
     limit: 'season',
-    attributes: { stamina: 1 }
+    attributes: { stamina: 2 }
   },
   {
     id: 'preparador-velocidad',
@@ -57,7 +57,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     description: 'Un exvelocista te enseña a arrancar y a mejorar tu zancada.',
     cost: 50_000,
     limit: 'season',
-    attributes: { pace: 1 }
+    attributes: { pace: 2 }
   },
   {
     id: 'psicologo',
@@ -66,25 +66,25 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     description: 'Aprendes a gestionar la presión de los penaltis y los silbidos.',
     cost: 40_000,
     limit: 'season',
-    attributes: { composure: 1 }
+    attributes: { composure: 2 }
   },
   {
     id: 'analista-video',
     name: 'Analista de vídeo propio',
     category: 'Equipo personal',
     description: 'Estudias a cada central rival antes de cada partido: sabes dónde atacar.',
-    cost: 70_000,
+    cost: 55_000,
     limit: 'season',
-    attributes: { offTheBall: 1 }
+    attributes: { offTheBall: 2 }
   },
   {
     id: 'tecnico-individual',
     name: 'Entrenador de técnica individual',
     category: 'Equipo personal',
     description: 'Horas extra de conducción, controles y pases después del entrenamiento.',
-    cost: 55_000,
+    cost: 110_000,
     limit: 'season',
-    attributes: { dribbling: 1, shortPassing: 1 }
+    attributes: { dribbling: 2, shortPassing: 1 }
   },
   {
     id: 'caminadora',
@@ -100,9 +100,9 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     name: 'Montar un gimnasio en casa',
     category: 'Equipamiento',
     description: 'Pesas, máquinas y una sala para trabajar fuerza sin depender del club.',
-    cost: 30_000,
+    cost: 80_000,
     limit: 'once',
-    attributes: { strength: 1, physique: 1 }
+    attributes: { strength: 1, physique: 2 }
   },
   {
     id: 'lanzabalones',
@@ -120,7 +120,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     description: 'Recuperación a −110 °C después de cada partido.',
     cost: 90_000,
     limit: 'once',
-    attributes: { stamina: 1, physique: 1 }
+    attributes: { stamina: 2, physique: 1 }
   },
   {
     id: 'campo-privado',
@@ -129,7 +129,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     description: 'Tu propio césped con porterías y focos. Entrenas cuando y como quieras.',
     cost: 600_000,
     limit: 'once',
-    attributes: { finishing: 1, longPassing: 1, dribbling: 1 }
+    attributes: { finishing: 3, longPassing: 3, dribbling: 3 }
   },
   {
     id: 'clases-cabeza',
@@ -211,7 +211,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
       'Colegio, idiomas y universidad pagados para los hijos que tengas o los que vengan. Una preocupación menos.',
     cost: 150_000,
     limit: 'once',
-    attributes: { composure: 1 },
+    attributes: { composure: 2 },
     morale: 5,
     minSeason: 6
   },
@@ -235,7 +235,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
       'Tus hermanos se independizan sin hipotecas ni alquileres imposibles. En la cena de Navidad eres el héroe.',
     cost: 280_000,
     limit: 'once',
-    attributes: { composure: 1 },
+    attributes: { composure: 2 },
     morale: 8,
     minSeason: 3
   },
@@ -247,7 +247,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
       'Una casa blanca frente al Mediterráneo para desconectar en cada parón, con la familia y sin cámaras.',
     cost: 900_000,
     limit: 'once',
-    attributes: { composure: 1 },
+    attributes: { composure: 3 },
     morale: 10,
     minSeason: 6
   },
@@ -259,7 +259,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
       'Horas de vuelo compartidas: ves a tu familia en cada día libre y viajas sin colas ni escalas.',
     cost: 2_500_000,
     limit: 'once',
-    attributes: { stamina: 1 },
+    attributes: { stamina: 3 },
     morale: 8,
     reputation: 3,
     minSeason: 10
@@ -273,7 +273,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     name: 'Instructor de yoga',
     category: 'Equipo personal',
     description: 'Respiración, equilibrio y una cabeza más tranquila en los minutos finales.',
-    cost: 25_000,
+    cost: 20_000,
     limit: 'season',
     attributes: { composure: 1 }
   },
@@ -292,7 +292,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     category: 'Equipo personal',
     description:
       'Horarios, luz, temperatura y un colchón a medida: duermes como un bebé incluso después de los partidos de noche.',
-    cost: 30_000,
+    cost: 25_000,
     limit: 'season',
     attributes: { stamina: 1 }
   },
@@ -304,7 +304,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
       'Un exportero te enseña a leer las caderas del rival y a elegir el lado antes de coger carrerilla.',
     cost: 35_000,
     limit: 'season',
-    attributes: { composure: 1 }
+    attributes: { composure: 2 }
   },
   {
     id: 'especialista-balon-parado',
@@ -314,7 +314,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
       'Estudiáis cada córner y cada falta: dónde atacar, cuándo arrancar y cómo librarte del marcaje.',
     cost: 45_000,
     limit: 'season',
-    attributes: { heading: 1 }
+    attributes: { heading: 2 }
   },
   {
     id: 'preparador-fuerza',
@@ -323,7 +323,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     description: 'Pliometría, saltos y lastres: ganas centímetros de salto y potencia de disparo.',
     cost: 50_000,
     limit: 'season',
-    attributes: { strength: 1 }
+    attributes: { strength: 2 }
   },
   {
     id: 'chef-personal',
@@ -331,9 +331,9 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     category: 'Equipo personal',
     description:
       'Menús de alto rendimiento cocinados en casa cada día. Comer bien nunca supo tan bien.',
-    cost: 90_000,
+    cost: 60_000,
     limit: 'season',
-    attributes: { stamina: 1 },
+    attributes: { stamina: 2 },
     morale: 3
   },
   {
@@ -354,7 +354,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
       'Un mito del área te acompaña toda la temporada: vídeo, charlas y secretos de vestuario.',
     cost: 120_000,
     limit: 'season',
-    attributes: { leadership: 1 },
+    attributes: { leadership: 3 },
     morale: 3,
     minSeason: 6
   },
@@ -417,7 +417,7 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     description: 'Recuperación activa en el agua cada mañana y largos para ganar fondo.',
     cost: 120_000,
     limit: 'once',
-    attributes: { stamina: 1 },
+    attributes: { stamina: 3 },
     morale: 3,
     minSeason: 3
   },
@@ -427,9 +427,9 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     category: 'Equipamiento',
     description:
       'Oxígeno a presión para recuperar en horas lo que antes tardabas días. Los golpes ya no te duran toda la semana.',
-    cost: 220_000,
+    cost: 150_000,
     limit: 'once',
-    attributes: { physique: 2 },
+    attributes: { physique: 3 },
     minSeason: 6
   },
   {
@@ -438,9 +438,9 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     category: 'Equipamiento',
     description:
       'Un centro con los mejores fisios y máquinas del país, abierto para ti a cualquier hora (y para tus vecinos, el resto del día).',
-    cost: 750_000,
+    cost: 380_000,
     limit: 'once',
-    attributes: { physique: 1, stamina: 1 },
+    attributes: { physique: 3, stamina: 3 },
     reputation: 2,
     minSeason: 6
   },
@@ -450,9 +450,9 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     category: 'Equipamiento',
     description:
       'Gimnasio, piscina, sala de recuperación y campo de césped en la misma finca. Tu propia ciudad deportiva.',
-    cost: 1_800_000,
+    cost: 900_000,
     limit: 'once',
-    attributes: { strength: 1, stamina: 1, physique: 1 },
+    attributes: { strength: 3, stamina: 3, physique: 3 },
     morale: 4,
     minSeason: 10
   },
@@ -515,9 +515,9 @@ export const SHOP_CATALOG: readonly ShopItem[] = [
     category: 'Formación',
     description:
       'Empiezas a sacarte las licencias de entrenador: ves el juego como desde el banquillo y lo explicas en el vestuario.',
-    cost: 25_000,
+    cost: 90_000,
     limit: 'once',
-    attributes: { leadership: 1, offTheBall: 1 },
+    attributes: { leadership: 2, offTheBall: 1 },
     minSeason: 12
   }
 ]

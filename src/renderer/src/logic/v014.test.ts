@@ -8,6 +8,7 @@ import { createCareer } from './career'
 import { canRequestRaise, raiseOptions, requestRaise } from './contractTalks'
 import { describeRelationships } from './relationships'
 import {
+  applyEffects,
   isEventEligible,
   isOptionLocked,
   optionCost,
@@ -51,7 +52,7 @@ function atEvent(c: Career, eventId: string): Career {
 
 describe('v0.14: barras del míster y la afición', () => {
   it('el míster y la afición tienen barra; el padre y la pareja no', () => {
-    const people = describeRelationships(career({ trust: 64, reputation: 41 }))
+    const people = describeRelationships(career({ trust: 64, reputation: 41, fansOffset: 0 }))
     expect(people.find((r) => r.id === 'coach')?.value).toBe(64)
     expect(people.find((r) => r.id === 'fans')?.value).toBe(41)
     for (const r of people.filter((p) => p.id !== 'coach' && p.id !== 'fans')) {
@@ -59,16 +60,15 @@ describe('v0.14: barras del míster y la afición', () => {
     }
   })
 
-  it('un choque con el míster o una promesa rota bajan la barra', () => {
-    const c = career({ trust: 80, reputation: 70 })
-    const angry = describeRelationships({
-      ...c,
-      flags: { ...c.flags, coachConflict: true, brokenPromise: true }
-    })
+  it('un choque con el míster baja su barra; la afición se mueve con lo que ve (v0.17)', () => {
+    const c = career({ trust: 80, reputation: 70, fansOffset: 0 })
+    const angry = describeRelationships({ ...c, flags: { ...c.flags, coachConflict: true } })
     expect(angry.find((r) => r.id === 'coach')?.value).toBeLessThanOrEqual(15)
-    expect(angry.find((r) => r.id === 'fans')?.value).toBeLessThanOrEqual(20)
-    const loyal = describeRelationships({ ...c, reputation: 30, flags: { loyalToClub: true } })
-    expect(loyal.find((r) => r.id === 'fans')?.value).toBeGreaterThanOrEqual(75)
+    // Escuchar a otro club baja a la afición; la lealtad la sube.
+    const doubts = describeRelationships(applyEffects(c, { fans: -15 }))
+    expect(doubts.find((r) => r.id === 'fans')?.value).toBe(55)
+    const loyal = describeRelationships(applyEffects(c, { fans: 10 }))
+    expect(loyal.find((r) => r.id === 'fans')?.value).toBe(80)
   })
 })
 

@@ -10,11 +10,12 @@ import {
   contractYearsLeft,
   monthlyWage,
   purchaseSummary,
+  shopDeltas,
   shopOffer,
   totalSpent
 } from '../logic/finance'
 import { canRequestRaise, raiseOptions, type RaiseLevel } from '../logic/contractTalks'
-import { careerScale, scaledDeltas } from '../logic/playerAttributes'
+import { careerScale } from '../logic/playerAttributes'
 import { useGameStore } from '../store/gameStore'
 
 type Tab = 'contract' | 'raise' | 'shop' | 'expenses'
@@ -289,10 +290,7 @@ export function Contract(): React.JSX.Element {
                           <div className="shop-item__bottom">
                             <span className="modifier modifier--up">
                               {purchaseSummary({
-                                attributes: scaledDeltas(
-                                  item.attributes ?? {},
-                                  careerScale(career)
-                                ),
+                                attributes: shopDeltas(item, careerScale(career)),
                                 morale: item.morale,
                                 reputation: item.reputation
                               })}

@@ -531,7 +531,7 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
           },
           failure: {
             text: 'Te pasas de carga y acabas con una tendinitis. Dos semanas en la camilla.',
-            effects: { morale: -5, trust: -2 }
+            effects: { injury: { matches: 2, zone: 'rodilla' }, morale: -5, trust: -2 }
           }
         }
       },
@@ -577,7 +577,12 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
           },
           failure: {
             text: 'Una entrada en el cemento te abre la rodilla. El club te multa y te pierdes un partido.',
-            effects: { money: -20000, trust: -8, morale: -4 }
+            effects: {
+              injury: { matches: 1, zone: 'rodilla' },
+              money: -20000,
+              trust: -8,
+              morale: -4
+            }
           }
         }
       },
@@ -1030,6 +1035,8 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
   {
     id: 'cumple-madre',
     once: true,
+    // Con 17–19 años tu madre aún no cumple sesenta (v0.17).
+    minAge: 25,
     title: 'Los sesenta de tu madre',
     text: 'Tu familia organiza una comida sorpresa por los sesenta años de tu madre. Es el sábado, justo el día antes de un partido fuera de casa.',
     options: [
@@ -1067,7 +1074,7 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
   {
     id: 'pareja-exclusiva',
     // Solo si tienes pareja (historia de la pareja, v0.8).
-    conditions: [{ flag: 'partner', oneOf: ['pareja', 'convivencia', 'prometidos', 'casados'] }],
+    conditions: [{ flag: 'partner', oneOf: ['pareja', 'casados'] }],
     title: 'La exclusiva',
     text: 'Unos paparazzi os fotografían a {pareja} y a ti en la playa. Una revista ofrece {dinero:40000} por una entrevista conjunta y un reportaje en vuestra casa.',
     options: [
@@ -1108,7 +1115,11 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
         label: 'Respetar los plazos de los médicos',
         outcome: {
           text: 'Ves el derbi desde la grada, pero el tobillo queda como nuevo.',
-          effects: { trust: 2, morale: -5 }
+          effects: {
+            trust: 2,
+            morale: -5,
+            injury: { matches: 4, zone: 'tobillo', attributeLoss: false }
+          }
         }
       },
       {
@@ -1122,7 +1133,12 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
           },
           failure: {
             text: 'Fuerzas los plazos y recaes en el primer entrenamiento. Ahora son seis semanas.',
-            effects: { money: -30000, morale: -8, trust: -3 }
+            effects: {
+              money: -30000,
+              morale: -8,
+              trust: -3,
+              injury: { matches: 6, zone: 'tobillo' }
+            }
           }
         }
       },
@@ -1137,7 +1153,12 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
           },
           failure: {
             text: 'A la media hora no puedes apoyar. Te retiras cojeando y el médico te mira con sospecha.',
-            effects: { trust: -4, morale: -6, flags: { hiddenInjury: true } }
+            effects: {
+              trust: -4,
+              morale: -6,
+              injury: { matches: 5, zone: 'tobillo' },
+              flags: { hiddenInjury: true }
+            }
           }
         }
       }
@@ -1155,11 +1176,16 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
           difficulty: 11,
           success: {
             text: 'Vuelves antes de lo previsto y con más fondo que nunca. El preparador no da crédito.',
-            effects: { attributes: { stamina: 1 }, trust: 4, morale: 5 }
+            effects: {
+              attributes: { stamina: 1 },
+              trust: 4,
+              morale: 5,
+              injury: { matches: 6, zone: 'muscular', attributeLoss: false }
+            }
           },
           failure: {
             text: 'Te pasas de vueltas y el músculo protesta. Dos semanas más de baja.',
-            effects: { morale: -8, trust: -2 }
+            effects: { morale: -8, trust: -2, injury: { matches: 10, zone: 'muscular' } }
           }
         }
       },
@@ -1170,11 +1196,15 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
           difficulty: 12,
           success: {
             text: 'Core, gimnasio y propiocepción. Vuelves con el cuerpo blindado.',
-            effects: { attributes: { physique: 1 }, morale: 4 }
+            effects: {
+              attributes: { physique: 1 },
+              morale: 4,
+              injury: { matches: 8, zone: 'muscular', attributeLoss: false }
+            }
           },
           failure: {
             text: 'Avanzas despacio y la impaciencia te come por dentro.',
-            effects: { morale: -5 }
+            effects: { morale: -5, injury: { matches: 8, zone: 'muscular' } }
           }
         }
       },
@@ -1182,7 +1212,12 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
         label: 'Estudiar al equipo desde la grada con el analista',
         outcome: {
           text: 'Vídeos, pizarra y charlas con el míster. Cuando vuelves, ves huecos que antes no veías.',
-          effects: { attributes: { offTheBall: 1 }, trust: 3, morale: -2 }
+          effects: {
+            attributes: { offTheBall: 1 },
+            trust: 3,
+            morale: -2,
+            injury: { matches: 8, zone: 'muscular' }
+          }
         }
       }
     ]
@@ -1594,6 +1629,7 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
             trust: -3,
             morale: -5,
             attributes: { physique: 1 },
+            injury: { matches: 6, zone: 'tobillo', attributeLoss: false },
             flags: { hiddenInjury: false }
           }
         }
@@ -1610,7 +1646,7 @@ export const EXTRA_EVENTS: readonly GameEvent[] = [
           failure: {
             text: 'El tobillo cede del todo en mitad de un partido. Quirófano, meses fuera y un club que ya no se fía de ti.',
             effects: {
-              attributes: { pace: -1, physique: -1 },
+              injury: { matches: 12, zone: 'tobillo' },
               trust: -10,
               morale: -10,
               flags: { hiddenInjury: false }

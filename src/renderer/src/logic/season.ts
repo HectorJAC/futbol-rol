@@ -8,7 +8,7 @@ import {
 } from '../data/attributes'
 import { TRAINING_FOCUS } from '../data/trainingFocus'
 import { CONTINENTAL_FORMATS } from '../data/continentalCups'
-import { biggestClubs, getClub, isRivalry, type ClubTier } from '../data/clubs'
+import { biggestClubs, getClub, isRivalry, isSameCity, type ClubTier } from '../data/clubs'
 import { COUNTRY_CURRENCY, formatMoney, type CurrencyId } from '../data/currencies'
 import {
   EVENTS,
@@ -28,12 +28,12 @@ import {
 } from '../data/gameModes'
 import { NATIONAL_STRENGTH, TOURNAMENT_ROUNDS, tournamentForSeasonEnd } from '../data/nationalTeams'
 import { getOrigin } from '../data/origins'
-import { PARTNER_NAMES } from '../data/partnerNames'
 import type { TrophyId } from '../data/trophies'
 import type {
   Career,
   ClubMatch,
   EventResolution,
+  InjuryRecord,
   NationalTeamSeason,
   SeasonProgress,
   SeasonRecord
@@ -61,9 +61,12 @@ import {
   type SeasonContext
 } from './competitions'
 import { contractAfterSeason, monthlyWage, seasonEarnings } from './finance'
+import { applyInjury } from './injury'
 import { createLiveMatch } from './match'
+import { applyPartnerEffects } from './partner'
 import { addAttributeDeltas, baseAttributes, careerScale, setPieceRoles } from './playerAttributes'
 import { clamp, createRng, randomInt, seedFor, shuffle, type Rng } from './random'
+import { logRelationChanges } from './relationLog'
 import {
   applyRelationEffects,
   averageRelation,
@@ -143,8 +146,8 @@ export function isCareerOver(career: Career): boolean {
 // Eventos
 // ---------------------------------------------------------------------------
 
-/** Etapas de la pareja en las que hay relación. */
-export const ACTIVE_PARTNER = ['pareja', 'convivencia', 'prometidos', 'casados']
+/** Etapas de la pareja en las que hay relación (ver `logic/partner.ts`). */
+export { ACTIVE_PARTNER } from './partner'
 
 function conditionMet(condition: FlagCondition, career: Career): boolean {
   const value = career.flags[condition.flag]
@@ -402,8 +405,10 @@ function fillBasicText(text: string, career: Career): string {
     ? `${Math.max(last.goalsFor, last.goalsAgainst)}-${Math.min(last.goalsFor, last.goalsAgainst)}`
     : ''
   const currency = careerCurrency(career)
+  const ex = (career.exPartners ?? []).at(-1)?.name ?? 'tu expareja'
   return text
     .replaceAll('{pareja}', partner)
+    .replaceAll('{expareja}', ex)
     .replaceAll('{hijos}', String(Number(career.flags.children ?? 0)))
     .replaceAll('{marcador}', score)
     .replaceAll('{rival}', last ? getClub(last.opponentId).name : 'el rival')
@@ -519,6 +524,27 @@ export function checkChance(
  * `featuredId` es el excompañero protagonista del evento, si lo hay.
  */
 export function applyEffects(career: Career, effects: EventEffects, featuredId?: string): Career {
+  return applyEffectsDetailed(career, effects, featuredId).career
+}
+
+export interface AppliedEffects {
+  career: Career
+  /** Cambio de etapa con la pareja ("Ya sois novios."), para el texto del resultado. */
+  note?: string
+  /** Lesión que dejó la decisión. */
+  injury?: InjuryRecord
+}
+
+/**
+ * Como `applyEffects`, pero también devuelve el cambio de etapa con la pareja
+ * y la lesión. `reason` es el título del evento (motivo si lo dejáis).
+ */
+export function applyEffectsDetailed(
+  career: Career,
+  effects: EventEffects,
+  featuredId?: string,
+  reason = ''
+): AppliedEffects {
   const { attributes } = addAttributeDeltas(career, effects.attributes ?? {})
   const relations = applyRelationEffects(career, effects, featuredId)
   const captaincy =
@@ -527,22 +553,13 @@ export function applyEffects(career: Career, effects: EventEffects, featuredId?:
       : career.captaincy
   // Un gasto nunca te deja en negativo: se paga lo que tengas.
   const money = Math.max(-career.money, effects.money ?? 0)
-  const flags = { ...career.flags, ...effects.flags }
+  const merged = { ...career.flags, ...effects.flags }
   for (const [key, delta] of Object.entries(effects.addFlags ?? {})) {
-    flags[key] = Number(flags[key] ?? 0) + delta
+    merged[key] = Number(merged[key] ?? 0) + delta
   }
-  // Historia de la pareja: nombre al empezar una relación y temporada de cada cambio de etapa.
-  const before = career.flags.partner
-  if (flags.partner !== before) {
-    flags.partnerStageSince = career.season
-    if (flags.partner === 'pareja' && !ACTIVE_PARTNER.includes(String(before))) {
-      const names = PARTNER_NAMES[career.character.nationalityId]
-      const rng = createRng(seedFor(career.id, 'partner', career.season))
-      flags.partnerName = names[Math.floor(rng() * names.length)]
-      flags.partnerSince = career.season
-    }
-  }
-  return {
+  // Pareja: relación de 0 a 100, etapas y exparejas (v0.17).
+  const partner = applyPartnerEffects(career, merged, effects.partner ?? 0, reason)
+  const updated: Career = {
     ...career,
     ...relations,
     captaincy,
@@ -550,14 +567,19 @@ export function applyEffects(career: Career, effects: EventEffects, featuredId?:
     trust: clamp(career.trust + (effects.trust ?? 0), 0, 100),
     morale: clamp(career.morale + (effects.morale ?? 0), 0, 100),
     reputation: clamp(career.reputation + (effects.reputation ?? 0), 0, 100),
+    fansOffset: clamp((career.fansOffset ?? 0) + (effects.fans ?? 0), -100, 100),
     money: Math.max(0, career.money + money),
-    flags,
+    flags: partner.flags,
+    exPartners: partner.exPartners,
     seasonProgress: career.seasonProgress && {
       ...career.seasonProgress,
       bonusGoals: career.seasonProgress.bonusGoals + (effects.goals ?? 0),
       eventMoney: career.seasonProgress.eventMoney + money
     }
   }
+  if (!effects.injury) return { career: updated, note: partner.note }
+  const injured = applyInjury(updated, effects.injury)
+  return { career: injured.career, note: partner.note, injury: injured.record }
 }
 
 export interface ResolvedChoice {
@@ -613,7 +635,10 @@ export function resolveChoice(career: Career, optionIndex: number): ResolvedChoi
   }
 
   if (featured) resolution = { ...resolution, featured }
-  const updated = applyEffects(career, effects, featured)
+  const eventTitle = fillEventText(event.title, career, featured)
+  const applied = applyEffectsDetailed(career, effects, featured, eventTitle)
+  const updated = applied.career
+  if (applied.injury) resolution = { ...resolution, injury: applied.injury }
   const onceOnly = event.once || event.requiresFlags || (event.story && !event.story.repeatable)
   // Se apunta qué decisión dejó cada flag (para explicar las consecuencias).
   const flagSources = { ...updated.flagSources }
@@ -626,19 +651,30 @@ export function resolveChoice(career: Career, optionIndex: number): ResolvedChoi
     // Los eventos de consecuencia (y los capítulos únicos de una historia) solo se viven una vez.
     ...(onceOnly ? { [seenFlag(eventId)]: true } : {})
   }
-  const text = fillEventText(resolution.text, updated, featured)
+  // Si lo dejáis, el texto todavía nombra a tu expareja.
+  const named = updated.flags.partnerName
+    ? updated
+    : { ...updated, flags: { ...updated.flags, partnerName: career.flags.partnerName ?? '' } }
+  const text = [fillEventText(resolution.text, named, featured), applied.note]
+    .filter(Boolean)
+    .join(' ')
+  const final: Career = {
+    ...updated,
+    flags,
+    flagSources,
+    seasonProgress: updated.seasonProgress && {
+      ...updated.seasonProgress,
+      resolutions: [...updated.seasonProgress.resolutions, { ...resolution, text }]
+    }
+  }
   return {
     effects,
     resolution: { ...resolution, text },
-    career: {
-      ...updated,
-      flags,
-      flagSources,
-      seasonProgress: updated.seasonProgress && {
-        ...updated.seasonProgress,
-        resolutions: [...updated.seasonProgress.resolutions, { ...resolution, text }]
-      }
-    }
+    career: logRelationChanges(career, final, {
+      kind: 'evento',
+      title: eventTitle,
+      detail: fillEventText(option.label, career, featured)
+    })
   }
 }
 
@@ -936,7 +972,31 @@ export function seasonContext(career: Career): SeasonContext {
 }
 
 export type ImportanceReason =
-  'grande' | 'segundo' | 'descenso' | 'clasico' | 'derbi' | 'cuartos' | 'semifinal' | 'final'
+  | 'grande'
+  | 'segundo'
+  | 'descenso'
+  | 'clasico'
+  | 'derbi'
+  | 'cuartos'
+  | 'semifinal'
+  | 'final'
+  | 'exClub'
+
+/** Partido contra un club en el que jugaste: derbi de la traición (misma ciudad) o reencuentro. */
+export type ExClubKind = 'traicion' | 'exclub'
+
+/**
+ * ¿Jugaste en el club rival? (v0.17). Si además es de tu misma ciudad, es un
+ * derbi contra el club al que dejaste por su vecino: la traición.
+ */
+export function exClubKind(
+  career: Pick<Career, 'clubId' | 'history'>,
+  opponentId: string
+): ExClubKind | null {
+  if (opponentId === career.clubId) return null
+  if (!career.history.some((r) => r.clubId === opponentId)) return null
+  return isSameCity(career.clubId, opponentId) ? 'traicion' : 'exclub'
+}
 
 /** Puestos de abajo de primera división que cuentan como pelea por no bajar (3 de descenso + 3). */
 export const RELEGATION_FIGHT_ZONE = 6
@@ -960,6 +1020,12 @@ const KNOCKOUT_REASONS: Record<string, ImportanceReason> = {
  * semifinales y final.
  */
 export function importanceOf(career: Career, fixture: ClubFixture): ImportanceReason | null {
+  // Contra un club en el que jugaste, el partido siempre se vive (v0.17).
+  const reason = baseImportance(career, fixture)
+  return reason ?? (exClubKind(career, fixture.opponentId) ? 'exClub' : null)
+}
+
+function baseImportance(career: Career, fixture: ClubFixture): ImportanceReason | null {
   if (fixture.competition === 'copa') {
     const index = fixture.round - CUP_IMPORTANT_FROM
     return index < 0 ? null : (['cuartos', 'semifinal', 'final'] as const)[index]
@@ -1369,7 +1435,20 @@ export function finishSeason(career: Career): { career: Career; record: SeasonRe
     seasonProgress: null,
     history: [...career.history, record]
   }
-  return { record, career: { ...nextCareer, contract: contractAfterSeason(nextCareer) } }
+  // La fama ganada en la temporada también sube a la afición de tu club (v0.17).
+  const { relationLog } = logRelationChanges(
+    career,
+    { ...nextCareer, season: career.season, seasonProgress: career.seasonProgress },
+    {
+      kind: 'temporada',
+      title: `Balance de la temporada ${record.yearLabel}`,
+      detail: `${record.goals} goles y ${record.trophies.length} títulos`
+    }
+  )
+  return {
+    record,
+    career: { ...nextCareer, relationLog, contract: contractAfterSeason(nextCareer) }
+  }
 }
 
 /** Reparte los puntos de fin de temporada (sin pasar del máximo del modo en ningún atributo). */

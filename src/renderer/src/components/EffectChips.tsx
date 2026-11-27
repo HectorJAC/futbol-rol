@@ -2,6 +2,8 @@ import { ATTRIBUTES, scaleDelta } from '../data/attributes'
 import type { EventEffects } from '../data/events'
 import type { MatchMomentEffects } from '../data/matchTypes'
 import { formatMoney, type CurrencyId } from '../data/currencies'
+import { injuryText, ZONE_NAMES } from '../logic/injury'
+import type { InjuryRecord } from '../types/career'
 
 const LABELS = { trust: 'Confianza del míster', morale: 'Moral', reputation: 'Fama' } as const
 
@@ -22,6 +24,8 @@ export function EffectChips({
   currency = 'EUR',
   scale = 20,
   exName,
+  partnerName,
+  injury,
   inline = false
 }: {
   effects: EventEffects | MatchMomentEffects
@@ -31,10 +35,26 @@ export function EffectChips({
   scale?: number
   /** Nombre del excompañero protagonista (para el cambio de relación). */
   exName?: string
+  /** Nombre de la pareja (para el cambio de relación, v0.17). */
+  partnerName?: string
+  /** Lesión que dejó la decisión: partidos de baja y atributos perdidos (v0.17). */
+  injury?: InjuryRecord
   /** Dentro de un botón (solo `span`, sin lista). */
   inline?: boolean
 }): React.JSX.Element {
   const chips: Array<{ text: string; up: boolean }> = []
+  if (injury) {
+    chips.push({
+      text: `${ZONE_NAMES[injury.zone as keyof typeof ZONE_NAMES] ?? 'Lesión'}: ${injuryText(injury)}`,
+      up: false
+    })
+    for (const { id, name } of ATTRIBUTES) {
+      const lost = injury.losses[id]
+      if (lost) chips.push({ text: `${lost} ${name}`, up: false })
+    }
+  } else if (effects.injury) {
+    chips.push({ text: `Lesión: ${effects.injury.matches} partidos de baja`, up: false })
+  }
   for (const { id, name } of ATTRIBUTES) {
     const delta = scaleDelta(effects.attributes?.[id] ?? 0, scale)
     if (delta) chips.push({ text: `${sign(delta)} ${name}`, up: delta > 0 })
@@ -50,6 +70,13 @@ export function EffectChips({
     })
   }
   if (effects.becomeCaptain) chips.push({ text: 'Capitán del equipo', up: true })
+  if (effects.partner && partnerName) {
+    chips.push({
+      text: `${sign(effects.partner)} Relación: ${partnerName}`,
+      up: effects.partner > 0
+    })
+  }
+  if (effects.fans) chips.push({ text: `${sign(effects.fans)} Afición`, up: effects.fans > 0 })
   for (const key of ['trust', 'morale', 'reputation'] as const) {
     const delta = effects[key]
     if (delta) chips.push({ text: `${sign(delta)} ${LABELS[key]}`, up: delta > 0 })

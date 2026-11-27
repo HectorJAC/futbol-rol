@@ -30,6 +30,26 @@ export interface EventEffects {
   exTeammate?: number
   /** Te conviertes en el capitán del equipo. */
   becomeCaptain?: boolean
+  /**
+   * Cambio en la relación con tu pareja (0–100, desde la v0.17). A 50 sois
+   * novios, a 100 os casáis y a 0 os separáis (ver `logic/partner.ts`).
+   */
+  partner?: number
+  /** Cambio en la relación con la afición de tu club, además de lo que mueve la fama (v0.17). */
+  fans?: number
+  /** Lesión (v0.17): partidos de baja y zona del cuerpo (ver `logic/injury.ts`). */
+  injury?: InjuryEffect
+}
+
+/** Zona de la lesión: decide qué atributos se resienten. */
+export type InjuryZone = 'tobillo' | 'muscular' | 'rodilla' | 'espalda'
+
+export interface InjuryEffect {
+  /** Partidos (huecos del calendario) que te pierdes. */
+  matches: number
+  zone: InjuryZone
+  /** `false` = recuperación bien hecha: no pierdes atributos. */
+  attributeLoss?: boolean
 }
 
 /** Condición sobre la relación con un compañero (0–100). */
@@ -408,7 +428,7 @@ const BASE_EVENTS: readonly GameEvent[] = [
           },
           failure: {
             text: 'Te rompes en el minuto 20. Tres semanas fuera y algo de velocidad perdida.',
-            effects: { attributes: { pace: -1 }, morale: -8, trust: -3 }
+            effects: { injury: { matches: 3, zone: 'muscular' }, morale: -8, trust: -3 }
           }
         }
       },
@@ -498,7 +518,7 @@ const BASE_EVENTS: readonly GameEvent[] = [
         label: 'Organizar un partido benéfico para arreglar el campo',
         outcome: {
           text: 'El club se suma a la idea y el barrio estrena césped. La prensa lo cuenta.',
-          effects: { reputation: 6, morale: 4, flags: { charityBarrio: true } }
+          effects: { reputation: 6, morale: 4, fans: 10, flags: { charityBarrio: true } }
         }
       }
     ]
@@ -513,14 +533,14 @@ const BASE_EVENTS: readonly GameEvent[] = [
         label: 'Mostrar interés',
         outcome: {
           text: 'Tu agente filtra la noticia. Tu valor sube, pero en el club no gusta nada.',
-          effects: { reputation: 5, trust: -6, flags: { foreignInterest: true } }
+          effects: { reputation: 5, trust: -6, fans: -15, flags: { foreignInterest: true } }
         }
       },
       {
         label: '"Aquí soy feliz"',
         outcome: {
           text: 'Lo dices públicamente. La afición te canta en el siguiente partido.',
-          effects: { trust: 5, morale: 4, flags: { loyalToClub: true } }
+          effects: { trust: 5, morale: 4, fans: 10, flags: { loyalToClub: true } }
         }
       }
     ]
@@ -725,7 +745,13 @@ const BASE_EVENTS: readonly GameEvent[] = [
           difficulty: 12,
           success: {
             text: 'Gol y te besas el escudo. Los silbidos se convierten en aplausos.',
-            effects: { goals: 1, reputation: 4, morale: 6, flags: { foreignInterest: false } }
+            effects: {
+              goals: 1,
+              reputation: 4,
+              morale: 6,
+              fans: 15,
+              flags: { foreignInterest: false }
+            }
           },
           failure: {
             text: 'Los nervios te pueden. Te cambian al descanso entre más silbidos.',
@@ -737,7 +763,7 @@ const BASE_EVENTS: readonly GameEvent[] = [
         label: 'Escribir una carta abierta a la afición',
         outcome: {
           text: 'Explicas que escuchar no es irse. Una parte de la grada te perdona.',
-          effects: { reputation: 2, morale: 2, flags: { foreignInterest: false } }
+          effects: { reputation: 2, morale: 2, fans: 10, flags: { foreignInterest: false } }
         }
       }
     ]

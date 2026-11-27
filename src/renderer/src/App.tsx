@@ -16,6 +16,7 @@ import { LoadGame } from './screens/LoadGame'
 import { MainMenu } from './screens/MainMenu'
 import { OriginSelection } from './screens/OriginSelection'
 import { Records } from './screens/Records'
+import { RelationHistory } from './screens/RelationHistory'
 import { Relationships } from './screens/Relationships'
 import { Settings } from './screens/Settings'
 import { SeasonEvent } from './screens/SeasonEvent'
@@ -43,6 +44,7 @@ const SCREENS: Record<Screen, () => React.JSX.Element> = {
   careerDetail: CareerDetail,
   settings: Settings,
   relationships: Relationships,
+  relationHistory: RelationHistory,
   modeSelection: ModeSelection,
   extras: Extras,
   originCatalog: OriginCatalog,

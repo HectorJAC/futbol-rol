@@ -43,7 +43,8 @@ describe('relaciones', () => {
   it('las decisiones cambian cómo te ven', () => {
     expect(find(career({ flags: { coachConflict: true } }), 'coach')?.level).toBe('enemigo')
     expect(find(career({ flags: { fatherRelation: 'tensa' } }), 'father')?.level).toBe('tenso')
-    expect(find(career({ flags: { brokenPromise: true } }), 'fans')?.level).toBe('tenso')
+    // La promesa rota era con la afición del club anterior (v0.17); mirar a otro club, con la de ahora.
+    expect(find(career({ flags: { foreignInterest: true } }), 'fans')?.level).toBe('tenso')
   })
 
   it('la confianza del míster define la relación si no hay conflictos', () => {

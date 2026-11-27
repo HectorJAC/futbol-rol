@@ -9,7 +9,9 @@ import { getEvent } from '../data/events'
 import { t } from '../i18n/es'
 import { leagueRounds, slotsFor } from '../logic/competitions'
 import { careerScale, scaledDeltas } from '../logic/playerAttributes'
+import { partnerName, partnerStage } from '../logic/partner'
 import { featuredExTeammate, mentionedTeammates } from '../logic/teammates'
+import type { EventOption } from '../data/events'
 import { formatMoney } from '../data/shop'
 import {
   advanceSeason,
@@ -63,6 +65,44 @@ export function SeasonEvent(): React.JSX.Element {
     : featuredExTeammate(career, event)?.id
   const exName = career.exTeammates.find((x) => x.id === featured)?.name
   const fill = (text: string): string => fillEventText(text, career, featured)
+  // Relación con la pareja que mueve cada opción (v0.17): si sale bien / si sale mal.
+  const partner = partnerName(career.flags)
+  const hasPartner = partnerStage(career.flags) !== null
+  const partnerChips = (option: EventOption): Array<{ text: string; up: boolean }> => {
+    const starts = [option.outcome, option.check?.success].some(
+      (o) => o?.effects.flags?.partner === 'conociendo'
+    )
+    if (!hasPartner && !starts) return []
+    const who = partner ? `con ${partner}` : t.season.partnerNew
+    if (option.outcome) {
+      const d = option.outcome.effects.partner ?? 0
+      return d
+        ? [{ text: `${d > 0 ? '+' : ''}${d} ${t.season.partnerRelation} ${who}`, up: d > 0 }]
+        : []
+    }
+    const ok = option.check?.success.effects.partner ?? 0
+    const ko = option.check?.failure.effects.partner ?? 0
+    if (!ok && !ko) return []
+    const fmt = (n: number): string => (n > 0 ? `+${n}` : `${n}`)
+    return [
+      ...(ok
+        ? [
+            {
+              text: `${fmt(ok)} ${t.season.partnerRelation} ${who} ${t.season.ifSuccess}`,
+              up: ok > 0
+            }
+          ]
+        : []),
+      ...(ko
+        ? [
+            {
+              text: `${fmt(ko)} ${t.season.partnerRelation} ${who} ${t.season.ifFailure}`,
+              up: ko > 0
+            }
+          ]
+        : [])
+    ]
+  }
   const options = eventOptions(event, career)
   // Compañeros que nombra el evento: al pasar el cursor se ve tu relación con ellos.
   const mates = mentionedTeammates(
@@ -163,6 +203,18 @@ export function SeasonEvent(): React.JSX.Element {
                   >
                     <span className="event-option__label">
                       <span>{rich(fill(option.label))}</span>
+                      {partnerChips(option).length > 0 && (
+                        <span className="event-option__gains" data-testid="option-partner">
+                          {partnerChips(option).map((chip) => (
+                            <span
+                              key={chip.text}
+                              className={`modifier modifier--${chip.up ? 'up' : 'down'}`}
+                            >
+                              {chip.text}
+                            </span>
+                          ))}
+                        </span>
+                      )}
                       {event.showEffects && option.outcome ? (
                         <EffectChips
                           inline
@@ -218,6 +270,12 @@ export function SeasonEvent(): React.JSX.Element {
                 currency={careerCurrency(career)}
                 scale={careerScale(career)}
                 exName={exName}
+                partnerName={
+                  partner ??
+                  career.exPartners.at(-1)?.name ??
+                  (lastChoice.effects.partner ? 'tu pareja' : undefined)
+                }
+                injury={lastChoice.resolution.injury}
               />
               {next && <NextMatch career={career} live={next} />}
             </div>

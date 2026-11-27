@@ -1,22 +1,12 @@
 import { getClub } from '../data/clubs'
 import { getOrigin } from '../data/origins'
 import type { Career, Teammate } from '../types/career'
+import { partnerName, partnerRelation, partnerStage, STAGE_LABELS } from './partner'
+import { coachValue, fansValue } from './relationLog'
 import { relationLevel, ROLE_LABELS } from './teammates'
 
-/** Estado familiar para la ficha: "Casado con Lucía · 2 hijos". */
-export function familyStatus(career: Career): string {
-  const f = career.flags
-  const name = typeof f.partnerName === 'string' ? f.partnerName : ''
-  const children = Number(f.children ?? 0)
-  const stage: Record<string, string> = {
-    pareja: `Saliendo con ${name}`,
-    convivencia: `Vive con ${name}`,
-    prometidos: `Prometido con ${name}`,
-    casados: `Casado con ${name}`
-  }
-  const base = stage[String(f.partner)] ?? 'Soltero'
-  return children > 0 ? `${base} · ${children} ${children === 1 ? 'hijo' : 'hijos'}` : base
-}
+export { familyStatus } from './partner'
+export { coachValue, fansValue } from './relationLog'
 
 export type RelationshipLevel = 'aliado' | 'bien' | 'neutral' | 'tenso' | 'enemigo'
 
@@ -55,12 +45,13 @@ export function describeRelationships(career: Career): Relationship[] {
     coach = { level: 'tenso', text: 'Apenas cuenta contigo.' }
   }
   // La barra es la confianza del míster; un choque o una queja pública la limitan.
-  const coachValue = f.coachConflict
-    ? Math.min(career.trust, 15)
-    : f.publicComplaint
-      ? Math.min(career.trust, 35)
-      : career.trust
-  result.push({ id: 'coach', name: 'El míster', role: 'Entrenador', ...coach, value: coachValue })
+  result.push({
+    id: 'coach',
+    name: 'El míster',
+    role: 'Entrenador',
+    ...coach,
+    value: coachValue(career)
+  })
 
   // Padre (solo con el origen "Hijo de una leyenda")
   if (getOrigin(career.originId).archetype === 'herencia') {
@@ -76,63 +67,45 @@ export function describeRelationships(career: Career): Relationship[] {
     result.push({ id: 'father', name: 'Tu padre', role: 'Leyenda del club', ...father })
   }
 
-  // Pareja (historia de la v0.8)
-  const partnerName = typeof f.partnerName === 'string' ? f.partnerName : null
-  const children = Number(f.children ?? 0)
-  const kids = children > 0 ? ` Tenéis ${children} ${children === 1 ? 'hijo' : 'hijos'}.` : ''
-  if (partnerName && f.partner) {
-    const partner: Record<string, Pick<Relationship, 'level' | 'text'>> = {
-      pareja: {
-        level: 'bien',
-        text: 'Estáis empezando. Cada viaje y cada partido os pone a prueba.'
-      },
-      convivencia: {
-        level: 'bien',
-        text: 'Compartís casa y rutina: es tu refugio después de los partidos.'
-      },
-      prometidos: { level: 'aliado', text: 'Estáis preparando la boda.' },
-      casados: { level: 'aliado', text: `Tu compañera de vida.${kids}` },
-      ruptura: { level: 'tenso', text: `Lo dejasteis. Todavía duele cuando sale su nombre.${kids}` }
-    }
-    const info = partner[String(f.partner)]
-    if (info) {
-      const level = f.cheated === true && f.partner !== 'ruptura' ? 'tenso' : info.level
-      const text =
-        f.cheated === true && f.partner !== 'ruptura'
-          ? 'No sabe lo que pasó aquella noche… por ahora.'
-          : info.text
-      result.push({ id: 'partner', name: partnerName, role: 'Pareja', level, text })
-    }
+  // Pareja: relación de 0 a 100 (v0.17).
+  const name = partnerName(f)
+  const stage = partnerStage(f)
+  if (name && stage) {
+    const value = partnerRelation(f)
+    const children = Number(f.children ?? 0)
+    const kids = children > 0 ? ` Tenéis ${children} ${children === 1 ? 'hijo' : 'hijos'}.` : ''
+    const text =
+      f.cheated === true
+        ? 'No sabe lo que pasó aquella noche… por ahora.'
+        : stage === 'conociendo'
+          ? 'Os estáis conociendo. A 50 de relación seréis novios.'
+          : stage === 'pareja'
+            ? `${f.engaged ? 'Estáis prometidos.' : f.livingTogether ? 'Compartís casa y rutina.' : 'Sois novios.'} A 100 de relación os casáis.`
+            : `Tu compañera de vida.${kids}`
+    result.push({
+      id: 'partner',
+      name,
+      role: `Pareja · ${STAGE_LABELS[stage]}`,
+      level: f.cheated === true ? 'tenso' : relationLevel(value),
+      text,
+      value
+    })
   }
 
-  // Afición
-  let fans: Pick<Relationship, 'level' | 'text'>
-  if (f.brokenPromise) {
-    fans = { level: 'tenso', text: 'No olvidan que dijiste "aquí soy feliz" y te fuiste.' }
-  } else if (f.foreignInterest) {
-    fans = { level: 'tenso', text: 'Sospechan que tienes la cabeza en otro club.' }
-  } else if (f.loyalToClub || f.charityBarrio || career.reputation >= 60) {
-    fans = { level: 'aliado', text: 'Te adoran. Tu nombre se corea en cada partido.' }
-  } else if (career.reputation >= 30) {
-    fans = { level: 'bien', text: 'Te aplauden y empiezan a ver tu camiseta en la grada.' }
-  } else {
-    fans = { level: 'neutral', text: 'Aún no saben bien quién eres.' }
-  }
-  result.push({ id: 'fans', name: 'La afición', role: 'Grada', ...fans, value: fansValue(career) })
+  // Afición de tu club actual (v0.17: vuelve a empezar al fichar por otro club).
+  const fans = fansValue(career)
+  const fansInfo: Pick<Relationship, 'level' | 'text'> = f.foreignInterest
+    ? { level: 'tenso', text: 'Sospechan que tienes la cabeza en otro club.' }
+    : fans >= 70
+      ? { level: 'aliado', text: 'Te adoran. Tu nombre se corea en cada partido.' }
+      : fans >= 50
+        ? { level: 'bien', text: 'Te aplauden y empiezan a ver tu camiseta en la grada.' }
+        : fans >= 35
+          ? { level: 'neutral', text: 'Aún no saben bien quién eres.' }
+          : { level: 'tenso', text: 'La grada te ha dado la espalda.' }
+  result.push({ id: 'fans', name: 'La afición', role: 'Grada', ...fansInfo, value: fans })
 
   return result
-}
-
-/**
- * Barra de la afición: parte de tu fama y se mueve con lo que han visto de ti
- * (lealtad y obras benéficas suben; promesas rotas o mirar a otro club, bajan).
- */
-export function fansValue(career: Pick<Career, 'reputation' | 'flags'>): number {
-  const f = career.flags
-  if (f.brokenPromise) return Math.min(career.reputation, 20)
-  if (f.foreignInterest) return Math.min(career.reputation, 35)
-  if (f.loyalToClub || f.charityBarrio) return Math.max(career.reputation, 75)
-  return career.reputation
 }
 
 const TEAMMATE_TEXT: Record<RelationshipLevel, string> = {

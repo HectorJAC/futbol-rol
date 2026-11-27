@@ -42,6 +42,56 @@ export interface EventResolution {
   text: string
   /** Excompañero protagonista del evento, si lo hay (id de `Teammate`). */
   featured?: string
+  /** Lesión que dejó la decisión (v0.17): partidos de baja y atributos perdidos (escala del modo). */
+  injury?: InjuryRecord
+}
+
+/** Lesión sufrida en una decisión (v0.17). */
+export interface InjuryRecord {
+  matches: number
+  severity: 'leve' | 'moderada' | 'grave'
+  zone: string
+  /** Puntos perdidos en cada atributo, en la escala del modo (negativos). */
+  losses: Partial<Attributes>
+}
+
+/** A quién afecta un cambio de relación del historial. */
+export type RelationTarget = 'coach' | 'fans' | 'partner'
+
+/**
+ * Un cambio en la relación con el míster, la afición o tu pareja (v0.17). Se
+ * guarda para enseñar qué decisiones la subieron o la bajaron.
+ */
+export interface RelationChange {
+  target: RelationTarget
+  season: number
+  /** Club en el que estabas (las relaciones con el míster y la afición son de cada club). */
+  clubId: string
+  /** Hueco del calendario (para el orden dentro de la temporada). */
+  slot: number
+  /** Cambio (0 en el punto de partida de una relación nueva). */
+  delta: number
+  /** Valor después del cambio. */
+  value: number
+  kind: 'inicio' | 'evento' | 'partido' | 'contrato' | 'mercado' | 'temporada'
+  /** Qué pasó: el título del evento, la jugada o la negociación. */
+  title: string
+  /** La opción que elegiste o el resultado. */
+  detail?: string
+  /** Nombre de la pareja (solo en los cambios de pareja). */
+  partnerName?: string
+}
+
+/** Una pareja con la que lo dejaste (v0.17). */
+export interface ExPartner {
+  name: string
+  /** Temporada en la que os conocisteis y en la que lo dejasteis. */
+  since: number
+  until: number
+  /** Etapa más alta a la que llegasteis. */
+  stage: 'conociendo' | 'pareja' | 'casados'
+  /** Lo que pasó al final ("Te fue infiel", "La rutina pudo con vosotros"…). */
+  reason: string
 }
 
 /** Papel de un compañero destacado en el vestuario. */
@@ -131,6 +181,8 @@ export interface LiveMatch {
   exitMinute?: number
   /** Ya viste la convocatoria y empezó el partido. */
   started?: boolean
+  /** Desde la v0.17: contra un exequipo, la primera jugada es una extra (traición o reencuentro). */
+  exClub?: 'traicion' | 'exclub'
 }
 
 /** Temporada en curso. */
@@ -286,4 +338,13 @@ export interface Career {
   captaincy: { clubId: string; since: number } | null
   /** Club que quieres fichar al final de la temporada (buscador de equipos). */
   transferTarget: { clubId: string; season: number } | null
+  /**
+   * Afición de tu club actual (v0.17): su relación es tu fama más este ajuste,
+   * que vuelve a empezar al fichar por otro club (ver `fansValue`).
+   */
+  fansOffset: number
+  /** Cambios de relación con el míster, la afición y tu pareja (v0.17), en orden. */
+  relationLog: RelationChange[]
+  /** Parejas con las que lo dejaste (v0.17). */
+  exPartners: ExPartner[]
 }

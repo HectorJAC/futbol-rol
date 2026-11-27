@@ -1,5 +1,6 @@
 import { getClub } from '../data/clubs'
 import { MATCH_MOMENTS } from '../data/matchMoments'
+import { EXCLUB_MOMENTS } from '../data/matchMomentsExClub'
 import type {
   MatchMoment,
   MatchMomentEffects,
@@ -11,11 +12,13 @@ import type { Career, ClubMatch, LiveMatch, MatchRole, MomentResolution } from '
 import { leagueRounds, penaltyShootout, seasonStrength, type ClubFixture } from './competitions'
 import { baseAttributes, setPieceRoles } from './playerAttributes'
 import { clamp, createRng, poisson, randomInt, seedFor, shuffle, type Rng } from './random'
+import { logRelationChanges } from './relationLog'
 import {
   applyEffects,
   checkChance,
   clubStrengthWithPlayer,
   driftMorale,
+  exClubKind,
   importanceOf,
   matchRating,
   minutesShare,
@@ -30,7 +33,7 @@ import {
  */
 
 export function getMoment(id: string): MatchMoment {
-  const moment = MATCH_MOMENTS.find((m) => m.id === id)
+  const moment = MATCH_MOMENTS.find((m) => m.id === id) ?? EXCLUB_MOMENTS.find((m) => m.id === id)
   if (!moment) throw new Error(`Jugada desconocida: ${id}`)
   return moment
 }
@@ -209,6 +212,14 @@ export function pickMoment(
   const upper = live.exitMinute ?? 100
   const rng = createRng(seedFor(career.id, 'moment', career.season, live.slot, index))
   const times = (m: MatchMoment): number => Number(career.flags[momentTimesFlag(m.id)] ?? 0)
+  // Contra un exequipo, la primera jugada es la extra (la que menos ha salido).
+  if (live.exClub && index === 0) {
+    const extra = shuffle(
+      rng,
+      EXCLUB_MOMENTS.filter((m) => m.exClub === live.exClub)
+    ).sort((a, b) => times(a) - times(b))[0]
+    return { id: extra.id, minute: live.minutes[0] }
+  }
   const roles = setPieceRoles(career)
   // Los balones parados solo los vives si eres el lanzador.
   const usable = (m: MatchMoment): boolean =>
@@ -263,6 +274,12 @@ export function createLiveMatch(career: Career, fixture: ClubFixture): LiveMatch
   const count = momentCount(career, fixture)
   const lineup = lineupFor(career, rng)
   const { phases, minutes } = momentPlan(lineup, count, rng)
+  // Contra un exequipo hay una jugada más, al saltar al campo (v0.17).
+  const exClub = phases.length > 0 ? exClubKind(career, fixture.opponentId) : null
+  if (exClub) {
+    phases.unshift('inicio')
+    minutes.unshift(lineup.role === 'suplente' ? (lineup.enterMinute ?? 60) + 1 : 1)
+  }
 
   // Los goles de fondo son menos que en un partido normal: el resto depende de
   // tus jugadas. Cuantas menos jugadas vives (suplente, no convocado), más goles de fondo.
@@ -303,6 +320,7 @@ export function createLiveMatch(career: Career, fixture: ClubFixture): LiveMatch
     role: lineup.role,
     ...(lineup.enterMinute !== undefined ? { enterMinute: lineup.enterMinute } : {}),
     ...(lineup.exitMinute !== undefined ? { exitMinute: lineup.exitMinute } : {}),
+    ...(exClub ? { exClub } : {}),
     started: false
   }
   return phases.length > 0 ? withMoment(career, live, 0) : live
@@ -410,6 +428,7 @@ export function resolveMoment(career: Career, optionIndex: number): ResolvedMome
 
   const { playerGoals = 0, playerAssists = 0, teamGoals = 0, opponentGoals = 0, ...rest } = effects
   const applied = applyEffects(career, rest)
+  const rival = getClub(live.opponentId).name
   let nextLive: LiveMatch = {
     ...live,
     resolutions: [...live.resolutions, resolution],
@@ -428,16 +447,21 @@ export function resolveMoment(career: Career, optionIndex: number): ResolvedMome
   if (index + 1 < live.phases.length) {
     nextLive = withMoment(withFlags, nextLive, index + 1)
   }
+  const final: Career = {
+    ...withFlags,
+    seasonProgress: withFlags.seasonProgress && {
+      ...withFlags.seasonProgress,
+      liveMatch: nextLive
+    }
+  }
   return {
     effects,
     resolution,
-    career: {
-      ...withFlags,
-      seasonProgress: withFlags.seasonProgress && {
-        ...withFlags.seasonProgress,
-        liveMatch: nextLive
-      }
-    }
+    career: logRelationChanges(career, final, {
+      kind: 'partido',
+      title: `${moment.title} (vs ${rival}, minuto ${minute})`,
+      detail: fillMomentText(option.label, career, live)
+    })
   }
 }
 

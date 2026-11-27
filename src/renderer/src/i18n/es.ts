@@ -12,7 +12,7 @@ export const es = {
     prefix: 'Your',
     main: 'Football Path'
   },
-  version: 'v0.16',
+  version: 'v0.17',
   comingSoon: 'Próximamente',
   back: 'Atrás',
   continue: 'Continuar',
@@ -326,7 +326,8 @@ export const es = {
       segundo: 'Duelo en la parte alta',
       descenso: 'Pelea por el descenso',
       clasico: 'Clásico',
-      derbi: 'Derbi'
+      derbi: 'Derbi',
+      exClub: 'Contra tu exequipo'
     } as Partial<Record<ImportanceReason, string>>
   },
   contract: {
@@ -428,8 +429,23 @@ export const es = {
     captaincy: 'Capitanía',
     youAreCaptain: 'Eres el capitán del equipo desde la temporada {n}.',
     captaincyHint:
-      'Tras 3 temporadas en el mismo club, si cumples todo, el vestuario te propone ser capitán.',
+      'Tras 3 temporadas en el mismo club (o antes, si tienes 40 de liderazgo), si cumples todo, el vestuario te propone ser capitán.',
     playedAt: 'en',
+    exPartners: 'Exparejas',
+    exPartnerLine: 'Del {from} al {to} · llegasteis a: {stage}',
+    seeHistory: 'Ver historial',
+    historyTitle: 'Historial de la relación',
+    historySubtitle: 'Las decisiones que la subieron o la bajaron, de la primera a la última.',
+    historyEmpty:
+      'Todavía no hay cambios. Las decisiones anteriores a la v0.17 no se guardaron en el historial.',
+    historyStart: 'Punto de partida',
+    historyNow: 'Ahora',
+    historyUp: 'Subió',
+    historyDown: 'Bajó',
+    historyCoach: 'El míster',
+    historyFans: 'La afición',
+    historyClubNote: 'Con el míster y la afición, la relación empieza de cero en cada club.',
+    back: 'Volver a Relaciones',
     levels: {
       aliado: 'Aliado',
       bien: 'Buena',
@@ -484,6 +500,10 @@ export const es = {
     caps: 'Internacional'
   },
   season: {
+    partnerRelation: 'Relación',
+    partnerNew: '(empezáis en 25)',
+    ifSuccess: 'si sale bien',
+    ifFailure: 'si sale mal',
     progress: 'Progreso de la temporada',
     consequence: 'Consecuencia de una decisión anterior',
     story: 'Tu vida personal',

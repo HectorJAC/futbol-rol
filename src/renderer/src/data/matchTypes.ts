@@ -55,5 +55,7 @@ export interface MatchMoment {
   setPiece?: SetPieceId
   /** Texto para jugadores de menos de 25 años (si el normal no encaja con su edad). */
   youngText?: string
+  /** Jugada extra contra un exequipo (v0.17): solo sale en esos partidos. */
+  exClub?: 'traicion' | 'exclub'
   options: MatchMomentOption[]
 }

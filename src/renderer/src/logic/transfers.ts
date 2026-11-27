@@ -14,6 +14,7 @@ import {
 import { baseAttributes } from './playerAttributes'
 import { clamp, createRng, randomInt, seedFor, type Rng } from './random'
 import { playerRating } from './rating'
+import { initialFansOffset, logRelationChanges, startEntries } from './relationLog'
 import { hasProvenRecord, initialStanding, isCareerOver } from './season'
 import { teammatesAfterTransfer } from './teammates'
 
@@ -316,6 +317,9 @@ export function generateTransferMarket(career: Career): TransferMarket {
   return { offers, closedDoors, target }
 }
 
+/** Flags que son de tu club actual: al fichar por otro se olvidan (v0.17). */
+export const CLUB_BOUND_FLAGS = ['coachConflict', 'publicComplaint', 'foreignInterest']
+
 export interface TransferDecision {
   career: Career
   message: string
@@ -327,17 +331,22 @@ export function applyTransferDecision(career: Career, clubId: string | null): Tr
 
   if (clubId === null || clubId === career.clubId) {
     const renews = stayRenews(career)
+    const stayed: Career = {
+      ...career,
+      trust: clamp(career.trust + 4, 0, 100),
+      contract: renews ? renewedContract(career) : career.contract,
+      transferTarget: null,
+      flags: { ...flags, lastMarketDecision: 'stay' }
+    }
     return {
       message: renews
         ? 'Renuevas con tu club. El club valora tu compromiso.'
         : 'Te quedas. El club valora tu compromiso.',
-      career: {
-        ...career,
-        trust: clamp(career.trust + 4, 0, 100),
-        contract: renews ? renewedContract(career) : career.contract,
-        transferTarget: null,
-        flags: { ...flags, lastMarketDecision: 'stay' }
-      }
+      career: logRelationChanges(career, stayed, {
+        kind: 'mercado',
+        title: 'Mercado de fichajes',
+        detail: renews ? 'Renuevas con tu club' : 'Te quedas en el club'
+      })
     }
   }
 
@@ -352,36 +361,47 @@ export function applyTransferDecision(career: Career, clubId: string | null): Tr
     oldCurrency !== newCurrency
       ? ` Tu dinero se cambia a ${CURRENCIES[newCurrency].name}: ${formatMoney(career.money, newCurrency)}.`
       : ''
+  // En el club nuevo el míster y la afición empiezan de cero (v0.17): se olvidan
+  // las cuentas pendientes del club anterior (el choque con el míster, la queja
+  // pública y el interés de otro club que se filtró a la grada).
+  const keptFlags = { ...flags }
+  for (const key of CLUB_BOUND_FLAGS) delete keptFlags[key]
+  const reputation = clamp(career.reputation - (brokePromise ? 6 : 0), 0, 100)
+  const moved: Career = {
+    ...career,
+    ...teammatesAfterTransfer(career, clubId, career.season),
+    // En el club nuevo no eres el capitán (hay que ganárselo otra vez).
+    captaincy: null,
+    transferTarget: null,
+    clubId,
+    contract: buildContract(
+      clubId,
+      offer.weeklyWage,
+      roleFromMinutes(offer.minutes),
+      career.season,
+      offer.years
+    ),
+    // En un club nuevo hay que ganarse otra vez la confianza del entrenador.
+    trust: initialStanding(club.tier, career.originId).trust,
+    morale: clamp(career.morale + 5, 0, 100),
+    reputation,
+    fansOffset: initialFansOffset(reputation),
+    flags: {
+      ...keptFlags,
+      lastMarketDecision: 'transfer',
+      transfers: transfers + 1,
+      loyalToClub: false,
+      ...(brokePromise ? { brokenPromise: true } : {})
+    }
+  }
   return {
+    career: {
+      ...moved,
+      relationLog: [...(career.relationLog ?? []), ...startEntries(moved, `Llegas a ${club.name}`)]
+    },
     message:
       (brokePromise
         ? `Fichas por ${club.name}. Tu antigua afición no olvida que dijiste "aquí soy feliz".`
-        : `Fichas por ${club.name}. Nueva ciudad, nuevo vestuario, nuevo reto.`) + exchange,
-    career: {
-      ...career,
-      ...teammatesAfterTransfer(career, clubId, career.season),
-      // En el club nuevo no eres el capitán (hay que ganárselo otra vez).
-      captaincy: null,
-      transferTarget: null,
-      clubId,
-      contract: buildContract(
-        clubId,
-        offer.weeklyWage,
-        roleFromMinutes(offer.minutes),
-        career.season,
-        offer.years
-      ),
-      // En un club nuevo hay que ganarse otra vez la confianza del entrenador.
-      trust: initialStanding(club.tier, career.originId).trust,
-      morale: clamp(career.morale + 5, 0, 100),
-      reputation: clamp(career.reputation - (brokePromise ? 6 : 0), 0, 100),
-      flags: {
-        ...flags,
-        lastMarketDecision: 'transfer',
-        transfers: transfers + 1,
-        loyalToClub: false,
-        ...(brokePromise ? { brokenPromise: true } : {})
-      }
-    }
+        : `Fichas por ${club.name}. Nueva ciudad, nuevo vestuario, nuevo reto.`) + exchange
   }
 }

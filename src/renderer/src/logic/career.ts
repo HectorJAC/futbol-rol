@@ -12,6 +12,7 @@ import type { Career } from '../types/career'
 import type { Character } from '../types/character'
 import { initialContinentalTeams, initialDivisions } from './competitions'
 import { buildContract, roleFromMinutes } from './finance'
+import { initialFansOffset, startEntries } from './relationLog'
 import { initialStanding } from './season'
 import { generateTeammates } from './teammates'
 
@@ -95,7 +96,8 @@ export function createCareer(input: NewCareerInput, now: Date = new Date()): Car
 
   const timestamp = now.toISOString()
   const divisions = initialDivisions()
-  return {
+  const standing = initialStanding(chosen.club.tier, originId)
+  const career: Career = {
     id: generateCareerId(character.name, now),
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -106,7 +108,7 @@ export function createCareer(input: NewCareerInput, now: Date = new Date()): Car
     clubId,
     age: getOrigin(originId).startAge,
     season: 1,
-    ...initialStanding(chosen.club.tier, originId),
+    ...standing,
     money: 0,
     contract: buildContract(clubId, chosen.weeklyWage, roleFromMinutes(chosen.minutes), 1, 3),
     purchases: [],
@@ -119,6 +121,11 @@ export function createCareer(input: NewCareerInput, now: Date = new Date()): Car
     teammates: generateTeammates(clubId, 1),
     exTeammates: [],
     captaincy: null,
-    transferTarget: null
+    transferTarget: null,
+    fansOffset: initialFansOffset(standing.reputation),
+    relationLog: [],
+    exPartners: []
   }
+  // Punto de partida de las relaciones con el míster y la afición (v0.17).
+  return { ...career, relationLog: startEntries(career, `Llegas a ${chosen.club.name}`) }
 }

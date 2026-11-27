@@ -3,6 +3,7 @@ import type { Career } from '../types/career'
 import { buildContract, contractYearsLeft, marketWage } from './finance'
 import { clamp, createRng, seedFor } from './random'
 import { isCareerOver, minutesShare } from './season'
+import { logRelationChanges } from './relationLog'
 
 /** Lo que puedes pedir al club: una subida pequeña, lo que vale tu rendimiento o mucho más. */
 export type RaiseLevel = 'moderada' | 'mercado' | 'ambiciosa'
@@ -21,6 +22,13 @@ export interface RaiseOption {
 
 /** Si el club acepta, tu moral sube. */
 export const RAISE_ACCEPTED_MORALE = 6
+
+/** Nombre de cada petición en el historial de relaciones. */
+export const RAISE_NAMES: Record<RaiseLevel, string> = {
+  moderada: 'Subida moderada',
+  mercado: 'Lo que vales en el mercado',
+  ambiciosa: 'Subida ambiciosa'
+}
 
 const REJECT: Record<RaiseLevel, { trust: number; morale: number }> = {
   moderada: { trust: -1, morale: -3 },
@@ -107,14 +115,19 @@ export function requestRaise(
     raiseResult: accepted ? 'aceptada' : 'rechazada'
   }
   if (!accepted) {
+    const rejected: Career = {
+      ...career,
+      flags,
+      trust: clamp(career.trust + option.onReject.trust, 0, 100),
+      morale: clamp(career.morale + option.onReject.morale, 0, 100)
+    }
     return {
       accepted,
-      career: {
-        ...career,
-        flags,
-        trust: clamp(career.trust + option.onReject.trust, 0, 100),
-        morale: clamp(career.morale + option.onReject.morale, 0, 100)
-      }
+      career: logRelationChanges(career, rejected, {
+        kind: 'contrato',
+        title: 'Pediste una mejora de contrato',
+        detail: `${RAISE_NAMES[level]}: rechazada`
+      })
     }
   }
   const years = Math.max(contractYearsLeft(career), 3)

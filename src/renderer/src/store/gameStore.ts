@@ -24,7 +24,13 @@ import {
   startSeason
 } from '../logic/season'
 import { applyTransferDecision, isMarketPending, setTransferTarget } from '../logic/transfers'
-import type { Career, EventResolution, MomentResolution, SeasonRecord } from '../types/career'
+import type {
+  Career,
+  EventResolution,
+  MomentResolution,
+  RelationTarget,
+  SeasonRecord
+} from '../types/career'
 import type { CharacterDraft, Foot } from '../types/character'
 
 export type Screen =
@@ -44,6 +50,7 @@ export type Screen =
   | 'careerDetail'
   | 'settings'
   | 'relationships'
+  | 'relationHistory'
   | 'modeSelection'
   | 'extras'
   | 'originCatalog'
@@ -105,6 +112,8 @@ interface GameState {
   lastChoice: { resolution: EventResolution; effects: EventEffects } | null
   /** Resultado de la última jugada de un partido importante. */
   lastMoment: { resolution: MomentResolution; effects: MatchMomentEffects } | null
+  /** Relación cuyo historial se está mirando (v0.17): el míster, la afición o una pareja. */
+  relationView: { target: RelationTarget; name?: string } | null
   /** Temporada recién terminada (pantalla de resumen). */
   lastRecord: SeasonRecord | null
   /** Carrera que se está mirando desde Records (no es la que se juega). */
@@ -176,6 +185,8 @@ interface GameState {
   finishMatch: () => Promise<void>
   openTrophyRoom: () => void
   openRelationships: () => void
+  /** Historial de una relación (v0.17); `name` = una pareja o expareja concreta. */
+  openRelationHistory: (target: RelationTarget, name?: string) => void
   openCompetitions: () => void
   openContract: () => void
   /** Pantalla para repartir los puntos de fin de temporada. */
@@ -214,6 +225,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   saveStatus: 'idle',
   lastChoice: null,
   lastMoment: null,
+  relationView: null,
   lastRecord: null,
   recordCareer: null,
   marketMessage: null,
@@ -465,7 +477,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   openTrophyRoom: () => set({ screen: 'trophyRoom' }),
 
-  openRelationships: () => set({ screen: 'relationships' }),
+  openRelationships: () => set({ screen: 'relationships', relationView: null }),
+  openRelationHistory: (target, name) =>
+    set({ screen: 'relationHistory', relationView: { target, ...(name ? { name } : {}) } }),
 
   openCompetitions: () => set({ screen: 'competitions' }),
 

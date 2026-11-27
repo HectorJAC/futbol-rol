@@ -4,11 +4,17 @@
 
 - Plataforma: **solo escritorio, distribuido por Steam**. Windows primero. No habrá versión web.
 - Plan completo e ideas de diseño: [PLAN.md](PLAN.md).
-- **Versión actual: v0.16**:
+- **Versión actual: v0.17**:
+  - Historial de cada relación: qué decisiones subieron o bajaron la relación con el míster, la afición y tu pareja.
+  - El míster y la afición empiezan de cero al fichar por otro club.
+  - Pareja con relación de 0 a 100 (novios a 50, boda a 100, ruptura a 0) y exparejas.
+  - Lesiones que te dejan sin jugar y bajan atributos.
+  - Tienda con precios según los puntos que da cada compra.
+  - Una jugada más contra tu exequipo, y el derbi de la traición si es de tu misma ciudad.
+- **Lo que ya tiene el juego**:
   - Ficha completa de cada carrera desde Records.
   - Primera versión acotada: solo nacionalidades europeas, solo delantero centro (las otras cinco posiciones se ven bloqueadas) y solo el modo Completa.
   - "Pelea por el descenso" como partido importante cuando tu club está abajo.
-- **Lo que ya tiene el juego**:
   - El nombre: **Your Football Path**.
   - Hub rediseñado: bandera junto al nombre, sueldo junto al club, tarjetas a su medida y titularidad en la situación.
   - Pedir una mejora de contrato (una vez por temporada) y la tienda pasa a llamarse "Compras".
@@ -800,9 +806,65 @@ No se instaló nada. Al regenerar el `.exe`, electron-builder volvió a descarga
 - `typecheck` y `lint` sin errores.
 - El `.exe` regenerado abre la v0.16, y la partida que ya tenías sigue apareciendo en "Cargar partida".
 
+### v0.17 — Diez mejoras: historial de relaciones, pareja por puntos, lesiones y la traición (2026-11-26)
+
+**Descargas:** al regenerar el `.exe`, electron-builder volvió a descargar Electron (no lo tenía en caché). No se instaló nada nuevo.
+
+**Hecho**
+1. **"Los sesenta de tu madre" sale a partir de los 25 años.** Con 17, 18 o 19 años no tenía sentido.
+2. **Historial de cada relación.** En Relaciones, las tarjetas del míster, la afición y la pareja se pueden pulsar y llevan a una pantalla nueva:
+   - Lista, de la primera a la última, cada cosa que subió o bajó la relación: la decisión o la jugada, la opción que elegiste, la temporada, el club, cuánto subió o bajó y cómo quedó.
+   - Cuenta las decisiones de temporada, las jugadas de los partidos importantes, una mejora de contrato rechazada (así se ve lo que bajó el míster), quedarte en el mercado y, para la afición, el balance de cada temporada.
+   - Arriba, el valor actual y cuántas veces subió y bajó.
+   - Las partidas guardadas antes de la v0.17 no tienen ese historial: empieza a llenarse desde ahora.
+3. **Fichar reinicia al míster y a la afición.**
+   - El míster nuevo empieza con la confianza de siempre según el tipo de club.
+   - La afición nueva te recibe según tu fama: de 40 sin fama a 65 con la máxima. Desde ahí sube y baja con tu fama y con lo que ve de ti en el club (escuchar a otro club la baja; la lealtad y las obras benéficas la suben).
+   - Se olvidan las cuentas pendientes del club anterior: el choque con el míster, la queja pública y el interés de otro club que se filtró a la grada.
+4. **Lesiones de verdad.** Algunas decisiones te lesionan (el esguince, "Dos meses fuera", la tendinitis, el pinchazo en el isquiotibial, la rodilla en la pista de cemento y "El tobillo pasa factura"):
+   - Te pierdes los partidos de la baja, y las decisiones que caían en esas semanas no llegan a salir.
+   - Según los partidos de baja, la lesión es leve (hasta 3), moderada (4 a 8) o grave (9 o más).
+   - Baja de 1 a 10 puntos los atributos de la zona: tobillo (velocidad, regate, físico), muscular (velocidad, resistencia, fuerza), rodilla (velocidad, fuerza, físico) y espalda (fuerza, cabeza, físico). Leve: 1 atributo, de 1 a 3 puntos. Moderada: 1 o 2 atributos, de 2 a 6. Grave: 2 o 3 atributos, de 4 a 10.
+   - Si la recuperación se hace bien (respetar los plazos, una rehabilitación que sale bien), no pierdes atributos.
+   - El resultado de la decisión enseña la baja y los puntos perdidos.
+5. **Tienda por puntos.**
+   - Cada compra sube de 1 a 3 puntos cada atributo (los puntos que ves en la ficha).
+   - Si mejora dos atributos, lo normal es 1 y 2 puntos. Las compras de lujo suben 3 puntos en 2 o en 3 atributos, como el campo de entrenamiento privado (600.000, +3 en remate, pase largo y regate).
+   - El precio va según los puntos y no se solapa: 1 punto, de 5.000 a 25.000; 2 puntos, de 30.000 a 60.000; 3 puntos, de 70.000 a 150.000; 6 puntos, de 250.000 a 400.000; 9 puntos, de 600.000 a 900.000. Ya no hay un +3 de físico por 50.000 y otro por 20.000.
+   - Las compras de la familia (casas, viajes) tienen su propio precio, pero sus puntos siguen las mismas reglas.
+6. **Pareja por puntos.**
+   - Cada opción de la historia de la pareja dice cuánto sube o baja la relación (si hay tirada, lo que pasa si sale bien y si sale mal).
+   - Al conocer a alguien empezáis en 25. A 50 sois novios y a 100 os casáis; después vienen los hijos. Irse a vivir juntos y prometerse quedan como momentos de los novios.
+   - Si la relación llega a 0, lo dejáis. La temporada siguiente aparece otra persona.
+   - En Relaciones hay una pestaña de **Exparejas** (solo si las has tenido), con cuándo empezó y acabó cada relación, hasta dónde llegasteis y su historial.
+7. **El derbi de la traición.** Si juegas contra un club de tu misma ciudad en el que estuviste (del AC Milen al Inter de Milam, por ejemplo), el partido tiene una jugada más al saltar al campo: "Judas", "La ley del ex" o "En el túnel".
+8. **"La afición se entera"** solo sale si sigues en el mismo club. Al fichar por otro, se olvida.
+9. **Capitanía con 40 de liderazgo.** Con 40 o más de liderazgo no hace falta esperar las 3 temporadas en el club (el resto de requisitos sigue igual).
+10. **Contra tu exequipo.** Cualquier partido contra un club en el que jugaste se vive jugada a jugada y tiene una jugada más que hace alusión a él: "Vuelves a casa", "La ley del ex" o "Te conozco".
+
+**Partidas guardadas.** El formato pasa a la versión 7. Al cargar una partida antigua:
+- La pareja pasa a puntos según su etapa (novios 60, viviendo juntos 70, prometidos 85, casados 100) y una ruptura pasa a las exparejas.
+- La afición conserva la barra que tenía.
+
+**Verificado**
+- **246 tests unitarios** en verde (20 nuevos en `v017.test.ts`, y los de la pareja, la afición, la tienda y el formato de guardado, puestos al día):
+  - "Los sesenta de tu madre" desde los 25 años;
+  - historial del míster (una decisión que lo baja queda apuntada, en orden) y la afición que se mueve con la fama;
+  - fichar reinicia al míster y a la afición, y "La afición se entera" solo en el mismo club;
+  - capitanía con 40 de liderazgo;
+  - lesiones: gravedad, partidos y decisiones de la baja y atributos de la zona;
+  - tienda: puntos de 1 a 3, combinaciones y precios sin solaparse;
+  - pareja: novios a 50, boda a 100, ruptura a 0, exparejas y otra persona la temporada siguiente;
+  - derbi de la traición, reencuentro y la jugada extra;
+  - partidas guardadas de la v0.16.
+- **22 tests e2e** en la app real. Ahora también abren el historial del míster (punto de partida y "+4" por quedarte en el mercado) y el de la afición desde Relaciones.
+- `typecheck` y `lint` sin errores.
+- El `.exe` se regeneró (`dist\win-unpacked\your-football-path.exe`). No lo abrí a mano: los e2e prueban la misma compilación.
+
 ### Pendiente / siguientes pasos
 - Sexo femenino y más posiciones.
-- Más eventos y más clubes. Relaciones que cambien con eventos propios: agente, compañeros y pareja.
+- Más eventos y más clubes. Relaciones que cambien con eventos propios: agente y compañeros.
+- Las lesiones de los partidos simulados no quitan decisiones ni atributos (solo las de las decisiones).
 - Ventana de invierno, cesiones y retirada.
 - Integración con Steamworks (logros y Cloud), traducción al inglés e instalador (`npm run build:win`).
 - `npm audit` sigue avisando de 6 vulnerabilidades moderadas en dependencias de desarrollo de la plantilla (sin cambios).
@@ -824,7 +886,7 @@ src/renderer/src/
   store/gameStore.ts           Estado del juego (Zustand): pantallas, borrador de partida y carrera
   screens/                     MainMenu, CharacterCreation, ModeSelection, OriginSelection, AttributeAllocation,
                                ClubSelection, CreationSummary, CareerHub, LoadGame, SeasonEvent, Match,
-                               SeasonSummary, TrophyRoom, CareerDetail,
+                               SeasonSummary, TrophyRoom, CareerDetail, RelationHistory,
                                TransferMarket, Records, Settings, Relationships, Competitions, Contract,
                                Extras, OriginCatalog, TrainingPoints, ClubSearch
   components/                  MenuButton, NationalitySelector, Stepper, ClubCrest, Stars,
@@ -833,9 +895,10 @@ src/renderer/src/
   data/                        nationalities, positions, attributes, origins + originCatalog, clubs,
                                leagues/ (primera y segunda división de cada país), playerNames, partnerNames,
                                events + eventsExtra + storyEvents + contextEvents + teamEvents, currencies,
-                               matchTypes + matchMoments + matchMomentsExtra, gameModes, continentalCups,
+                               matchTypes + matchMoments + matchMomentsExtra + matchMomentsExClub, gameModes, continentalCups,
                                shop + shopCatalog + shopTraining, trainingFocus, trophies, nationalTeams
   logic/                       characterName, career (creación y puntos), saveGame (formato y migraciones),
+                               partner (pareja por puntos), relationLog (historial de relaciones), injury (lesiones),
                                season (eventos, tiradas, simulación y selección), random (aleatoriedad con semilla),
                                transfers (mercado de fichajes), records (comparativa de carreras),
                                relationships (cómo te ven), motion (ajuste de animaciones),
@@ -848,6 +911,6 @@ src/renderer/src/
   i18n/es.ts                   Textos
   assets/cursors/              Puntero "Flecha césped" (normal, sobre botones y desactivado)
   styles/                      theme.css (tema y v0.1), career.css (v0.2), season.css (v0.3–v0.6), v07.css,
-                               v010.css, v012.css, v013.css, v014.css, v016.css
+                               v010.css, v012.css, v013.css, v014.css, v016.css, v017.css
 e2e/app.spec.ts                Tests de la app real con Playwright
 ```

@@ -104,6 +104,13 @@ export function biggestClubs(countryId: NationalityId, count = 3): string[] {
     .map((c) => c.id)
 }
 
+/** ¿Son dos clubes de la misma ciudad (y del mismo país)? */
+export function isSameCity(clubId: string, opponentId: string): boolean {
+  const club = getClub(clubId)
+  const opponent = getClub(opponentId)
+  return club.city === opponent.city && club.countryId === opponent.countryId
+}
+
 /** ¿Es un clásico o un derbi de la misma ciudad? */
 export function isRivalry(clubId: string, opponentId: string): 'clasico' | 'derbi' | null {
   const club = getClub(clubId)

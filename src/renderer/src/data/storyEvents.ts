@@ -3,22 +3,27 @@ import type { FlagCondition, GameEvent } from './events'
 /**
  * Historia de la pareja: se desarrolla a lo largo de toda la carrera.
  *
+ * Desde la v0.17 la relación va de 0 a 100 (`partner` en los efectos, ver
+ * `logic/partner.ts`): al conocer a alguien empezáis en 25; a 50 sois novios,
+ * a 100 os casáis y a 0 lo dejáis. Las opciones enseñan cuánto sube o baja.
+ *
  * Flags que usa (ver `FlagCondition` en `events.ts`):
- * - `partner`: 'pareja' | 'convivencia' | 'prometidos' | 'casados' | 'ruptura' (sin flag = soltero).
- * - `partnerName`, `partnerSince`, `partnerStageSince`: los rellena el código al cambiar `partner`.
- * - `children`: número de hijos (se suma con `addFlags`).
+ * - `partner`: 'conociendo' | 'pareja' | 'casados' (sin flag = sin pareja).
+ * - `partnerRelation`, `partnerName`, `partnerSince`, `partnerStageSince`: los rellena el código.
+ * - `livingTogether` y `engaged`: hitos de los novios (vivir juntos, prometerse).
+ * - `children`: número de hijos (se suma con `addFlags`; se quedan contigo si lo dejáis).
  * - `cheated`: `true` tras una infidelidad que ella todavía no conoce.
  * - `noMoreChildren`: `true` si la pareja decide no tener más hijos.
+ * - `lastBreakupSeason`: temporada de la última ruptura.
  *
- * En los textos, `{pareja}` es el nombre de ella y `{hijos}` el número de hijos.
- * Orden: primero las consecuencias (infidelidad descubierta), luego la progresión de la
- * relación y al final los eventos repetibles de ambiente.
+ * En los textos, `{pareja}` es el nombre de ella, `{expareja}` el de tu última
+ * expareja y `{hijos}` el número de hijos.
  */
 
-/** Cualquier etapa con pareja (no soltero ni ruptura). */
+/** Cualquier etapa con pareja. */
 const ACTIVE: FlagCondition = {
   flag: 'partner',
-  oneOf: ['pareja', 'convivencia', 'prometidos', 'casados']
+  oneOf: ['conociendo', 'pareja', 'casados']
 }
 
 /** Al menos una temporada en la etapa actual de la relación. */
@@ -42,14 +47,15 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 12,
           success: {
             text: 'Le hablas durante horas, sin excusas. Al amanecer, agotada, te dice que lo va a intentar. "Una vez. Ni una más".',
-            effects: { morale: -4, reputation: -3, flags: { cheated: false } }
+            effects: { partner: -20, morale: -4, reputation: -3, flags: { cheated: false } }
           },
           failure: {
             text: 'Cada excusa empeora las cosas. {pareja} hace la maleta esa misma noche y la prensa del corazón se da un festín.',
             effects: {
               morale: -12,
               reputation: -6,
-              flags: { partner: 'ruptura', cheated: false }
+              partner: -100,
+              flags: { cheated: false }
             }
           }
         }
@@ -65,6 +71,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
               morale: -2,
               reputation: -2,
               attributes: { composure: 1 },
+              partner: -10,
               flags: { cheated: false }
             }
           },
@@ -73,7 +80,8 @@ export const STORY_EVENTS: readonly GameEvent[] = [
             effects: {
               morale: -10,
               reputation: -4,
-              flags: { partner: 'ruptura', cheated: false }
+              partner: -100,
+              flags: { cheated: false }
             }
           }
         }
@@ -85,7 +93,8 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           effects: {
             morale: -8,
             reputation: -5,
-            flags: { partner: 'ruptura', cheated: false }
+            partner: -100,
+            flags: { cheated: false }
           }
         }
       }
@@ -99,7 +108,8 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     id: 'pareja-conocer',
     title: 'Alguien especial',
     text: 'En el cumpleaños de un compañero coincides con una chica que no tiene ni idea de quién eres. Te habla de libros, de viajes, de todo menos de fútbol. Hacía años que no te reías tanto.',
-    story: { id: 'pareja', repeatable: true },
+    // Sin pareja, conocer a alguien va antes que los demás capítulos (v0.17).
+    story: { id: 'pareja', repeatable: true, priority: 2 },
     minAge: 18,
     conditions: [{ flag: 'partner', oneOf: [null] }],
     options: [
@@ -110,7 +120,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 10,
           success: {
             text: 'Te tiembla la voz, pero ella sonríe: "Pensaba que no me lo ibas a pedir nunca". Esa semana entrenas con una sonrisa tonta que nadie en el vestuario deja pasar.',
-            effects: { morale: 8, flags: { partner: 'pareja' } }
+            effects: { morale: 8, partner: 15, flags: { partner: 'conociendo' } }
           },
           failure: {
             text: 'Te lías, le cuentas tu último gol con todo lujo de detalles y ella se va a por algo de beber. No vuelve.',
@@ -122,7 +132,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Pedirle el número y dejar que las cosas fluyan',
         outcome: {
           text: 'Mensajes, un café, un paseo largo después de entrenar. Poco a poco, sin prisa. Un mes después ya no te imaginas la semana sin ella.',
-          effects: { morale: 6, flags: { partner: 'pareja' } }
+          effects: { morale: 6, partner: 10, flags: { partner: 'conociendo' } }
         }
       },
       {
@@ -141,7 +151,8 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     id: 'pareja-conocer-infancia',
     title: 'Alguien especial',
     text: 'Vuelves a casa en vacaciones y te cruzas con tu amiga de la infancia, la que jugaba contigo al fútbol en la calle hasta que se hacía de noche y te ganaba a los penaltis. Os sentáis en el banco de siempre y, sin daros cuenta, se os hace de madrugada.',
-    story: { id: 'pareja', repeatable: true },
+    // Sin pareja, conocer a alguien va antes que los demás capítulos (v0.17).
+    story: { id: 'pareja', repeatable: true, priority: 2 },
     minAge: 18,
     conditions: [{ flag: 'partner', oneOf: [null] }],
     options: [
@@ -152,7 +163,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 9,
           success: {
             text: 'Se queda callada un segundo eterno y luego se ríe: "Llevo desde los doce años esperando que lo dijeras". Vuelves a la ciudad deportiva con la cabeza en las nubes.',
-            effects: { morale: 10, flags: { partner: 'pareja' } }
+            effects: { morale: 10, partner: 15, flags: { partner: 'conociendo' } }
           },
           failure: {
             text: 'Te mira con cariño y te da un abrazo: "Eres como mi hermano". Volvéis a casa en silencio. La amistad sigue ahí, pero escuece.',
@@ -164,7 +175,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Proponerle veros cada vez que vuelvas a casa',
         outcome: {
           text: 'Un café cada vez que vuelves, mensajes a diario entre medias. Una noche te das cuenta de que ya no os despedís como amigos.',
-          effects: { morale: 7, flags: { partner: 'pareja' } }
+          effects: { morale: 7, partner: 10, flags: { partner: 'conociendo' } }
         }
       },
       {
@@ -180,7 +191,8 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     id: 'pareja-conocer-hospital',
     title: 'Alguien especial',
     text: 'El club organiza una visita al hospital infantil. La voluntaria que os acompaña por las habitaciones no se impresiona con los autógrafos, pero se le ilumina la cara cuando te sientas en el suelo a jugar con los niños.',
-    story: { id: 'pareja', repeatable: true },
+    // Sin pareja, conocer a alguien va antes que los demás capítulos (v0.17).
+    story: { id: 'pareja', repeatable: true, priority: 2 },
     minAge: 18,
     conditions: [{ flag: 'partner', oneOf: [null] }],
     options: [
@@ -191,7 +203,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 10,
           success: {
             text: '"Solo si es un sitio donde nadie te pida fotos", te dice. Encontráis uno. Es la primera de muchas cenas.',
-            effects: { morale: 8, flags: { partner: 'pareja' } }
+            effects: { morale: 8, partner: 15, flags: { partner: 'conociendo' } }
           },
           failure: {
             text: 'Te dice que no sale con futbolistas, con una sonrisa que no admite réplica. Al menos los niños te han pedido que vuelvas.',
@@ -203,7 +215,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Apuntarte como voluntario y volver cada semana',
         outcome: {
           text: 'Vuelves los martes, sin cámaras. Entre cuentos y partidas de cartas, una tarde ella te espera a la salida con dos cafés.',
-          effects: { morale: 7, reputation: 2, flags: { partner: 'pareja' } }
+          effects: { morale: 7, reputation: 2, partner: 10, flags: { partner: 'conociendo' } }
         }
       },
       {
@@ -219,7 +231,8 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     id: 'pareja-conocer-cafeteria',
     title: 'Alguien especial',
     text: 'Cada mañana paras en la misma cafetería antes de entrenar. La chica de la barra ya te pone el café sin preguntar y hoy, por primera vez, te ha dejado una nota en el vaso: "¿Y si un día te lo tomas sentado?".',
-    story: { id: 'pareja', repeatable: true },
+    // Sin pareja, conocer a alguien va antes que los demás capítulos (v0.17).
+    story: { id: 'pareja', repeatable: true, priority: 2 },
     minAge: 18,
     conditions: [{ flag: 'partner', oneOf: [null] }],
     options: [
@@ -230,7 +243,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 10,
           success: {
             text: 'Llegas tarde al entrenamiento por primera vez en tu vida y te da igual. Esa noche cenáis juntos.',
-            effects: { morale: 8, trust: -1, flags: { partner: 'pareja' } }
+            effects: { morale: 8, trust: -1, partner: 15, flags: { partner: 'conociendo' } }
           },
           failure: {
             text: 'Entra el grupo de las ocho, se llena la barra y no os da tiempo ni a presentaros. Al día siguiente la nota ya no está.',
@@ -242,7 +255,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Contestarle con otra nota y tu número',
         outcome: {
           text: 'Notas que van y vienen durante semanas, hasta que un domingo os veis fuera de la cafetería. Ya no hay vuelta atrás.',
-          effects: { morale: 6, flags: { partner: 'pareja' } }
+          effects: { morale: 6, partner: 10, flags: { partner: 'conociendo' } }
         }
       },
       {
@@ -258,7 +271,8 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     id: 'pareja-conocer-vuelo',
     title: 'Alguien especial',
     text: 'Una tormenta deja el vuelo de vuelta de un partido fuera tres horas en tierra. La chica del asiento de al lado te presta un cargador, luego medio bocadillo y, al final, te cuenta su vida entera. No sabe quién eres hasta que los de la otra fila te piden una foto.',
-    story: { id: 'pareja', repeatable: true },
+    // Sin pareja, conocer a alguien va antes que los demás capítulos (v0.17).
+    story: { id: 'pareja', repeatable: true, priority: 2 },
     minAge: 18,
     conditions: [{ flag: 'partner', oneOf: [null] }],
     options: [
@@ -269,7 +283,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 10,
           success: {
             text: '"Me debes medio bocadillo", te contesta. La semana siguiente se lo devuelves en el mejor restaurante de la ciudad.',
-            effects: { morale: 8, flags: { partner: 'pareja' } }
+            effects: { morale: 8, partner: 15, flags: { partner: 'conociendo' } }
           },
           failure: {
             text: 'Aterrizáis, se despide con prisa y se pierde entre la gente del aeropuerto. Ni siquiera sabes su apellido.',
@@ -281,7 +295,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Invitarla a ver tu próximo partido en casa',
         outcome: {
           text: 'Viene al partido, no entiende el fuera de juego y grita tu gol más que nadie. Al acabar te espera en la puerta del estadio.',
-          effects: { morale: 6, flags: { partner: 'pareja' } }
+          effects: { morale: 6, partner: 10, flags: { partner: 'conociendo' } }
         }
       },
       {
@@ -302,7 +316,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     title: 'Comida con sus padres',
     text: '{pareja} te lleva a comer el domingo a casa de sus padres. Su padre es socio de vuestro máximo rival desde hace cuarenta años y te abre la puerta con la bufanda del enemigo al cuello.',
     story: { id: 'pareja' },
-    conditions: [{ flag: 'partner', oneOf: ['pareja'] }],
+    conditions: [{ flag: 'partner', oneOf: ['conociendo', 'pareja'] }],
     options: [
       {
         label: 'Aguantar las pullas con humor',
@@ -311,11 +325,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 10,
           success: {
             text: 'Le sigues el juego, te ríes de ti mismo y acabáis brindando. Al despedirse te da una palmada: "Para ser de los otros, no estás mal". {pareja} no se lo puede creer.',
-            effects: { morale: 7, attributes: { composure: 1 } }
+            effects: { partner: 12, morale: 7, attributes: { composure: 1 } }
           },
           failure: {
             text: 'Al tercer chiste sobre tu último fallo, saltas. La sobremesa se congela y {pareja} no te dirige la palabra en todo el viaje de vuelta.',
-            effects: { morale: -6 }
+            effects: { partner: -8, morale: -6 }
           }
         }
       },
@@ -323,14 +337,14 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Regalarle dos entradas de palco para el derbi',
         outcome: {
           text: 'Viene al derbi... con su bufanda. Pero al acabar te pide una foto "para el nieto que algún día tendréis". {pareja} se ríe y te coge de la mano.',
-          effects: { money: -2000, morale: 6 }
+          effects: { partner: 8, money: -2000, morale: 6 }
         }
       },
       {
         label: 'Excusarte: tienes concentración',
         outcome: {
           text: '{pareja} va sola. No te reprocha nada, pero durante semanas notas que algo se ha enfriado entre vosotros.',
-          effects: { morale: -3, trust: 1 }
+          effects: { partner: -10, morale: -3, trust: 1 }
         }
       }
     ]
@@ -340,13 +354,13 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     title: 'Celos en las redes',
     text: 'Una influencer famosa llena tus fotos de corazones y emojis de fuego. Medio país especula con un romance. {pareja} te enseña el móvil sin decir nada. No hace falta.',
     story: { id: 'pareja' },
-    conditions: [{ flag: 'partner', oneOf: ['pareja', 'convivencia'] }],
+    conditions: [{ flag: 'partner', oneOf: ['conociendo', 'pareja'] }],
     options: [
       {
         label: 'Subir una foto juntos y zanjar el tema',
         outcome: {
           text: 'La foto de los dos en la playa se llena de "me gusta". Los rumores mueren en un día y {pareja} te da un beso largo al verla.',
-          effects: { morale: 6, reputation: 2 }
+          effects: { partner: 10, morale: 6, reputation: 2 }
         }
       },
       {
@@ -356,11 +370,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 11,
           success: {
             text: 'Le enseñas que no contestas a nadie y le dejas el móvil sin que te lo pida. Esa noche os prometéis contároslo todo, siempre.',
-            effects: { morale: 6 }
+            effects: { partner: 12, morale: 6 }
           },
           failure: {
             text: 'Te pones a la defensiva y la conversación acaba a gritos. Duermes en el sofá y llegas al entrenamiento con ojeras.',
-            effects: { morale: -6, trust: -2 }
+            effects: { partner: -8, morale: -6, trust: -2 }
           }
         }
       },
@@ -368,7 +382,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Restarle importancia: "Son cosas de las redes"',
         outcome: {
           text: 'Para ti no es nada. Para {pareja}, sí. Algo se queda flotando entre los dos, y tu nombre en todos los programas de cotilleo.',
-          effects: { morale: -4, reputation: 2 }
+          effects: { partner: -6, morale: -4, reputation: 2 }
         }
       }
     ]
@@ -382,13 +396,18 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     title: 'Una sola llave',
     text: 'Lleváis tiempo juntos y {pareja} pasa más noches en tu casa que en la suya. Una mañana, mientras desayunáis, lo suelta: "¿Y si buscamos algo nuestro?"',
     story: { id: 'pareja', repeatable: true },
-    conditions: [{ flag: 'partner', oneOf: ['pareja'] }, ONE_SEASON_IN_STAGE],
+    conditions: [
+      { flag: 'partner', oneOf: ['pareja'] },
+      { flag: 'livingTogether', oneOf: [null, false] },
+      { flag: 'partnerRelation', min: 55 },
+      ONE_SEASON_IN_STAGE
+    ],
     options: [
       {
         label: 'Buscar un piso juntos',
         outcome: {
           text: 'Visitáis pisos durante semanas hasta dar con uno con terraza y luz de tarde. La primera noche cenáis pizza sentados en el suelo, entre cajas.',
-          effects: { money: -12000, morale: 10, flags: { partner: 'convivencia' } }
+          effects: { money: -12000, morale: 10, partner: 15, flags: { livingTogether: true } }
         }
       },
       {
@@ -398,11 +417,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 11,
           success: {
             text: 'Le vacías medio armario y le dejas cambiar todos los cuadros. "Ahora sí parece una casa", dice {pareja}. Tienes que darle la razón.',
-            effects: { morale: 8, flags: { partner: 'convivencia' } }
+            effects: { morale: 8, partner: 12, flags: { livingTogether: true } }
           },
           failure: {
             text: '"¿Tu casa? ¿Y yo qué soy, una invitada?" La discusión se te va de las manos y acaba con {pareja} cerrando la puerta de un portazo. Esta vez no vuelve.',
-            effects: { morale: -10, flags: { partner: 'ruptura' } }
+            effects: { partner: -30, morale: -10 }
           }
         }
       },
@@ -410,7 +429,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Pedirle tiempo: ahora necesitas centrarte en el fútbol',
         outcome: {
           text: 'Asiente, pero se le apaga la mirada. "Vale. Pero no pienso esperar siempre".',
-          effects: { morale: -4, trust: 2 }
+          effects: { partner: -8, morale: -4, trust: 2 }
         }
       }
     ]
@@ -420,7 +439,13 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     title: 'El anillo',
     text: 'Llevas semanas con un anillo escondido en el fondo de la bolsa de deporte. Cada vez que {pareja} se acerca a ella se te para el corazón. Ha llegado el momento... ¿o no?',
     story: { id: 'pareja', repeatable: true },
-    conditions: [{ flag: 'partner', oneOf: ['convivencia'] }, ONE_SEASON_IN_STAGE],
+    conditions: [
+      { flag: 'partner', oneOf: ['pareja'] },
+      { flag: 'livingTogether', oneOf: [true] },
+      { flag: 'engaged', oneOf: [null, false] },
+      { flag: 'partnerRelation', min: 65 },
+      ONE_SEASON_IN_STAGE
+    ],
     options: [
       {
         label: 'Pedírselo a lo grande: en el estadio vacío, con focos y violines',
@@ -433,12 +458,13 @@ export const STORY_EVENTS: readonly GameEvent[] = [
               money: -15000,
               morale: 12,
               reputation: 5,
-              flags: { partner: 'prometidos' }
+              partner: 20,
+              flags: { engaged: true }
             }
           },
           failure: {
             text: 'Se te olvida el discurso, los violines desafinan y {pareja}, que odia ser el centro de atención, se queda helada. "Pregúntamelo cuando estemos solos", te susurra.',
-            effects: { money: -15000, morale: -6, reputation: -2 }
+            effects: { partner: -10, money: -15000, morale: -6, reputation: -2 }
           }
         }
       },
@@ -446,14 +472,14 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Pedírselo en casa, a solas, con la cena de vuestra primera cita',
         outcome: {
           text: 'Sin cámaras ni testigos. Solo vosotros, dos platos de pasta y un "sí" que se te queda grabado para siempre.',
-          effects: { morale: 10, flags: { partner: 'prometidos' } }
+          effects: { morale: 10, partner: 15, flags: { engaged: true } }
         }
       },
       {
         label: 'Esperar un poco más',
         outcome: {
           text: 'Devuelves el anillo al fondo de la bolsa. Ya llegará el momento. {pareja} no sospecha nada... o eso crees.',
-          effects: { morale: -2 }
+          effects: { partner: -5, morale: -2 }
         }
       }
     ]
@@ -463,7 +489,10 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     title: 'La boda',
     text: 'Toca decidir cómo será la boda. La madre de {pareja} ya tiene una lista de cuatrocientos invitados, {pareja} sueña con algo pequeño junto al mar y tu agente, con vender la exclusiva a una revista.',
     story: { id: 'pareja', repeatable: true },
-    conditions: [{ flag: 'partner', oneOf: ['prometidos'] }, ONE_SEASON_IN_STAGE],
+    conditions: [
+      { flag: 'partner', oneOf: ['pareja'] },
+      { flag: 'engaged', oneOf: [true] }
+    ],
     options: [
       {
         label: 'Boda por todo lo alto, con exclusiva incluida',
@@ -473,7 +502,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
             money: -120000,
             morale: 10,
             reputation: 6,
-            flags: { partner: 'casados' }
+            partner: 50
           }
         }
       },
@@ -481,14 +510,14 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Una boda íntima, solo con los vuestros',
         outcome: {
           text: 'Cuarenta personas, una cala, los pies descalzos en la arena. Tu abuela llora durante toda la ceremonia. Es exactamente lo que {pareja} y tú queríais.',
-          effects: { money: -25000, morale: 12, flags: { partner: 'casados' } }
+          effects: { money: -25000, morale: 12, partner: 50 }
         }
       },
       {
         label: 'Aplazarla: con este calendario no hay manera',
         outcome: {
           text: '{pareja} lo entiende, aunque su madre no tanto. La fecha queda en el aire hasta el verano que viene.',
-          effects: { morale: -3, trust: 2 }
+          effects: { partner: -8, morale: -3, trust: 2 }
         }
       }
     ]
@@ -503,13 +532,13 @@ export const STORY_EVENTS: readonly GameEvent[] = [
     text: 'A {pareja} le ofrecen dirigir el estudio de arquitectura donde trabaja: el proyecto de su vida. Esa misma semana tu agente te llama porque un club extranjero pregunta por ti. "Yo también tengo una carrera", te recuerda ella.',
     story: { id: 'pareja' },
     minAge: 21,
-    conditions: [{ flag: 'partner', oneOf: ['convivencia', 'casados'] }, ONE_SEASON_IN_STAGE],
+    conditions: [{ flag: 'partner', oneOf: ['pareja', 'casados'] }, ONE_SEASON_IN_STAGE],
     options: [
       {
         label: 'Decirle a tu agente que no te mueves de aquí',
         outcome: {
           text: 'Cuelgas al agente sin escuchar la cifra. {pareja} acepta el puesto y esa noche brindáis por los dos.',
-          effects: { morale: 8, trust: 3 }
+          effects: { partner: 10, morale: 8, trust: 3 }
         }
       },
       {
@@ -519,11 +548,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 12,
           success: {
             text: 'Le hablas de la ciudad, de un estudio de allí que ella admira, de la aventura. Al final sonríe: "Si vamos, vamos los dos. Y el barrio lo elijo yo".',
-            effects: { morale: 6, reputation: 2 }
+            effects: { partner: 6, morale: 6, reputation: 2 }
           },
           failure: {
             text: '"¿Y lo mío qué?" La discusión dura días. No rompéis, pero algo se agrieta entre vosotros y el vestuario te nota ausente.',
-            effects: { morale: -8, trust: -2 }
+            effects: { partner: -12, morale: -8, trust: -2 }
           }
         }
       },
@@ -531,7 +560,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Dejar que ella decida primero',
         outcome: {
           text: 'Le dices que esta vez su carrera va delante. {pareja} acepta el puesto y tú aprendes a esperar tu momento sin ansiedad.',
-          effects: { morale: 5, attributes: { composure: 1 } }
+          effects: { partner: 12, morale: 5, attributes: { composure: 1 } }
         }
       }
     ]
@@ -551,14 +580,19 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Sí. Vamos a por ello',
         outcome: {
           text: 'Meses después te tiemblan las manos en el paritorio más que en cualquier final. Tu siguiente gol lo celebras meciendo una cuna imaginaria. Eres padre.',
-          effects: { morale: 12, attributes: { leadership: 1 }, addFlags: { children: 1 } }
+          effects: {
+            partner: 5,
+            morale: 12,
+            attributes: { leadership: 1 },
+            addFlags: { children: 1 }
+          }
         }
       },
       {
         label: 'Esperar a que termine la temporada',
         outcome: {
           text: '"Vale, pero no lo dejes pasar", dice {pareja}. Lo volveréis a hablar en verano.',
-          effects: { morale: -2 }
+          effects: { partner: -3, morale: -2 }
         }
       }
     ]
@@ -577,7 +611,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Ir a terapia de pareja',
         outcome: {
           text: 'Cuesta abrirse delante de un desconocido, pero semana a semana volvéis a reíros juntos. Aprendes a escuchar, también en el vestuario.',
-          effects: { money: -18000, morale: 6, attributes: { composure: 1 } }
+          effects: { partner: 15, money: -18000, morale: 6, attributes: { composure: 1 } }
         }
       },
       {
@@ -587,11 +621,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 12,
           success: {
             text: 'Una semana en una isla, sin móviles. La última noche, {pareja} te dice que hacía años que no te sentía tan cerca.',
-            effects: { money: -12000, morale: 10 }
+            effects: { partner: 12, money: -12000, morale: 10 }
           },
           failure: {
             text: 'Un viaje no arregla lo que no habláis. Volvéis antes de tiempo y en silencio. Un mes después, {pareja} te pide el divorcio.',
-            effects: { money: -12000, morale: -12, flags: { partner: 'ruptura' } }
+            effects: { partner: -35, money: -12000, morale: -12 }
           }
         }
       },
@@ -602,11 +636,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 13,
           success: {
             text: 'El verano llega a tiempo. Unas semanas de descanso juntos y la tormenta pasa sola... esta vez.',
-            effects: { morale: 2 }
+            effects: { partner: 2, morale: 2 }
           },
           failure: {
             text: 'No se pasa. Una noche encuentras sus maletas en la entrada. {pareja} se marcha, y lo siguiente que recibes son los papeles del divorcio.',
-            effects: { morale: -12, reputation: -2, flags: { partner: 'ruptura' } }
+            effects: { partner: -40, morale: -12, reputation: -2 }
           }
         }
       }
@@ -626,7 +660,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Salir al campo con él en brazos',
         outcome: {
           text: 'Lo llevas hasta el centro del campo. Cuando el estadio entero aplaude, se agarra a tu cuello con todas sus fuerzas. Esa foto la tendrás siempre en la mesilla.',
-          effects: { morale: 10, reputation: 3 }
+          effects: { partner: 5, morale: 10, reputation: 3 }
         }
       },
       {
@@ -636,11 +670,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 11,
           success: {
             text: 'Marcas, corres hacia su fila y haces un corazón con las manos. {pareja} lo levanta en brazos para que lo vea todo el estadio.',
-            effects: { goals: 1, morale: 12 }
+            effects: { partner: 6, goals: 1, morale: 12 }
           },
           failure: {
             text: 'No llega el gol. Pero en el coche, de vuelta, se queda dormido abrazado a tu camiseta, y se te olvida el resultado.',
-            effects: { morale: 4 }
+            effects: { partner: -2, morale: 4 }
           }
         }
       }
@@ -661,7 +695,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Que venga uno más',
         outcome: {
           text: 'La familia crece. Un nuevo llanto a las cuatro de la mañana y una razón más para dejarte la piel en cada partido.',
-          effects: { morale: 10, addFlags: { children: 1 } }
+          effects: { partner: 4, morale: 10, addFlags: { children: 1 } }
         }
       },
       {
@@ -675,7 +709,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Decidir que la familia está completa',
         outcome: {
           text: 'Lo habláis con calma y estáis de acuerdo: así estáis perfectos. Esa noche {pareja} y tú dormís de un tirón por primera vez en años.',
-          effects: { morale: 4, flags: { noMoreChildren: true } }
+          effects: { partner: 2, morale: 4, flags: { noMoreChildren: true } }
         }
       }
     ]
@@ -694,11 +728,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 11,
           success: {
             text: 'El entrenador, padre de tres, te da el día libre sin pestañear: "La familia, primero". Soplas las velas con él y te comes medio pastel.',
-            effects: { morale: 10, trust: -1 }
+            effects: { partner: 6, morale: 10, trust: -1 }
           },
           failure: {
             text: '"Aquí eso no se pide", te corta. Viajas con el equipo de mal humor y te pasas el partido mirando el reloj.',
-            effects: { morale: -6, trust: -3 }
+            effects: { partner: -6, morale: -6, trust: -3 }
           }
         }
       },
@@ -709,11 +743,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 12,
           success: {
             text: 'Marcas y haces el gesto de soplar velas mirando a la cámara. En casa, tu hijo salta en el sofá gritando tu nombre.',
-            effects: { goals: 1, morale: 8, reputation: 2 }
+            effects: { partner: 4, goals: 1, morale: 8, reputation: 2 }
           },
           failure: {
             text: 'No marcas, y cuando llegas a casa ya está dormido con el gorro de fiesta puesto. Te quedas un rato mirándolo desde la puerta.',
-            effects: { morale: -6 }
+            effects: { partner: -6, morale: -6 }
           }
         }
       },
@@ -721,14 +755,14 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Adelantar la fiesta un día y tirar la casa por la ventana',
         outcome: {
           text: 'Castillo hinchable, payaso y medio colegio en el jardín. No es el día exacto, pero nadie lo olvidará.',
-          effects: { money: -5000, morale: 5 }
+          effects: { partner: 5, money: -5000, morale: 5 }
         }
       }
     ]
   },
 
   // -------------------------------------------------------------------------
-  // Eventos repetibles: tentación, aniversario y ruptura.
+  // Eventos repetibles: tentación, aniversario y pasar página tras una ruptura.
   // -------------------------------------------------------------------------
   {
     id: 'pareja-tentacion',
@@ -756,7 +790,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           },
           failure: {
             text: 'Un paparazzi os fotografía juntos en la barra. No ha pasado nada, pero la foto dice otra cosa. {pareja} te cree, aunque le duele.',
-            effects: { morale: -5, reputation: -3 }
+            effects: { partner: -8, morale: -5, reputation: -3 }
           }
         }
       },
@@ -764,7 +798,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Levantarte y llamarla',
         outcome: {
           text: 'Pagas tu refresco y subes a la habitación. Habláis de tonterías hasta las tantas y te duermes con el móvil en la mano y la conciencia tranquila.',
-          effects: { morale: 4 }
+          effects: { partner: 6, morale: 4 }
         }
       }
     ]
@@ -780,7 +814,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Una cena sorpresa en vuestro restaurante de siempre',
         outcome: {
           text: 'El mismo rincón, el mismo vino, las mismas bromas. {pareja} levanta la copa: "Por muchos más".',
-          effects: { money: -3000, morale: 6 }
+          effects: { partner: 8, money: -3000, morale: 6 }
         }
       },
       {
@@ -790,11 +824,11 @@ export const STORY_EVENTS: readonly GameEvent[] = [
           difficulty: 11,
           success: {
             text: 'Sales por la puerta de servicio del hotel, una hora con {pareja} en un banco del paseo y vuelta antes del toque de queda. Nadie se entera.',
-            effects: { morale: 8 }
+            effects: { partner: 10, morale: 8 }
           },
           failure: {
             text: 'El delegado te pilla volviendo por la puerta de servicio. Multa, bronca del míster y titulares. Al menos {pareja} se ríe.',
-            effects: { morale: 2, trust: -6, reputation: -2 }
+            effects: { partner: -4, morale: 2, trust: -6, reputation: -2 }
           }
         }
       },
@@ -802,7 +836,7 @@ export const STORY_EVENTS: readonly GameEvent[] = [
         label: 'Un mensaje y la promesa de compensarla en verano',
         outcome: {
           text: '{pareja} te manda un corazón y una foto del vestido que piensa estrenar en verano. Te toca cumplir.',
-          effects: { morale: -1, trust: 2 }
+          effects: { partner: -6, morale: -1, trust: 2 }
         }
       }
     ]
@@ -810,9 +844,13 @@ export const STORY_EVENTS: readonly GameEvent[] = [
   {
     id: 'pareja-superar',
     title: 'Pasar página',
-    text: 'Desde que {pareja} y tú lo dejasteis, la casa está demasiado silenciosa. Tus amigos insisten en sacarte de ella; tu preparador, en que vuelques todo en el campo.',
-    story: { id: 'pareja', repeatable: true },
-    conditions: [{ flag: 'partner', oneOf: ['ruptura'] }, ONE_SEASON_IN_STAGE],
+    text: 'Desde que {expareja} y tú lo dejasteis, la casa está demasiado silenciosa. Tus amigos insisten en sacarte de ella; tu preparador, en que vuelques todo en el campo.',
+    // Si dos temporadas después de la ruptura sigues sin pareja (v0.17).
+    story: { id: 'pareja', repeatable: true, priority: 3 },
+    conditions: [
+      { flag: 'partner', oneOf: [null] },
+      { flag: 'lastBreakupSeason', seasonsSince: 2 }
+    ],
     options: [
       {
         label: 'Refugiarte en el fútbol: entrenar mañana y tarde',
@@ -845,7 +883,8 @@ export const STORY_EVENTS: readonly GameEvent[] = [
             text: 'Una cena "casual" que de casual no tiene nada. Al principio te resistes, pero ella se ríe de tus chistes malos y, de repente, la casa ya no parece tan vacía.',
             effects: {
               morale: 8,
-              flags: { partner: 'pareja', cheated: false, noMoreChildren: false }
+              partner: 10,
+              flags: { partner: 'conociendo' }
             }
           },
           failure: {

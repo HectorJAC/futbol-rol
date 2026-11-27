@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { emptyAttributes, scaleDelta } from '../data/attributes'
+import { emptyAttributes } from '../data/attributes'
 import { defaultMode } from '../data/gameModes'
 import { MATCH_MOMENTS } from '../data/matchMoments'
 import { getShopItem, SHOP_ITEMS } from '../data/shop'
@@ -12,6 +12,7 @@ import {
   contractAfterSeason,
   monthlyWage,
   purchaseSummary,
+  shopDeltas,
   shopOffer,
   SHOP_SIZE
 } from './finance'
@@ -92,7 +93,8 @@ describe('tienda de mejoras', () => {
       expect(item.cost).toBeGreaterThan(0)
       expect(!!item.attributes || !!item.morale || !!item.reputation).toBe(true)
     }
-    expect(getShopItem('casa-padres').attributes?.composure).toBe(2)
+    // Desde la v0.17 los puntos de la tienda se cuentan en la escala de 50.
+    expect(getShopItem('casa-padres').attributes?.composure).toBe(3)
   })
 
   it('comprar cobra, sube atributos y se apunta en los gastos', () => {
@@ -105,7 +107,7 @@ describe('tienda de mejoras', () => {
     for (const [id, delta] of Object.entries(item.attributes ?? {})) {
       const key = id as keyof typeof rich.attributes
       expect(after.attributes[key]).toBe(
-        Math.min(max, rich.attributes[key] + scaleDelta(delta ?? 0, max))
+        Math.min(max, rich.attributes[key] + (shopDeltas(item, max)[key] ?? delta ?? 0))
       )
     }
     expect(after.purchases).toHaveLength(1)

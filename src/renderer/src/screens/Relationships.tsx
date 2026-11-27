@@ -3,18 +3,31 @@ import { t } from '../i18n/es'
 import { describeRelationships, describeTeammate, type Relationship } from '../logic/relationships'
 import { captaincyChecks } from '../logic/teammates'
 import { useGameStore } from '../store/gameStore'
+import type { RelationTarget } from '../types/career'
+import { seasonYearLabel } from '../logic/competitions'
+import { STAGE_LABELS } from '../logic/partner'
 
-type Tab = 'people' | 'teammates' | 'ex'
+type Tab = 'people' | 'teammates' | 'ex' | 'exPartners'
+
+/** Relaciones del entorno que tienen historial (v0.17). */
+const WITH_HISTORY: Record<string, RelationTarget> = {
+  coach: 'coach',
+  fans: 'fans',
+  partner: 'partner'
+}
 
 function RelationshipCard({
   r,
-  relation
+  relation,
+  onOpen
 }: {
   r: Relationship
   relation?: number
+  /** Si se indica, la tarjeta abre el historial de la relación (v0.17). */
+  onOpen?: () => void
 }): React.JSX.Element {
-  return (
-    <article className={`panel relationship relationship--${r.level}`} data-testid="relationship">
+  const body = (
+    <>
       <span className="relationship__avatar" aria-hidden="true">
         {r.name.replace(/^(El|La|Tu) /, '')[0].toUpperCase()}
       </span>
@@ -33,7 +46,26 @@ function RelationshipCard({
           </span>
         )}
         <p>{r.text}</p>
+        {onOpen && <span className="relationship__more">{t.relationships.seeHistory} ›</span>}
       </div>
+    </>
+  )
+  if (onOpen) {
+    return (
+      <button
+        type="button"
+        className={`panel relationship relationship--${r.level} relationship--link`}
+        onClick={onOpen}
+        data-testid="relationship"
+        data-relation={r.id}
+      >
+        {body}
+      </button>
+    )
+  }
+  return (
+    <article className={`panel relationship relationship--${r.level}`} data-testid="relationship">
+      {body}
     </article>
   )
 }
@@ -42,6 +74,7 @@ function RelationshipCard({
 export function Relationships(): React.JSX.Element {
   const career = useGameStore((s) => s.career)
   const backToHub = useGameStore((s) => s.backToHub)
+  const openRelationHistory = useGameStore((s) => s.openRelationHistory)
   const [tab, setTab] = useState<Tab>('people')
   if (!career) return <></>
   const people = describeRelationships(career)
@@ -52,7 +85,16 @@ export function Relationships(): React.JSX.Element {
   const tabs: Array<{ id: Tab; label: string }> = [
     { id: 'people', label: t.relationships.people },
     { id: 'teammates', label: t.relationships.teammates },
-    { id: 'ex', label: `${t.relationships.exTeammates} (${exTeammates.length})` }
+    { id: 'ex', label: `${t.relationships.exTeammates} (${exTeammates.length})` },
+    // Las exparejas solo salen si las hay (v0.17).
+    ...(career.exPartners.length > 0
+      ? [
+          {
+            id: 'exPartners' as const,
+            label: `${t.relationships.exPartners} (${career.exPartners.length})`
+          }
+        ]
+      : [])
   ]
 
   return (
@@ -81,9 +123,17 @@ export function Relationships(): React.JSX.Element {
 
       {tab === 'people' && (
         <div className="relationship-grid">
-          {people.map((r) => (
-            <RelationshipCard key={r.id} r={r} relation={r.value} />
-          ))}
+          {people.map((r) => {
+            const target = WITH_HISTORY[r.id]
+            return (
+              <RelationshipCard
+                key={r.id}
+                r={r}
+                relation={r.value}
+                onOpen={target ? () => openRelationHistory(target) : undefined}
+              />
+            )
+          })}
         </div>
       )}
 
@@ -130,6 +180,27 @@ export function Relationships(): React.JSX.Element {
             ))}
           </div>
         ))}
+
+      {tab === 'exPartners' && (
+        <div className="relationship-grid relationship-grid--compact relationship-grid--scroll">
+          {career.exPartners.map((ex, i) => (
+            <RelationshipCard
+              key={`${ex.name}-${i}`}
+              r={{
+                id: `ex-${i}`,
+                name: ex.name,
+                role: t.relationships.exPartnerLine
+                  .replace('{from}', seasonYearLabel(ex.since))
+                  .replace('{to}', seasonYearLabel(ex.until))
+                  .replace('{stage}', STAGE_LABELS[ex.stage]),
+                level: 'tenso',
+                text: ex.reason ? `Lo dejasteis: ${ex.reason}.` : 'Lo dejasteis.'
+              }}
+              onOpen={() => openRelationHistory('partner', ex.name)}
+            />
+          ))}
+        </div>
+      )}
 
       <footer className="action-bar action-bar--wide">
         <button type="button" className="btn btn--secondary" onClick={backToHub}>
