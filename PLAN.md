@@ -1,4 +1,4 @@
-# Plan v0.1 — "Proyecto: Juego Futbol-Rol"
+# Plan — "Your Football Path" (nombre provisional hasta la v0.14: "Proyecto: Juego Futbol-Rol")
 
 ## Contexto
 Juego que fusiona el modo carrera de jugador (FIFA/PES, Copero) con el RPG narrativo (Mass Effect, Dragon Age, Baldur's Gate): no se juega al fútbol, se toman decisiones que marcan toda la carrera. Objetivo final: publicarlo en **Steam**; **solo se jugará como app de escritorio desde Steam, no habrá versión web** (Windows primero). La carpeta `C:\Users\USER\Documents\Futbol-Rol` está vacía (no es repo git). Hay Node 22 / npm 10 instalados.
@@ -117,11 +117,28 @@ Eventos definidos como datos (JSON con condiciones y efectos), o **Ink/inkjs** p
 ### Importante para Steam: licencias
 Sin licencias **no se pueden usar** nombres reales de clubes, jugadores, ligas, escudos ni trofeos (Balón de Oro, Champions…). Usar clubes y competiciones ficticios (p. ej. ciudades reales con nombres inventados) y premios propios ("Balón Dorado", "Bota de Plata"). Las banderas de países sí se pueden usar.
 
+**Decisión del 2026-11-23 (v0.8):** los clubes usan nombres parecidos a los reales con una o dos letras cambiadas ("FC Barkelone", "Real Madrik") y las ligas nombres genéricos ("Primera División de España"). Jugadores, trofeos y escudos siguen siendo propios. Antes de publicar en Steam conviene revisar este criterio con alguien de temas legales.
+
 ### Roadmap tentativo
-- **v0.1** — Menú principal + creación de personaje (este plan).
-- **v0.2** — Orígenes y atributos iniciales, elección del primer club, guardado/carga local (JSON en la carpeta de usuario).
-- **v0.3** — Simulación de una temporada con eventos y decisiones; Sala de trofeos.
-- **v0.4** — Mercado de fichajes y relaciones.
-- **v0.5** — Selección nacional y premios individuales completos.
-- **v0.6** — Ajustes (pantalla completa, volumen, idioma) y Records.
-- **v1.0** — Steamworks (logros, Cloud), traducción al inglés, empaquetado y página de Steam.
+Estado a 2026-11-26: v0.1–v0.18 hechas (ver el registro de trabajo en README.md).
+
+- ✅ **v0.1** — Menú principal + creación de personaje (este plan).
+- ✅ **v0.2** — Orígenes y atributos iniciales, elección del primer club, guardado/carga local (JSON en la carpeta de usuario).
+- ✅ **v0.3** — Simulación de una temporada con eventos y decisiones; Sala de trofeos.
+- ✅ **v0.4** — Mercado de fichajes, eventos de consecuencia y pantalla de Relaciones.
+- ✅ **v0.5** — Selección nacional, premios individuales completos y Records *(adelantado desde la v0.6)*.
+- ✅ **v0.6** — Ajustes (pantalla completa, tamaño de ventana, animaciones, idioma). *(Volumen pendiente: aún no hay audio.)*
+- ✅ **v0.7** — Peticiones tras la primera prueba: puntero propio, 4 orígenes por país y 10 especiales (menú Extras), modos de juego (Rápida, Normal, Completa, Personalizada) con fin de carrera, asistencias en la Sala de trofeos, 4 atributos nuevos, 10 decisiones y partidos importantes jugada a jugada en el modo Completa, competiciones (calendario, liga, copas, goleadores y asistentes) y contrato con dinero y tienda de mejoras.
+- ✅ **v0.8** — Media con estadísticas y valor de mercado, partidos importantes (grandes, clásico, derbi, segundo de la tabla, desde cuartos de copa), resultado de la eliminación al pasar el cursor, tienda rotativa, sueldo mensual, manita en los botones, historia de pareja, puntos de atributo al acabar cada temporada y clubes con nombres parecidos a los reales en primera y segunda división con ascensos y descensos.
+- ✅ **v0.9** — Resultados entre decisiones, moneda por país, origen de las consecuencias, título del partido importante dentro del recuadro, eventos que reaccionan al último partido (texto con el marcador real), eventos únicos ("La nómina de un grande", "Un país nuevo") y titularidad difícil para un joven en un club de 5 estrellas.
+- ✅ **v0.10** — Balón parado (córners, faltas, penaltis) y lanzadores, escala de atributos por modo (20/30/50), compañeros y excompañeros con relación, capitanía, buscador de equipos, tienda de 15 mejoras centrada en atributos, panel de resultados con tus números, puesto en liga en el marcador, tres copas europeas y Copa Intercontinental, y reparto de puntos cuando quieras.
+- ✅ **v0.11** — Convocatoria en los partidos importantes (titular, suplente, no convocado) y cambios, notas al estilo Sofascore, mercado según nacionalidad y edad, "Horas extra" según lo que necesita el equipo, 10 puntos libres en la Completa y motivos de no jugar.
+- ✅ **v0.12** — Resumen antes de firmar, tres clubes al azar en el primer contrato (5 estrellas, 4–3 y 3–2), moral desde 50 que se mueve con partidos y relaciones, de 3 a 5 jugadas en los partidos importantes según su relevancia, rival del próximo partido importante en las decisiones, titular o suplente en los resultados, "Corners" y sin pistas de lanzador.
+- ✅ **v0.13** — Pierna buena (derecha o izquierda) al crear el jugador, nombre siempre en mayúsculas, modo Completa de 15 temporadas y Rápida y Normal cerradas por ahora.
+- ✅ **v0.14** — Hub rediseñado (bandera, sueldo, tarjetas a medida y titularidad), pedir una mejora de contrato, "Compras", barras del míster y la afición, cinco escenarios para conocer pareja, opciones bloqueadas sin dinero, penalti del veterano solo para el lanzador, colores de cada copa europea en la tabla, relación con los compañeros al pasar el cursor, división en el mercado y resumen con scroll.
+- ✅ **v0.15** — Nombre definitivo: **Your Football Path** (título, ventana, ejecutable y acceso directo; las partidas y los ajustes pasan a la carpeta nueva).
+- ✅ **v0.16** — Ficha completa de cada carrera desde Records. Primera versión acotada: solo nacionalidades europeas, solo delantero centro (cinco posiciones más, bloqueadas) y solo el modo Completa. "Pelea por el descenso" como partido importante. Tienda que no cambia al comprar. Decisiones que encajan con tu situación (titular, capitán y edad).
+- ✅ **v0.17** — Historial de cada relación (míster, afición y pareja), que el míster y la afición empiecen de cero al fichar, pareja con relación de 0 a 100 (novios a 50, boda a 100, ruptura a 0) y exparejas, lesiones que te quitan partidos, decisiones y atributos, tienda con precios según los puntos, una jugada más contra tu exequipo (el derbi de la traición si es de tu ciudad), capitanía con 40 de liderazgo, "Los sesenta de tu madre" desde los 25 años y "La afición se entera" solo en el mismo club.
+- **Primera versión (v1.0)** — Solo Europa (España, Francia, Inglaterra, Alemania e Italia), delantero centro y modo Completa. Más adelante: desbloquear Argentina, Brasil, Japón y Estados Unidos, el resto de posiciones y los modos Rápida, Normal y Personalizada.
+- ✅ **v0.18** — Inglés original (no traducido) para todo el juego, con cambio en vivo desde Ajustes. Créditos, "Early-Access v0.x" en todas las pantallas, máximo de 5 puntos por temporada, tienda más cara cada temporada y modos cerrados solo con el título.
+- **v1.0** — Steamworks (logros, Cloud), empaquetado y página de Steam (la página, en español y en inglés).
